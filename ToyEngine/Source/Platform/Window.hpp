@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../Core/GPUFramework/Vulkan/VkCommon.hpp"
+#include "Core/GPUFramework/Vulkan/VkCommon.hpp"
 
 #include <GLFW/glfw3.h>
 #include <string>

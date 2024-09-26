@@ -16,6 +16,31 @@
 
 #include <exception>
 #include <functional>
+#include <algorithm>
+
+const std::string vertexShaderText_PC_C = R"(
+#version 400
+
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+
+layout (std140, binding = 0) uniform buffer
+{
+  mat4 mvp;
+} uniformBuffer;
+
+layout (location = 0) in vec4 pos;
+layout (location = 1) in vec4 inColor;
+
+layout (location = 0) out vec4 outColor;
+
+void main()
+{
+  outColor = inColor;
+  gl_Position = uniformBuffer.mvp * pos;
+}
+)";
+
 
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -144,7 +169,7 @@ void createSwapChain(){
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    uint32_t queueFamilyIndices[] = {0, 3};
+    uint32_t queueFamilyIndices[] = {0, 2};
 
     if (1)
     {
@@ -371,8 +396,10 @@ int main() {
     }
     
     std::vector<const char *> extensions;
+#ifdef ARCH_OS_MAC
     extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
     extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif // ARCH_OS_MAC
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -380,7 +407,11 @@ int main() {
         extensions.push_back(glfwExtensions[i]);
     }
     
+#ifdef ARCH_OS_MACOS
+    instance = new Instance("ToyEngine", extensions, validationLayers, VK_API_VERSION_1_2);
+#else
     instance = new Instance("ToyEngine", extensions, validationLayers);
+#endif
     
     VkResult result = window->createWindowSurface(instance->getHandle());
     if (result != VK_SUCCESS)
@@ -452,8 +483,13 @@ int main() {
         return buffer;
     };
     
+#ifdef ARCH_OS_MACOS
     auto vertShaderCode = readFile("/Users/leolii/Desktop/VulkanTest/VulkanTest/shaders/vert.spv");
     auto fragShaderCode = readFile("/Users/leolii/Desktop/VulkanTest/VulkanTest/shaders/frag.spv");
+#endif // ARCH_OS_MACOS
+
+    auto vertShaderCode = readFile("D:/Downloads/vert.spv");
+    auto fragShaderCode = readFile("D:/Downloads/frag.spv");
     
     auto createShaderModule = [](const std::vector<char> &code) -> VkShaderModule
     {

@@ -28,9 +28,8 @@ public:
     Instance(const std::string                            &application_name,
              const std::vector<const char *>              &extensions        = {},
              const std::vector<const char *>              &validationLayers = {},
-             const std::vector<VkLayerSettingEXT>         &layerSettings    = {},
              bool                                          headless                   = false,
-             uint32_t                                      api_version                = VK_API_VERSION_1_2);
+             uint32_t                                      api_version                = VK_API_VERSION_1_3);
     
     
     VkInstance getHandle();

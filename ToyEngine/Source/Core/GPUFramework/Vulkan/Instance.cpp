@@ -9,6 +9,9 @@
 //#include "../../Common/logging.hpp"
 #include <iostream>
 
+
+//#include <Volk/volk.h>
+
 #ifdef VK_ENABLE_VALIDATION
 
 VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type,
@@ -34,7 +37,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(VkDebugUtilsMessag
 Instance::Instance(const std::string                            &applicationName,
                    const std::vector<const char *>              &extensions,
                    const std::vector<const char *>              &validationLayers,
-                   const std::vector<VkLayerSettingEXT>         &required_layer_settings,
                    bool                                          headless,
                    uint32_t                                      api_version)
 {

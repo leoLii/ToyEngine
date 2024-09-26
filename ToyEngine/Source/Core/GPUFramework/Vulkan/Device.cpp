@@ -61,7 +61,11 @@ Device::Device(Instance& instance)
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyProperties.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures.features;
-    std::vector<const char *> enabledExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
+    std::vector<const char *> enabledExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+#ifdef ARCH_OS_MACOS
+    enabledExtensions.push_back("VK_KHR_portability_subset");
+#endif // ARCH_OS_MACOS
+
     createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
     createInfo.ppEnabledExtensionNames = enabledExtensions.data();
     
@@ -71,9 +75,9 @@ Device::Device(Instance& instance)
     }
     
     vkGetDeviceQueue(handle, 0, 0, &graphicsQueue);
+    vkGetDeviceQueue(handle, 2, 0, &presentQueue);
     vkGetDeviceQueue(handle, 1, 0, &computeQueue);
-    vkGetDeviceQueue(handle, 2, 0, &transferQueue);
-    vkGetDeviceQueue(handle, 3, 0, &presentQueue);
+    vkGetDeviceQueue(handle, 1, 1, &transferQueue);
 }
 
 VkPhysicalDevice Device::getUsingGPU(){

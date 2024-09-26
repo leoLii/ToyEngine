@@ -6,15 +6,23 @@
 //
 #pragma once
 
+#include "Core/Marcos.h"
+
+#if defined ASRCH_OS_WINDOWS
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#elif defined ASRCH_OS_MACOS
 #define VK_USE_PLATFORM_METAL_EXT
 #include <vulkan/vulkan.h>
+#define VK_ENABLE_PORTABLE
+#endif
 
 #include <vma/vk_mem_alloc.h>
 
 #define VK_ENABLE_VALIDATION
-#define VK_ENABLE_PORTABLE
 
-#include <exception>
+
+#include <stdexcept>
 #include <string>
 #include <vector>
 
