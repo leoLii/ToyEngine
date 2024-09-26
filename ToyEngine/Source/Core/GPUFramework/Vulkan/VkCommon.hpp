@@ -10,17 +10,16 @@
 
 #if defined ASRCH_OS_WINDOWS
 #define VK_USE_PLATFORM_WIN32_KHR
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #elif defined ASRCH_OS_MACOS
 #define VK_USE_PLATFORM_METAL_EXT
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 #define VK_ENABLE_PORTABLE
 #endif
 
 #include <vma/vk_mem_alloc.h>
 
 #define VK_ENABLE_VALIDATION
-
 
 #include <stdexcept>
 #include <string>
@@ -101,8 +100,8 @@ class VulkanException : public std::runtime_error
 #define VK_CHECK(x)                                                                    \
     do                                                                                 \
     {                                                                                  \
-        VkResult err = x;                                                              \
-        if (err)                                                                       \
+        VkResult err = static_cast<VkResult>(x);                                                              \
+        if (err!= VK_SUCCESS)                                                                       \
         {                                                                              \
             throw std::runtime_error("Detected Vulkan error: " + vk_string(err)); \
         }                                                                              \

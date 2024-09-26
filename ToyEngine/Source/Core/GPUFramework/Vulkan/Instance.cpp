@@ -41,74 +41,53 @@ Instance::Instance(const std::string                            &applicationName
                    uint32_t                                      api_version)
 {
     uint32_t layerCount;
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
+    VK_CHECK(vk::enumerateInstanceLayerProperties(&layerCount, nullptr));
     availableLayers.resize(layerCount);
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
+    VK_CHECK(vk::enumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
     
     uint32_t extensionCount;
-    VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
+    VK_CHECK(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
     availableExtensions.resize(extensionCount);
-    VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data()));
+    VK_CHECK(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data()));
     
-    VkApplicationInfo appInfo = {};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = applicationName.c_str();
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "ToyEngine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = api_version;
+    vk::ApplicationInfo applicationInfo;
+    applicationInfo.pApplicationName = applicationName.c_str();
+    applicationInfo.applicationVersion = 1;
+    applicationInfo.pEngineName = "ToyEngine";
+    applicationInfo.engineVersion = 1;
+    applicationInfo.apiVersion = VK_API_VERSION_1_3;
+
+#ifdef VK_ENABLE_VALIDATION
+    vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo;
+    debugUtilsCreateInfo.flags = {};
+    debugUtilsCreateInfo.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+    debugUtilsCreateInfo.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation;
+    debugUtilsCreateInfo.pfnUserCallback = debug_utils_messenger_callback;
+#endif
     
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
-    createInfo.enabledExtensionCount = static_cast<int>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
+    vk::InstanceCreateInfo createInfo;
 #ifdef VK_ENABLE_PORTABLE
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
-    createInfo.enabledLayerCount = static_cast<int>(validationLayers.size());
+    createInfo.pApplicationInfo = &applicationInfo;
+    createInfo.enabledLayerCount = validationLayers.size();
     createInfo.ppEnabledLayerNames = validationLayers.data();
+    createInfo.enabledExtensionCount = extensions.size();
+    createInfo.ppEnabledExtensionNames = extensions.data();
+    createInfo.pNext = &debugUtilsCreateInfo;
   
-    auto result = VK_SUCCESS;
-    
-#ifdef VK_ENABLE_VALIDATION
-    VkDebugUtilsMessengerCreateInfoEXT debug_utils_create_info  = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
-    debug_utils_create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-    debug_utils_create_info.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    debug_utils_create_info.pfnUserCallback = debug_utils_messenger_callback;
-    
-    createInfo.pNext = &debug_utils_create_info;
-#endif
-    
-    result = vkCreateInstance(&createInfo, nullptr, &handle);
-    if(result != VK_SUCCESS){
-        throw VulkanException(result, "Failed to create instance: ");
-    }
-    
-#ifdef VK_ENABLE_VALIDATION
-    vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(handle, "vkCreateDebugUtilsMessengerEXT");
-    if (!vkCreateDebugUtilsMessengerEXT) {
-        std::runtime_error("Failed load function");
-    }
-    
-    vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(handle, "vkDestroyDebugUtilsMessengerEXT");
-    if(vkDestroyDebugUtilsMessengerEXT==nullptr){
-        std::runtime_error("Failed load function");
-    }
-    
-    result = vkCreateDebugUtilsMessengerEXT(handle, &debug_utils_create_info, nullptr, &debugMessenger);
-    if (result != VK_SUCCESS)
-    {
-        throw VulkanException(result, "Could not create debug utils messenger");
-    }
-#endif
+    VK_CHECK(vk::createInstance(&createInfo, nullptr, &handle));
+
+    functionLoader = vk::DispatchLoaderDynamic(handle, vkGetInstanceProcAddr);
+
+    debugMessenger = handle.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, nullptr, functionLoader);
 }
 
-VkInstance Instance::getHandle(){
+vk::Instance Instance::getHandle(){
     return this->handle;
 }
 
 Instance::~Instance(){
-    vkDestroyDebugUtilsMessengerEXT(handle, debugMessenger, nullptr);
-    vkDestroyInstance(handle, nullptr);
+    handle.destroyDebugUtilsMessengerEXT(debugMessenger, nullptr, functionLoader);
+    handle.destroy();
 }

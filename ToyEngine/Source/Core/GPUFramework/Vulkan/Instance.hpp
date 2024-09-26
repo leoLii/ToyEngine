@@ -32,21 +32,18 @@ public:
              uint32_t                                      api_version                = VK_API_VERSION_1_3);
     
     
-    VkInstance getHandle();
-    
-#ifdef VK_ENABLE_VALIDATION
-    PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = {VK_NULL_HANDLE};
-    PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = {VK_NULL_HANDLE};
-#endif
+    vk::Instance getHandle();
     
 protected:
-    VkInstance handle{VK_NULL_HANDLE};
+    vk::Instance handle{VK_NULL_HANDLE};
+
+    vk::DispatchLoaderDynamic functionLoader;
     
-    std::vector<VkExtensionProperties> availableExtensions;
+    std::vector<vk::ExtensionProperties> availableExtensions;
     
-    std::vector<VkLayerProperties> availableLayers;
+    std::vector<vk::LayerProperties> availableLayers;
     
 #ifdef VK_ENABLE_VALIDATION
-    VkDebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
+    vk::DebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
 #endif
 };
