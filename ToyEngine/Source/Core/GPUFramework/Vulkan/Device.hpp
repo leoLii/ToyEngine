@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <optional>
 
 class Instance;
 class Queue;
@@ -26,52 +27,52 @@ public:
 
     Device(Instance&);
     
-    VkPhysicalDevice getUsingGPU();
+    vk::PhysicalDevice getUsingGPU();
     
-    VkDevice getHandle();
+    vk::Device getHandle();
     
-    VkQueue getGraphicsQueue(){
+    vk::Queue getGraphicsQueue(){
         return this->graphicsQueue;
     }
     
-    VkQueue getComputeQueue(){
+    vk::Queue getComputeQueue(){
         return this->computeQueue;
     }
     
-    VkQueue getTransferQueue(){
+    vk::Queue getTransferQueue(){
         return this->transferQueue;
     }
     
-    VkQueue getPresentQueue(){
+    vk::Queue getPresentQueue(){
         return this->presentQueue;
     }
     
 private:
     void initGPU();
     
-    void setupExtensions();
-    
 protected:
     Instance& instance;
     
-    VkPhysicalDevice gpu{VK_NULL_HANDLE};
+    vk::PhysicalDevice gpu{ VK_NULL_HANDLE };
     
-    VkDevice handle{VK_NULL_HANDLE};
+    vk::Device handle{ VK_NULL_HANDLE };
+
+    vk::DispatchLoaderDynamic functionLoader;
     
-    std::vector<VkExtensionProperties> gpuExtensions;
+    std::vector<vk::ExtensionProperties> gpuExtensions;
     
     std::vector<const char *> enabledExtensions;
     
-    std::vector<VkQueueFamilyProperties2> queueFamilyProperties;
+    std::vector<vk::QueueFamilyProperties> queueFamilyProperties;
     
-    VkPhysicalDeviceProperties2 gpuInfo{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    vk::PhysicalDeviceProperties gpuInfo;
     
-    VkPhysicalDeviceMemoryProperties2 memoryProperty{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2};
+    vk::PhysicalDeviceMemoryProperties memoryProperty;
     
-    VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    vk::PhysicalDeviceFeatures deviceFeatures;
     
-    VkQueue graphicsQueue{VK_NULL_HANDLE};
-    VkQueue computeQueue{VK_NULL_HANDLE};
-    VkQueue presentQueue{VK_NULL_HANDLE};
-    VkQueue transferQueue{VK_NULL_HANDLE};
+    vk::Queue graphicsQueue{ VK_NULL_HANDLE };
+    vk::Queue computeQueue{ VK_NULL_HANDLE };
+    vk::Queue presentQueue{ VK_NULL_HANDLE };
+    vk::Queue transferQueue{ VK_NULL_HANDLE };
 };

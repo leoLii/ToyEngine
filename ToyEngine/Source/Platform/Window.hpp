@@ -27,7 +27,7 @@ public:
     
     VkResult createWindowSurface(VkInstance);
     
-    VkSurfaceKHR getSurface();
+    VkSurfaceKHR& getSurface();
     
 protected:
     GLFWwindow* window;
@@ -36,4 +36,6 @@ protected:
     int height;
     
     VkSurfaceKHR surface;
+
+
 };

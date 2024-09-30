@@ -11,57 +11,42 @@
 
 #include <iostream>
 
-void Device::initGPU(){
-    uint32_t gpuCount = 0;
-    vkEnumeratePhysicalDevices(instance.getHandle(), &gpuCount, nullptr);
-    if (gpuCount == 0) { throw std::runtime_error("failed to find GPUs with Vulkan support!"); }
-    std::vector<VkPhysicalDevice> gpus(gpuCount);
-    vkEnumeratePhysicalDevices(instance.getHandle(), &gpuCount, gpus.data());
+void Device::initGPU() {
+    gpu = instance.getHandle().enumeratePhysicalDevices().front();
+    if (!gpu) { throw std::runtime_error("failed to find a suitable GPU!"); }
     
-    gpu = gpus[0];
-    if (gpu == VK_NULL_HANDLE) { throw std::runtime_error("failed to find a suitable GPU!"); }
+    deviceFeatures = gpu.getFeatures();
+    gpuInfo = gpu.getProperties();
+    memoryProperty = gpu.getMemoryProperties();
     
-    vkGetPhysicalDeviceFeatures2(gpu, &deviceFeatures);
-    vkGetPhysicalDeviceProperties2(gpu, &gpuInfo);
-    vkGetPhysicalDeviceMemoryProperties2(gpu, &memoryProperty);
-    
-    std::cout<<"Found: "<<gpuInfo.properties.deviceName<<std::endl;
+    std::cout<<"Found: "<<gpuInfo.deviceName<<std::endl;
 }
 
 Device::Device(Instance& instance)
     :instance(instance)
 {
     initGPU();
+
+    gpuExtensions = gpu.enumerateDeviceExtensionProperties();
+
+    queueFamilyProperties = gpu.getQueueFamilyProperties();
     
-    uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, nullptr);
-    gpuExtensions.resize(extensionCount);
-    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &extensionCount, gpuExtensions.data());
     
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties2(gpu, &queueFamilyCount, nullptr);
-    queueFamilyProperties.resize(queueFamilyCount);
-    std::fill(queueFamilyProperties.begin(), queueFamilyProperties.end(), VkQueueFamilyProperties2{VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
-    vkGetPhysicalDeviceQueueFamilyProperties2(gpu, &queueFamilyCount, queueFamilyProperties.data());
-    
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     float queuePriority = 1.0f;
-    for(int index = 0; index < queueFamilyCount; index++){
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    for(int index = 0; index < queueFamilyProperties.size(); index++){
+        vk::DeviceQueueCreateInfo queueCreateInfo;
         queueCreateInfo.queueFamilyIndex = index;
         queueCreateInfo.queueCount = 1;
         queueCreateInfo.pQueuePriorities = &queuePriority;
         queueCreateInfos.push_back(queueCreateInfo);
     }
     
-    VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
+    vk::DeviceCreateInfo createInfo{};
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyProperties.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = &deviceFeatures.features;
-    std::vector<const char *> enabledExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    createInfo.pEnabledFeatures = &deviceFeatures;
+    std::vector<const char*> enabledExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 #ifdef ARCH_OS_MACOS
     enabledExtensions.push_back("VK_KHR_portability_subset");
 #endif // ARCH_OS_MACOS
@@ -69,21 +54,23 @@ Device::Device(Instance& instance)
     createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
     createInfo.ppEnabledExtensionNames = enabledExtensions.data();
     
-    auto result = vkCreateDevice(gpu, &createInfo, nullptr, &handle);
-    if(result!=VK_SUCCESS){
-        throw VulkanException(result);
-    }
-    
-    vkGetDeviceQueue(handle, 0, 0, &graphicsQueue);
-    vkGetDeviceQueue(handle, 2, 0, &presentQueue);
-    vkGetDeviceQueue(handle, 1, 0, &computeQueue);
-    vkGetDeviceQueue(handle, 1, 1, &transferQueue);
+    handle = gpu.createDevice(createInfo);
+
+    graphicsQueue = handle.getQueue(0, 0);
+    presentQueue = handle.getQueue(2, 0);
+    computeQueue = handle.getQueue(1, 0);
+    transferQueue = handle.getQueue(1, 1);
 }
 
-VkPhysicalDevice Device::getUsingGPU(){
+
+Device::~Device() {
+    handle.destroy();
+}
+
+vk::PhysicalDevice Device::getUsingGPU(){
     return this->gpu;
 }
 
-VkDevice Device::getHandle(){
+vk::Device Device::getHandle(){
     return this->handle;
 }

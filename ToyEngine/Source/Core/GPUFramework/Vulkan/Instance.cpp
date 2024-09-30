@@ -40,15 +40,9 @@ Instance::Instance(const std::string                            &applicationName
                    bool                                          headless,
                    uint32_t                                      api_version)
 {
-    uint32_t layerCount;
-    VK_CHECK(vk::enumerateInstanceLayerProperties(&layerCount, nullptr));
-    availableLayers.resize(layerCount);
-    VK_CHECK(vk::enumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
-    
-    uint32_t extensionCount;
-    VK_CHECK(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
-    availableExtensions.resize(extensionCount);
-    VK_CHECK(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data()));
+    availableLayers = vk::enumerateInstanceLayerProperties();
+
+    availableExtensions = vk::enumerateInstanceExtensionProperties();
     
     vk::ApplicationInfo applicationInfo;
     applicationInfo.pApplicationName = applicationName.c_str();

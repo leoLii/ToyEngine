@@ -17,6 +17,7 @@
 #define VK_ENABLE_PORTABLE
 #endif
 
+//#define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
 #define VK_ENABLE_VALIDATION

@@ -39,6 +39,6 @@ VkResult Window::createWindowSurface(VkInstance instance){
     return glfwCreateWindowSurface(instance, window, nullptr, &surface);
 }
 
-VkSurfaceKHR Window::getSurface(){
+VkSurfaceKHR& Window::getSurface() {
     return this->surface;
 }
