@@ -37,7 +37,7 @@ public:
         return this->queueFamilyIndex;
     }
     
-    VkCommandPool getHandle() const {
+    vk::CommandPool getHandle() const {
         return this->handle;
     }
     
@@ -53,7 +53,7 @@ public:
 protected:
     Device& device;
     
-    VkCommandPool handle{VK_NULL_HANDLE};
+    vk::CommandPool handle{VK_NULL_HANDLE};
     
     size_t threadIndex{0};
 
@@ -69,6 +69,6 @@ protected:
 
     //CommandBuffer::ResetMode reset_mode{CommandBuffer::ResetMode::ResetPool};
 
-    VkResult reset_command_buffers();
+    vk::Result reset_command_buffers();
     
 };

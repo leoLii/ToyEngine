@@ -13,18 +13,13 @@ CommandPool::CommandPool(Device &device, uint32_t queueFamilyIndex, size_t threa
 queueFamilyIndex(queueFamilyIndex),
 threadIndex(thread_index)
 {
-    VkCommandPoolCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    createInfo.queueFamilyIndex = queueFamilyIndex;
-    createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    vk::CommandPoolCreateInfo createInfo;
+    createInfo.queueFamilyIndex = queueFamilyIndex; 
+    createInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     
-    auto result = vkCreateCommandPool(device.getHandle(), &createInfo, nullptr, &handle);
-    
-    if(result!=VK_SUCCESS){
-        throw VulkanException(result);
-    }
+    handle = device.getHandle().createCommandPool(createInfo);
 }
 
 CommandPool::~CommandPool(){
-    vkDestroyCommandPool(device.getHandle(), handle, nullptr);
+    device.getHandle().destroyCommandPool(handle);
 }
