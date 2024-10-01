@@ -36,6 +36,10 @@ protected:
     vk::SurfaceKHR surface;
     vk::SwapchainKHR handle;
 
+    vk::SurfaceCapabilitiesKHR surfaceCapabilities;
+    std::vector<vk::SurfaceFormatKHR> surfaceFormats;
+    std::vector<vk::PresentModeKHR> presentModes;
+
     std::vector<vk::Image> images;
 
     vk::Format format;
