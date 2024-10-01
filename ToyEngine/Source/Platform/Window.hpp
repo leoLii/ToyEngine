@@ -14,7 +14,7 @@
 
 class Window{
 public:
-    Window(std::string name = "", int width = 1080, int height = 720);
+    Window(std::string name = "", int width = 1920, int height = 1080);
     ~Window();
     
     bool shouldClose();

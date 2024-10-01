@@ -54,7 +54,7 @@ Swapchain::~Swapchain() {
 
 void Swapchain::rebuildWithSize(vk::Extent2D size) {
 	format = vk::Format::eB8G8R8A8Srgb;
-	extent = surfaceCapabilities.currentExtent;
+	extent = size;
 	vk::SwapchainCreateInfoKHR createInfo;
 	createInfo.surface = surface;
 	createInfo.minImageCount = surfaceCapabilities.minImageCount + 1;
@@ -84,13 +84,14 @@ void Swapchain::rebuildWithSize(vk::Extent2D size) {
 	vk::SwapchainKHR newSwapchain = device.getHandle().createSwapchainKHR(createInfo);
 	device.getHandle().destroySwapchainKHR(handle);
 	handle = newSwapchain;
+	images = device.getHandle().getSwapchainImagesKHR(handle);
 }
 
 const vk::SwapchainKHR Swapchain::getHandle() const {
 	return this->handle;
 }
 
-std::vector<vk::Image> Swapchain::getSwapChainImages() const {
+std::vector<vk::Image> Swapchain::getSwapchainImages() const {
 	return this->images;
 }
 

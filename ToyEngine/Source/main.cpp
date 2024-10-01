@@ -2,7 +2,7 @@
 #include "Core/GPUFramework/Vulkan/Device.hpp"
 #include "Core/GPUFramework/Vulkan/CommandPool.hpp"
 #include "Core/GPUFramework/Vulkan/ImageView.h"
-#include "Core/GPUFramework/Vulkan/SwapChain.hpp"
+#include "Core/GPUFramework/Vulkan/Swapchain.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -51,6 +51,8 @@ const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation
 
 const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
 
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 std::unique_ptr<Window> window;
 Instance* instance;
@@ -149,7 +151,15 @@ void recreateSwapChain()
     vkDeviceWaitIdle(device->getHandle());
 
     cleanupSwapChain();
+    swapchain->rebuildWithSize(vk::Extent2D(width, height));
+    auto spImages = swapchain->getSwapchainImages();
+    swapChainImages.resize(spImages.size());
 
+    std::transform(spImages.begin(), spImages.end(), swapChainImages.begin(), [](vk::Image i)->VkImage {
+        return static_cast<VkImage>(i);
+        });
+    swapChainImageFormat = static_cast<VkFormat>(swapchain->getFormat());
+    swapChainExtent = static_cast<VkExtent2D>(swapchain->getExtent());
     //swapchain->rebuildWithSize(vk::Extent2D(width, height));
     createImageViews();
     createFramebuffers();
@@ -266,9 +276,7 @@ void drawFrame()
 }
 
 int main() {
-    if(window.get()==nullptr){
-        window.reset(new Window("Vulkan window"));
-    }
+    window.reset(new Window("ToyEngine", WIDTH, HEIGHT));
     
     std::vector<const char *> extensions;
 #ifdef ARCH_OS_MAC
@@ -299,7 +307,7 @@ int main() {
     auto surface = static_cast<vk::SurfaceKHR>(window->getSurface());
     swapchain = new Swapchain(*device, surface);
 
-    auto spImages = swapchain->getSwapChainImages();
+    auto spImages = swapchain->getSwapchainImages();
     swapChainImages.resize(spImages.size());
 
     std::transform(spImages.begin(), spImages.end(), swapChainImages.begin(), [](vk::Image i)->VkImage {
