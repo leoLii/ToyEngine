@@ -81,9 +81,7 @@ void Swapchain::rebuildWithSize(vk::Extent2D size) {
 	createInfo.pNext = &compressionControl;
 #endif // IMAGE_COMPRESSION
 
-	vk::SwapchainKHR newSwapchain = device.getHandle().createSwapchainKHR(createInfo);
-	device.getHandle().destroySwapchainKHR(handle);
-	handle = newSwapchain;
+	handle = device.getHandle().createSwapchainKHR(createInfo);
 	images = device.getHandle().getSwapchainImagesKHR(handle);
 }
 
