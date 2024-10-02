@@ -8,7 +8,6 @@
 #include "Device.hpp"
 #include "Instance.hpp"
 //#include "Queue.hpp"
-
 #include <iostream>
 
 void Device::initGPU() {
@@ -60,10 +59,26 @@ Device::Device(Instance& instance)
     presentQueue = handle.getQueue(2, 0);
     computeQueue = handle.getQueue(1, 0);
     transferQueue = handle.getQueue(1, 1);
+
+    // init allocator
+    VmaVulkanFunctions vulkanFunctions = {};
+    vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+    vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+    VmaAllocatorCreateInfo allocatorCreateInfo = {};
+    allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    allocatorCreateInfo.physicalDevice = gpu;
+    allocatorCreateInfo.device = handle;
+    allocatorCreateInfo.instance = instance.getHandle();
+    allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+
+    vmaCreateAllocator(&allocatorCreateInfo, &allocator);
 }
 
 
 Device::~Device() {
+    vmaDestroyAllocator(allocator);
     handle.destroy();
 }
 

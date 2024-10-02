@@ -46,11 +46,17 @@ public:
     vk::Queue getPresentQueue(){
         return this->presentQueue;
     }
+
+    VmaAllocator getAllocator() {
+        return this->allocator;
+    }
     
 private:
     void initGPU();
     
 protected:
+    VmaAllocator allocator;
+
     Instance& instance;
     
     vk::PhysicalDevice gpu{ VK_NULL_HANDLE };
