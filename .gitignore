@@ -1,5 +1,4 @@
 ToyEngine.xcodeproj/
 .DS_Store
-ToyEngine/build/
-ToyEngine/.xmake/
-ToyEngine/*xmake*/
+build/
+*xmake*/
