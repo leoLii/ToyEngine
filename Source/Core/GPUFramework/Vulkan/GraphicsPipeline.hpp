@@ -5,11 +5,12 @@
 #include <vector>
 
 class Device;
+class RenderPass;
 
 class GraphicsPipeline {
 public:
 	GraphicsPipeline() = delete;
-	GraphicsPipeline(Device&);
+	GraphicsPipeline(Device&, RenderPass&, std::vector<vk::ShaderModule>&);
 
 	~GraphicsPipeline();
 
@@ -21,7 +22,11 @@ public:
 protected:
 	Device& device;
 
+	RenderPass& renderPass;
+
 	vk::Pipeline handle;
+
+	std::vector<vk::ShaderModule> shaderModules;
 
 	vk::PipelineLayout layout;
 
