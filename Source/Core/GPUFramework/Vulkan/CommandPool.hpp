@@ -20,9 +20,8 @@ public:
 //                    size_t                   thread_index = 0,
 //                    CommandBuffer::ResetMode reset_mode   = CommandBuffer::ResetMode::ResetPool);
 
-    CommandPool(Device &device, uint32_t queueFamilyIndex, size_t thread_index = 0);
+    CommandPool(Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount);
 
-    
     CommandPool(const CommandPool &) = delete;
 
     CommandPool(CommandPool &&other) = delete;
@@ -47,6 +46,8 @@ public:
 
     VkResult resetPool();
 
+    vk::CommandBuffer getCommandBuffer(uint32_t index);
+
 //    CommandBuffer &requestCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
     //const CommandBuffer::ResetMode get_reset_mode() const;
@@ -58,6 +59,8 @@ protected:
     size_t threadIndex{0};
 
     uint32_t queueFamilyIndex{0};
+
+    std::vector<vk::CommandBuffer> commandBuffers;
 
 //    std::vector<std::unique_ptr<CommandBuffer>> primaryCommandBuffers;
 //
