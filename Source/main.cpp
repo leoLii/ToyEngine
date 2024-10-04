@@ -65,7 +65,6 @@ RenderPass* renderPass;
 GraphicsPipeline* graphicsPipeline;
 
 std::vector<VkFramebuffer> swapChainFramebuffers;
-std::vector<VkCommandBuffer> commandBuffers;
 std::vector<VkSemaphore> imageAvailableSemaphores;
 std::vector<VkSemaphore> renderFinishedSemaphores;
 std::vector<VkFence> inFlightFences;
@@ -231,8 +230,8 @@ void drawFrame()
 
     vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
-    vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-    recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+    vkResetCommandBuffer(commandPool->getCommandBuffer(currentFrame), /*VkCommandBufferResetFlagBits*/ 0);
+    recordCommandBuffer(commandPool->getCommandBuffer(currentFrame), imageIndex);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -244,7 +243,8 @@ void drawFrame()
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+    auto cast = static_cast<VkCommandBuffer>(commandPool->getCommandBuffer(currentFrame));
+    submitInfo.pCommandBuffers = &cast;
 
     VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
@@ -376,21 +376,7 @@ int main() {
     
     createFramebuffers();
     
-    commandPool = new CommandPool(*device, 0);
-    
-    commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = static_cast<VkCommandPool>(commandPool->getHandle());
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(device->getHandle(), &allocInfo, commandBuffers.data()) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate command buffers!");
-    }
-    
+    commandPool = new CommandPool(*device, 0, MAX_FRAMES_IN_FLIGHT);
     
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     
