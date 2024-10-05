@@ -25,17 +25,15 @@ public:
     
     void getFramebufferSize(int* width, int* height);
     
-    VkResult createWindowSurface(VkInstance);
+    vk::Result createWindowSurface(vk::Instance);
     
-    VkSurfaceKHR& getSurface();
+    vk::SurfaceKHR& getSurface();
     
 protected:
     GLFWwindow* window;
     std::string name;
-    int width;
-    int height;
+    size_t width;
+    size_t height;
     
-    VkSurfaceKHR surface;
-
-
+    vk::SurfaceKHR surface;
 };

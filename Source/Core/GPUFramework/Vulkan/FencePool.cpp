@@ -45,7 +45,7 @@ void FencePool::resetFences(vk::Fence fence) {
 void FencePool::waitForFences(vk::Fence fence, VkBool32 waitForAll, uint32_t timeout) {
 	auto result = device.getHandle().waitForFences(fence, waitForAll, timeout);
 	if (result != vk::Result::eSuccess) {
-		VulkanException(static_cast<VkResult>(result));
+		VulkanException{ result };
 	}
 }
 
@@ -56,6 +56,6 @@ void FencePool::resetFences(std::vector<vk::Fence> fences) {
 void FencePool::waitForFences(std::vector<vk::Fence> fences, VkBool32 waitForAll, uint32_t timeout) {
 	auto result = device.getHandle().waitForFences(fences, waitForAll, timeout);
 	if (result != vk::Result::eSuccess) {
-		VulkanException(static_cast<VkResult>(result));
+		VulkanException{ result };
 	}
 }

@@ -35,10 +35,13 @@ void Window::getFramebufferSize(int* width, int* height){
     glfwGetFramebufferSize(this->window, width, height);
 }
 
-VkResult Window::createWindowSurface(VkInstance instance){
-    return glfwCreateWindowSurface(instance, window, nullptr, &surface);
+vk::Result Window::createWindowSurface(vk::Instance instance){
+    VkSurfaceKHR VKSurface;
+    auto result = glfwCreateWindowSurface(instance, window, nullptr, &VKSurface);
+    surface = static_cast<vk::SurfaceKHR>(VKSurface);
+    return static_cast<vk::Result>(result);
 }
 
-VkSurfaceKHR& Window::getSurface() {
+vk::SurfaceKHR& Window::getSurface() {
     return this->surface;
 }

@@ -307,10 +307,10 @@ int main() {
     instance = new Instance("ToyEngine", extensions, validationLayers);
 #endif
     
-    VkResult result = window->createWindowSurface(instance->getHandle());
-    if (result != VK_SUCCESS)
+    vk::Result result = window->createWindowSurface(instance->getHandle());
+    if (result != vk::Result::eSuccess)
     {
-        std::runtime_error("Create Surface Error");
+        VulkanException{ result };
     }
     
     device = new Device(*instance);
