@@ -14,9 +14,17 @@ public:
 
 	~FencePool();
 
-	vk::Fence requestFence();
+	vk::Fence& requestFence();
 
-	void returnFence(vk::Fence);
+	void returnFence(vk::Fence&);
+
+	void resetFences(vk::Fence&);
+
+	void waitForFences(vk::Fence&, VkBool32 waitForAll = VK_TRUE, uint32_t timeout = std::numeric_limits<uint32_t>::max());
+
+	void resetFences(std::vector<vk::Fence>&);
+
+	void waitForFences(std::vector<vk::Fence>&, VkBool32 waitForAll = VK_TRUE, uint32_t timeout = std::numeric_limits<uint32_t>::max());
 
 protected:
 	Device& device;

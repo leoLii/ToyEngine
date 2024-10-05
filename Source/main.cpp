@@ -214,8 +214,8 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, int imageIndex){
 
 void drawFrame()
 {
-    auto fence = static_cast<VkFence>(fencePool->requestFence());
-    vkWaitForFences(device->getHandle(), 1, &fence, VK_TRUE, UINT64_MAX);
+    auto fence = fencePool->requestFence();
+    fencePool->waitForFences(fence);
     auto imageAvailableSemaphore = semaphorePool->requestSemaphore();
     auto renderFinishedSemaphore = semaphorePool->requestSemaphore();
     uint32_t imageIndex;
@@ -229,7 +229,7 @@ void drawFrame()
     }
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { throw std::runtime_error("failed to acquire swap chain image!"); }
 
-    vkResetFences(device->getHandle(), 1, &fence);
+    fencePool->resetFences(fence);
 
     vkResetCommandBuffer(commandPool->getCommandBuffer(currentFrame), /*VkCommandBufferResetFlagBits*/ 0);
     recordCommandBuffer(commandPool->getCommandBuffer(currentFrame), imageIndex);
