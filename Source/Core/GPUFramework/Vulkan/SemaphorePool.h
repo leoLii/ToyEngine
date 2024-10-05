@@ -8,6 +8,7 @@
 class Device;
 
 class SemaphorePool {
+public:
 	SemaphorePool() = delete;
 	SemaphorePool(Device&);
 
