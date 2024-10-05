@@ -5,6 +5,7 @@
 #include "Core/GPUFramework/Vulkan/Swapchain.hpp"
 #include "Core/GPUFramework/Vulkan/RenderPass.hpp"
 #include "Core/GPUFramework/Vulkan/GraphicsPipeline.hpp"
+#include "Core/GPUFramework/Vulkan/SemaphorePool.h"
 
 #include "Platform/Window.hpp"
 
@@ -45,8 +46,6 @@ void main()
 }
 )";
 
-
-
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -63,10 +62,9 @@ Swapchain* swapchain;
 CommandPool* commandPool;
 RenderPass* renderPass;
 GraphicsPipeline* graphicsPipeline;
+static SemaphorePool* semaphorePool;
 
 std::vector<VkFramebuffer> swapChainFramebuffers;
-std::vector<VkSemaphore> imageAvailableSemaphores;
-std::vector<VkSemaphore> renderFinishedSemaphores;
 std::vector<VkFence> inFlightFences;
 
 
@@ -216,10 +214,11 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, int imageIndex){
 void drawFrame()
 {
     vkWaitForFences(device->getHandle(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-
+    auto imageAvailableSemaphore = semaphorePool->requestSemaphore();
+    auto renderFinishedSemaphore = semaphorePool->requestSemaphore();
     uint32_t imageIndex;
     VkResult result =
-    vkAcquireNextImageKHR(device->getHandle(), swapchain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    vkAcquireNextImageKHR(device->getHandle(), swapchain->getHandle(), UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -236,7 +235,7 @@ void drawFrame()
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+    VkSemaphore waitSemaphores[] = {static_cast<VkSemaphore>(imageAvailableSemaphore)};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -246,7 +245,7 @@ void drawFrame()
     auto cast = static_cast<VkCommandBuffer>(commandPool->getCommandBuffer(currentFrame));
     submitInfo.pCommandBuffers = &cast;
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+    VkSemaphore signalSemaphores[] = {static_cast<VkSemaphore>(renderFinishedSemaphore)};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
     
@@ -277,9 +276,13 @@ void drawFrame()
     else if (result != VK_SUCCESS) { throw std::runtime_error("failed to present swap chain image!"); }
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+    semaphorePool->returnSemaphore(renderFinishedSemaphore);
+    semaphorePool->returnSemaphore(imageAvailableSemaphore);
 }
 
 int main() {
+
     window.reset(new Window("ToyEngine", WIDTH, HEIGHT));
     
     std::vector<const char *> extensions;
@@ -307,6 +310,8 @@ int main() {
     }
     
     device = new Device(*instance);
+
+    semaphorePool = new SemaphorePool(*device);
 
     auto surface = static_cast<vk::SurfaceKHR>(window->getSurface());
     swapchain = new Swapchain(*device, surface);
@@ -378,11 +383,6 @@ int main() {
     
     commandPool = new CommandPool(*device, 0, MAX_FRAMES_IN_FLIGHT);
     
-    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    
-    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    
-    
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
@@ -394,9 +394,7 @@ int main() {
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        if (vkCreateSemaphore(device->getHandle(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-            vkCreateSemaphore(device->getHandle(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(device->getHandle(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+        if (vkCreateFence(device->getHandle(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
