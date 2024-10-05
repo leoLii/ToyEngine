@@ -15,7 +15,7 @@ FencePool::~FencePool() {
 	}
 }
 
-vk::Fence& FencePool::requestFence() {
+vk::Fence FencePool::requestFence() {
 	while (true) {
 		size_t count = availableCount.load();
 		if (count == 0) {
@@ -33,27 +33,27 @@ vk::Fence& FencePool::requestFence() {
 	}
 }
 
-void FencePool::returnFence(vk::Fence& fence) {
+void FencePool::returnFence(vk::Fence fence) {
 	fences.push(fence);
 	availableCount.fetch_add(1);
 }
 
-void FencePool::resetFences(vk::Fence& fence) {
+void FencePool::resetFences(vk::Fence fence) {
 	device.getHandle().resetFences(fence);
 }
 
-void FencePool::waitForFences(vk::Fence& fence, VkBool32 waitForAll, uint32_t timeout) {
+void FencePool::waitForFences(vk::Fence fence, VkBool32 waitForAll, uint32_t timeout) {
 	auto result = device.getHandle().waitForFences(fence, waitForAll, timeout);
 	if (result != vk::Result::eSuccess) {
 		VulkanException(static_cast<VkResult>(result));
 	}
 }
 
-void FencePool::resetFences(std::vector<vk::Fence>& fences) {
+void FencePool::resetFences(std::vector<vk::Fence> fences) {
 	device.getHandle().resetFences(fences);
 }
 
-void FencePool::waitForFences(std::vector<vk::Fence>& fences, VkBool32 waitForAll, uint32_t timeout) {
+void FencePool::waitForFences(std::vector<vk::Fence> fences, VkBool32 waitForAll, uint32_t timeout) {
 	auto result = device.getHandle().waitForFences(fences, waitForAll, timeout);
 	if (result != vk::Result::eSuccess) {
 		VulkanException(static_cast<VkResult>(result));
