@@ -1,4 +1,4 @@
-#include "SemaphorePool.h"
+#include "SemaphorePool.hpp"
 
 #include "Device.hpp"
 
