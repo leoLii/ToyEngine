@@ -5,7 +5,8 @@
 #include "Core/GPUFramework/Vulkan/Swapchain.hpp"
 #include "Core/GPUFramework/Vulkan/RenderPass.hpp"
 #include "Core/GPUFramework/Vulkan/GraphicsPipeline.hpp"
-#include "Core/GPUFramework/Vulkan/SemaphorePool.h"
+#include "Core/GPUFramework/Vulkan/SemaphorePool.hpp"
+#include "Core/GPUFramework/Vulkan/FencePool.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -63,9 +64,9 @@ CommandPool* commandPool;
 RenderPass* renderPass;
 GraphicsPipeline* graphicsPipeline;
 static SemaphorePool* semaphorePool;
+static FencePool* fencePool;
 
 std::vector<VkFramebuffer> swapChainFramebuffers;
-std::vector<VkFence> inFlightFences;
 
 
 VkFormat swapChainImageFormat;
@@ -213,7 +214,8 @@ void recordCommandBuffer(VkCommandBuffer commandBuffer, int imageIndex){
 
 void drawFrame()
 {
-    vkWaitForFences(device->getHandle(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    auto fence = static_cast<VkFence>(fencePool->requestFence());
+    vkWaitForFences(device->getHandle(), 1, &fence, VK_TRUE, UINT64_MAX);
     auto imageAvailableSemaphore = semaphorePool->requestSemaphore();
     auto renderFinishedSemaphore = semaphorePool->requestSemaphore();
     uint32_t imageIndex;
@@ -227,7 +229,7 @@ void drawFrame()
     }
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { throw std::runtime_error("failed to acquire swap chain image!"); }
 
-    vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
+    vkResetFences(device->getHandle(), 1, &fence);
 
     vkResetCommandBuffer(commandPool->getCommandBuffer(currentFrame), /*VkCommandBufferResetFlagBits*/ 0);
     recordCommandBuffer(commandPool->getCommandBuffer(currentFrame), imageIndex);
@@ -249,7 +251,7 @@ void drawFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
     
-    if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
+    if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, fence) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
@@ -279,6 +281,8 @@ void drawFrame()
 
     semaphorePool->returnSemaphore(renderFinishedSemaphore);
     semaphorePool->returnSemaphore(imageAvailableSemaphore);
+
+    fencePool->returnFence(fence);
 }
 
 int main() {
@@ -312,6 +316,7 @@ int main() {
     device = new Device(*instance);
 
     semaphorePool = new SemaphorePool(*device);
+    fencePool = new FencePool(*device);
 
     auto surface = static_cast<vk::SurfaceKHR>(window->getSurface());
     swapchain = new Swapchain(*device, surface);
@@ -382,25 +387,6 @@ int main() {
     createFramebuffers();
     
     commandPool = new CommandPool(*device, 0, MAX_FRAMES_IN_FLIGHT);
-    
-    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        if (vkCreateFence(device->getHandle(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create synchronization objects for a frame!");
-        }
-    }
-    
-    
     
     while(!window->shouldClose()) {
         window->pollEvents();
