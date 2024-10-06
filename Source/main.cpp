@@ -285,6 +285,17 @@ void drawFrame()
     fencePool->returnFence(fence);
 }
 
+void cleanup() {
+    delete fencePool;
+    delete semaphorePool;
+    delete graphicsPipeline;
+    delete renderPass;
+    delete commandPool;
+    delete swapchain;
+    delete device;
+    delete instance;
+}
+
 int main() {
 
     window.reset(new Window("ToyEngine", WIDTH, HEIGHT));
@@ -392,6 +403,8 @@ int main() {
         window->pollEvents();
         drawFrame();
     }
+
+    cleanup();
 
     return 0;
 }
