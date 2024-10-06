@@ -24,7 +24,7 @@ const Node* Node::getParent() const
 
 void Node::addChild(Node* child)
 {
-	this->children.push_back(std::make_shared<Node>(child));
+	this->children.push_back(std::shared_ptr<Node>(child));
 }
 
 const std::vector<std::shared_ptr<Node>> Node::getChildren() const
