@@ -25,7 +25,7 @@ public:
 
 	const uint32_t getID() const;
 
-	virtual void update(float deltaTime);
+	virtual void update(float deltaTime) = 0;
 
 	//void addComponent(Component*);
 
