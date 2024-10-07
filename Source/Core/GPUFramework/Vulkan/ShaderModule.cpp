@@ -83,7 +83,7 @@ ShaderModule::ShaderModule(const Device& device, vk::ShaderStageFlagBits stage, 
 	}
 
 	vk::ShaderModuleCreateInfo shaderInfo;
-	shaderInfo.codeSize = spirv.size();
+	shaderInfo.codeSize = spirv.size()*4;
 	shaderInfo.pCode = spirv.data();
 
 	handle = device.getHandle().createShaderModule(shaderInfo);

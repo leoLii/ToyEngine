@@ -62,27 +62,8 @@ int main() {
         return buffer;
      };
 
-    auto vertShaderCode = readFile("D:/Downloads/vert.spv");
-    auto fragShaderCode = readFile("D:/Downloads/frag.spv");
-    
-    auto createShaderModule = [](const std::vector<char> &code) -> VkShaderModule
-    {
-        VkShaderModuleCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
-
-        VkShaderModule shaderModule;
-        if (vkCreateShaderModule(gpuContext->getDevice()->getHandle(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create shader module!");
-        }
-
-        return shaderModule;
-    };
-
-    ShaderModule vertShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eVertex, vertShaderCode };
-    ShaderModule fragShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eFragment, fragShaderCode };
+    ShaderModule vertShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eVertex, std::string{VertShader} };
+    ShaderModule fragShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eFragment, std::string{FragShader} };
 
     std::vector<vk::ShaderModule> modules;
     modules.push_back(vertShaderModule.getHandle());

@@ -26,12 +26,10 @@ public:
 
 	~GPUContext();
 
+	/// Device
 	const Device* getDevice() const;
 
-	/// <summary>
 	/// Swapchain
-	/// </summary>
-	/// <returns></returns>
 	const std::vector<vk::Image>& getSwapchainImages() const;
 
 	const vk::Format getSwapchainFormat() const;
@@ -44,10 +42,7 @@ public:
 
 	const Swapchain* getSwapchain() const;
 
-	/// <summary>
 	/// Fence & Semaphore
-	/// </summary>
-	/// <returns></returns>
 	const vk::Fence requestFence() const;
 
 	void waitForFences(const vk::Fence) const;

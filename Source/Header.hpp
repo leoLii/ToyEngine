@@ -39,26 +39,43 @@ const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_N
 int WIDTH = 1920;
 int HEIGHT = 1080;
 
-const std::string vertexShaderText_PC_C = R"(
-#version 400
+const char* VertShader = R"(
+#version 450
+precision mediump float;
 
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
+layout(location = 0) out vec3 out_color;
 
-layout (std140, binding = 0) uniform buffer
-{
-  mat4 mvp;
-} uniformBuffer;
+vec2 triangle_positions[3] = vec2[](
+    vec2(0.5, -0.5),
+    vec2(0.5, 0.5),
+    vec2(-0.5, 0.5)
+);
 
-layout (location = 0) in vec4 pos;
-layout (location = 1) in vec4 inColor;
-
-layout (location = 0) out vec4 outColor;
+vec3 triangle_colors[3] = vec3[](
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0)
+);
 
 void main()
 {
-  outColor = inColor;
-  gl_Position = uniformBuffer.mvp * pos;
+    gl_Position = vec4(triangle_positions[gl_VertexIndex], 0.5, 1.0);
+
+    out_color = triangle_colors[gl_VertexIndex];
+}
+)";
+
+const char* FragShader = R"(
+#version 450
+precision mediump float;
+
+layout(location = 0) in vec3 in_color;
+
+layout(location = 0) out vec4 out_color;
+
+void main()
+{
+	out_color = vec4(in_color, 1.0);
 }
 )";
 
