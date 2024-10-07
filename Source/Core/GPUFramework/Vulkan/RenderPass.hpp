@@ -13,7 +13,7 @@ public:
 
 	~RenderPass();
 
-	vk::RenderPass getHandle() {
+	const vk::RenderPass getHandle() const {
 		return this->handle;
 	}
 
