@@ -35,13 +35,22 @@ void Window::getFramebufferSize(int* width, int* height){
     glfwGetFramebufferSize(this->window, width, height);
 }
 
-vk::Result Window::createWindowSurface(vk::Instance instance){
+void Window::createWindowSurface(vk::Instance instance){
     VkSurfaceKHR VKSurface;
     auto result = glfwCreateWindowSurface(instance, window, nullptr, &VKSurface);
+    if (result != VK_SUCCESS) {
+        throw VulkanException(static_cast<vk::Result>(result));
+    }
     surface = static_cast<vk::SurfaceKHR>(VKSurface);
-    return static_cast<vk::Result>(result);
 }
 
 vk::SurfaceKHR& Window::getSurface() {
     return this->surface;
+}
+
+std::vector<const char*> Window::requireWindowExtensions()
+{
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    return std::vector<const char*>(glfwExtensions, glfwExtensions + glfwExtensionCount);
 }

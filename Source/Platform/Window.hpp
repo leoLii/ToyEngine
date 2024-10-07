@@ -11,6 +11,7 @@
 
 #include <GLFW/glfw3.h>
 #include <string>
+#include <vector>
 
 class Window{
 public:
@@ -25,9 +26,11 @@ public:
     
     void getFramebufferSize(int* width, int* height);
     
-    vk::Result createWindowSurface(vk::Instance);
+    void createWindowSurface(vk::Instance);
     
     vk::SurfaceKHR& getSurface();
+
+    static std::vector<const char*> requireWindowExtensions();
     
 protected:
     GLFWwindow* window;
