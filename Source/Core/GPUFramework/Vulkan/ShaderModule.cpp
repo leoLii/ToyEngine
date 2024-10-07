@@ -52,7 +52,7 @@ bool GLSLtoSPV(const vk::ShaderStageFlagBits shaderType, std::string const& glsl
 
 	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		fmt::print("Shader compilation failed: {}\n", result.GetErrorMessage());
+		LOGE("Shader compilation failed: {}\n", result.GetErrorMessage());
 		return false;
 	}
 

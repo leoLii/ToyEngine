@@ -1,12 +1,20 @@
 #include "GPUContext.hpp"
 
+#include "Common/Logging.hpp"
+
 #include "Vulkan/Instance.hpp"
 #include "Vulkan/Device.hpp"
 #include "Vulkan/SemaphorePool.hpp"
 #include "Vulkan/FencePool.hpp"
 #include "Vulkan/Swapchain.hpp"
+#include "Vulkan/ShaderModule.hpp"
 
 #include "Platform/Window.hpp"
+
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 GPUContext::GPUContext(const std::vector<const char*>& layers, const std::vector<const char*>& extensions, const std::shared_ptr<Window> window)
 {
@@ -20,6 +28,7 @@ GPUContext::GPUContext(const std::vector<const char*>& layers, const std::vector
         this->window = window;
         swapchain = std::make_unique<Swapchain>(*device, static_cast<vk::SurfaceKHR&>(window->getSurface()));
     }
+    loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
 }
 
 GPUContext::~GPUContext() 
@@ -93,7 +102,44 @@ void GPUContext::returnSemaphore(const vk::Semaphore semaphore) const
     semaphorePool->returnSemaphore(semaphore);
 }
 
+const std::shared_ptr<ShaderModule> GPUContext::findShader(const std::string& name) const
+{
+    auto it = shaderModules.find(name);
+    if (it != shaderModules.end()) {
+        return it->second;
+    }
+    else {
+        LOGE("ShaderModule{} not found", name);
+        return nullptr;
+    }
+}
 
-
-
-
+void GPUContext::loadShaders(const std::string& dir)
+{
+    for (const auto& entry: std::filesystem::directory_iterator(dir)) {
+        if (entry.is_regular_file()) {
+            std::ifstream file(entry.path(), std::ios::in | std::ios::binary);
+            if (file) {
+                std::ostringstream content;
+                content << file.rdbuf();
+                std::string extension = entry.path().extension().string();
+                std::string name = entry.path().filename().string();
+                if (!extension.compare(".vert")) {
+                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eVertex, content.str());
+                }
+                else if (!extension.compare(".frag")) {
+                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eFragment, content.str());
+                }
+                else if (!extension.compare(".comp")) {
+                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eCompute, content.str());
+                }
+                else {
+                    continue;
+                }
+            }
+            else {
+                LOGE("无法打开文件:{}", entry.path().string());
+            }
+        }
+    }
+}

@@ -5,10 +5,11 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 class Instance;
 class Device;
-//class ShaderModule;
+class ShaderModule;
 class Window;
 class SemaphorePool;
 class FencePool;
@@ -26,10 +27,10 @@ public:
 
 	~GPUContext();
 
-	/// Device
+	// Device
 	const Device* getDevice() const;
 
-	/// Swapchain
+	// Swapchain
 	const std::vector<vk::Image>& getSwapchainImages() const;
 
 	const vk::Format getSwapchainFormat() const;
@@ -42,7 +43,7 @@ public:
 
 	const Swapchain* getSwapchain() const;
 
-	/// Fence & Semaphore
+	// Fence & Semaphore
 	const vk::Fence requestFence() const;
 
 	void waitForFences(const vk::Fence) const;
@@ -55,6 +56,9 @@ public:
 
 	void returnSemaphore(const vk::Semaphore) const;
 
+	// ShaderModule
+	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
+
 protected:
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;
@@ -63,8 +67,10 @@ protected:
 	std::unique_ptr<Device> device;
 	std::shared_ptr<Window> window;
 	std::unique_ptr<Swapchain> swapchain;
-
 	std::unique_ptr<SemaphorePool> semaphorePool;
 	std::unique_ptr<FencePool> fencePool;
-	//std::vector<std::unique_ptr<ShaderModule>> shaderModules;
+	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
+
+private:
+	void loadShaders(const std::string& dir);
 };

@@ -39,41 +39,13 @@ int main() {
     
     renderPass = new RenderPass(*gpuContext->getDevice());
 
-    
-    auto readFile = [](const std::string& filename) -> std::vector<uint32_t> {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            throw std::runtime_error("failed to open file!");
-        }
-
-        size_t fileSize = (size_t)file.tellg();
-
-        // 确保文件大小是 4 的倍数（因为我们要读取 uint32_t 类型的数据）
-        if (fileSize % 4 != 0) {
-            throw std::runtime_error("file size is not a multiple of 4, cannot convert to uint32_t");
-        }
-
-        std::vector<uint32_t> buffer(fileSize / 4);
-
-        file.seekg(0);
-        file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-
-        file.close();
-
-        return buffer;
-     };
-
-    ShaderModule vertShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eVertex, std::string{VertShader} };
-    ShaderModule fragShaderModule{ *gpuContext->getDevice(), vk::ShaderStageFlagBits::eFragment, std::string{FragShader} };
+    auto vertShaderModule = gpuContext->findShader("triangle.vert");
+    auto fragShaderModule = gpuContext->findShader("triangle.frag");
 
     std::vector<vk::ShaderModule> modules;
-    modules.push_back(vertShaderModule.getHandle());
-    modules.push_back(fragShaderModule.getHandle());
+    modules.push_back(vertShaderModule->getHandle());
+    modules.push_back(fragShaderModule->getHandle());
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
-    
-    fragShaderModule.~ShaderModule();
-    vertShaderModule.~ShaderModule();
 
     createFramebuffers();
     
