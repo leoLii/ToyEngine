@@ -5,7 +5,7 @@
 
 #include <tuple>
 
-GraphicsPipeline::GraphicsPipeline(Device& device, RenderPass& renderPass, std::vector<vk::ShaderModule>& shaderModules)
+GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass, std::vector<vk::ShaderModule> shaderModules)
 	:device(device)
     , renderPass(renderPass)
     , shaderModules(shaderModules)

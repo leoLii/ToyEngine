@@ -9,7 +9,7 @@ class Device;
 class RenderPass {
 public:
 	RenderPass() = delete;
-	RenderPass(Device&);
+	RenderPass(const Device&);
 
 	~RenderPass();
 
@@ -18,7 +18,7 @@ public:
 	}
 
 protected:
-	Device& device;
+	const Device& device;
 
 	vk::RenderPass handle;
 

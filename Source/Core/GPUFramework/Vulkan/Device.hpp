@@ -29,9 +29,9 @@ public:
     
     vk::PhysicalDevice getUsingGPU();
     
-    vk::Device getHandle();
+    const vk::Device getHandle() const;
     
-    vk::Queue getGraphicsQueue(){
+    const vk::Queue getGraphicsQueue() const {
         return this->graphicsQueue;
     }
     
@@ -43,7 +43,7 @@ public:
         return this->transferQueue;
     }
     
-    vk::Queue getPresentQueue(){
+    const vk::Queue getPresentQueue() const{
         return this->presentQueue;
     }
 

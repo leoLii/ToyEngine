@@ -20,7 +20,7 @@ public:
 //                    size_t                   thread_index = 0,
 //                    CommandBuffer::ResetMode reset_mode   = CommandBuffer::ResetMode::ResetPool);
 
-    CommandPool(Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount);
+    CommandPool(const Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount);
 
     CommandPool(const CommandPool &) = delete;
 
@@ -52,7 +52,7 @@ public:
 
     //const CommandBuffer::ResetMode get_reset_mode() const;
 protected:
-    Device& device;
+    const Device& device;
     
     vk::CommandPool handle{VK_NULL_HANDLE};
     

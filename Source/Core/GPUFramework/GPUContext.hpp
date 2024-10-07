@@ -1,0 +1,75 @@
+#pragma once
+
+#include "Vulkan/VkCommon.hpp"
+
+#include <vector>
+#include <memory>
+#include <tuple>
+
+class Instance;
+class Device;
+//class ShaderModule;
+class Window;
+class SemaphorePool;
+class FencePool;
+class Swapchain;
+
+/// <summary>
+/// GPUContext is designed to deal with physical level functions.
+/// </summary>
+
+class GPUContext {
+public:
+	GPUContext() = delete;
+
+	GPUContext(const std::vector<const char*>& = {}, const std::vector<const char*>& = {}, const std::shared_ptr<Window> = nullptr);
+
+	~GPUContext();
+
+	const Device* getDevice() const;
+
+	/// <summary>
+	/// Swapchain
+	/// </summary>
+	/// <returns></returns>
+	const std::vector<vk::Image>& getSwapchainImages() const;
+
+	const vk::Format getSwapchainFormat() const;
+
+	const vk::Extent2D getSwapchainExtent() const;
+
+	void rebuildSwapchainWithSize(const vk::Extent2D) const;
+
+	const std::tuple<vk::Result, uint32_t> acquireNextImage(const vk::Semaphore, const vk::Fence, uint32_t timeout = UINT32_MAX) const;
+
+	const Swapchain* getSwapchain() const;
+
+	/// <summary>
+	/// Fence & Semaphore
+	/// </summary>
+	/// <returns></returns>
+	const vk::Fence requestFence() const;
+
+	void waitForFences(const vk::Fence) const;
+
+	void resetFences(const vk::Fence) const;
+
+	void returnFence(const vk::Fence) const;
+
+	const vk::Semaphore requestSemaphore() const;
+
+	void returnSemaphore(const vk::Semaphore) const;
+
+protected:
+	std::vector<const char*> vulkanExtensions;
+	std::vector<const char*> vulkanLayers;
+
+	std::unique_ptr<Instance> instance;
+	std::unique_ptr<Device> device;
+	std::shared_ptr<Window> window;
+	std::unique_ptr<Swapchain> swapchain;
+
+	std::unique_ptr<SemaphorePool> semaphorePool;
+	std::unique_ptr<FencePool> fencePool;
+	//std::vector<std::unique_ptr<ShaderModule>> shaderModules;
+};

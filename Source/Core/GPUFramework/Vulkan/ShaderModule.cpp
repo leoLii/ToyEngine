@@ -6,133 +6,140 @@
 //
 
 #include "ShaderModule.hpp"
+#include "Device.hpp"
 
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <fmt/format.h>
 
-#include <glslang/SPIRV/GlslangToSpv.h>
-#include <glslang/Public/ResourceLimits.h>
-#include <glslang/Public/ShaderLang.h>
+#include <shaderc/shaderc.hpp>
 
-EShLanguage translateShaderStage(vk::ShaderStageFlagBits stage)
+shaderc_shader_kind translateShaderStage(vk::ShaderStageFlagBits stage)
 {
-    switch (stage)
-    {
-    case vk::ShaderStageFlagBits::eVertex: return EShLangVertex;
-    case vk::ShaderStageFlagBits::eTessellationControl: return EShLangTessControl;
-    case vk::ShaderStageFlagBits::eTessellationEvaluation: return EShLangTessEvaluation;
-    case vk::ShaderStageFlagBits::eGeometry: return EShLangGeometry;
-    case vk::ShaderStageFlagBits::eFragment: return EShLangFragment;
-    case vk::ShaderStageFlagBits::eCompute: return EShLangCompute;
-    case vk::ShaderStageFlagBits::eRaygenNV: return EShLangRayGenNV;
-    case vk::ShaderStageFlagBits::eAnyHitNV: return EShLangAnyHitNV;
-    case vk::ShaderStageFlagBits::eClosestHitNV: return EShLangClosestHitNV;
-    case vk::ShaderStageFlagBits::eMissNV: return EShLangMissNV;
-    case vk::ShaderStageFlagBits::eIntersectionNV: return EShLangIntersectNV;
-    case vk::ShaderStageFlagBits::eCallableNV: return EShLangCallableNV;
-    case vk::ShaderStageFlagBits::eTaskNV: return EShLangTaskNV;
-    case vk::ShaderStageFlagBits::eMeshNV: return EShLangMeshNV;
-    default: assert(false && "Unknown shader stage"); return EShLangVertex;
-    }
+	switch (stage)
+	{
+		case vk::ShaderStageFlagBits::eVertex: return shaderc_glsl_vertex_shader;
+		case vk::ShaderStageFlagBits::eTessellationControl: return shaderc_glsl_tess_control_shader;
+		case vk::ShaderStageFlagBits::eTessellationEvaluation: return shaderc_glsl_tess_evaluation_shader;
+		case vk::ShaderStageFlagBits::eGeometry: return shaderc_glsl_geometry_shader;
+		case vk::ShaderStageFlagBits::eFragment: return shaderc_glsl_fragment_shader;
+		case vk::ShaderStageFlagBits::eCompute: return shaderc_glsl_compute_shader;
+		case vk::ShaderStageFlagBits::eRaygenNV: return shaderc_glsl_raygen_shader;
+		case vk::ShaderStageFlagBits::eAnyHitNV: return shaderc_glsl_anyhit_shader;
+		case vk::ShaderStageFlagBits::eClosestHitNV: return shaderc_glsl_closesthit_shader;
+		case vk::ShaderStageFlagBits::eMissNV: return shaderc_glsl_miss_shader;
+		case vk::ShaderStageFlagBits::eIntersectionNV: return shaderc_glsl_intersection_shader;
+		case vk::ShaderStageFlagBits::eCallableNV: return shaderc_glsl_callable_shader;
+		case vk::ShaderStageFlagBits::eTaskNV: return shaderc_glsl_task_shader;
+		case vk::ShaderStageFlagBits::eMeshNV: return shaderc_glsl_mesh_shader;
+		default: assert(false && "Unknown shader stage"); return shaderc_glsl_infer_from_source;
+	}
 }
 
-bool GLSLtoSPV(const vk::ShaderStageFlagBits shaderType, std::string const& glslShader, std::vector<unsigned int>& spvShader)
+bool GLSLtoSPV(const vk::ShaderStageFlagBits shaderType, std::string const& glslShader, std::vector<uint32_t>& spvShader)
 {
-    EShLanguage stage = translateShaderStage(shaderType);
+	shaderc::Compiler compiler;
+	shaderc::CompileOptions options;
 
-    const char* shaderStrings[1];
-    shaderStrings[0] = glslShader.data();
+	// Enable optimization for performance
+	options.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-    glslang::TShader shader(stage);
-    shader.setStrings(shaderStrings, 1);
+	shaderc_shader_kind kind = translateShaderStage(shaderType);
 
-    // Enable SPIR-V and Vulkan rules when parsing GLSL
-    EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
+	shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(glslShader, kind, "shader");
 
-    if (!shader.parse(GetDefaultResources(), 100, false, messages))
-    {
-        puts(shader.getInfoLog());
-        puts(shader.getInfoDebugLog());
-        return false;  // something didn't work
-    }
+	if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		fmt::print("Shader compilation failed: {}\n", result.GetErrorMessage());
+		return false;
+	}
 
-    glslang::TProgram program;
-    program.addShader(&shader);
-
-    //
-    // Program-level processing...
-    //
-
-    if (!program.link(messages))
-    {
-        puts(shader.getInfoLog());
-        puts(shader.getInfoDebugLog());
-        fflush(stdout);
-        return false;
-    }
-
-    glslang::GlslangToSpv(*program.getIntermediate(stage), spvShader);
-    return true;
+	spvShader.assign(result.cbegin(), result.cend());
+	return true;
 }
 
-vk::ShaderModule createShaderModule(vk::Device const& device, vk::ShaderStageFlagBits shaderStage, std::string const& shaderText)
+ShaderModule::ShaderModule(const Device& device, vk::ShaderStageFlagBits stage, const std::string& content, const std::string& entryPoint) :
+	device{ device },
+	stage{ stage },
+	content{ content },
+	entryPoint{ entryPoint }
 {
-    std::vector<unsigned int> shaderSPV;
-    if (!GLSLtoSPV(shaderStage, shaderText, shaderSPV))
-    {
-        throw std::runtime_error("Could not convert glsl shader to spir-v -> terminating");
-    }
+	debugName = fmt::format("{} [variant {:X}] [entrypoint {}]", fileName, id, entryPoint);
 
-    return device.createShaderModule(vk::ShaderModuleCreateInfo(vk::ShaderModuleCreateFlags(), shaderSPV));
+	if (entryPoint.empty())
+	{
+		throw VulkanException{ vk::Result::eErrorInitializationFailed };
+	}
+
+	if (content.empty())
+	{
+		throw VulkanException{ vk::Result::eErrorInitializationFailed };
+	}
+
+	if (!GLSLtoSPV(stage, content, spirv))
+	{
+		throw std::runtime_error("Could not convert GLSL shader to SPIR-V -> terminating");
+	}
+
+	vk::ShaderModuleCreateInfo shaderInfo;
+	shaderInfo.codeSize = spirv.size();
+	shaderInfo.pCode = spirv.data();
+
+	handle = device.getHandle().createShaderModule(shaderInfo);
+
+	std::hash<std::string> hasher{};
+	id = hasher(std::string{ reinterpret_cast<const char*>(spirv.data()), reinterpret_cast<const char*>(spirv.data() + spirv.size()) });
 }
 
-ShaderModule::ShaderModule(Device& device, vk::ShaderStageFlagBits stage, const std::string& content, const std::string& entryPoint) :
-    device{ device },
-    stage{ stage },
-    content{ content },
-    entryPoint{ entryPoint }
+ShaderModule::ShaderModule(const Device& device, vk::ShaderStageFlagBits stage, const std::vector<uint32_t>& binary, const std::string& entryPoint) :
+	device{ device },
+	stage{ stage },
+	spirv{ binary },
+	entryPoint{ entryPoint }
 {
-    debugName = fmt::format("{} [variant {:X}] [entrypoint {}]",
-                             fileName, id, entryPoint);
+	debugName = fmt::format("{} [variant {:X}] [entrypoint {}]", fileName, id, entryPoint);
 
-    if (entryPoint.empty())
-    {
-        throw VulkanException{VK_ERROR_INITIALIZATION_FAILED};
-    }
+	if (entryPoint.empty())
+	{
+		throw VulkanException{ vk::Result::eErrorInitializationFailed };
+	}
 
-    if (content.empty())
-    {
-        throw VulkanException{VK_ERROR_INITIALIZATION_FAILED};
-    }
+	vk::ShaderModuleCreateInfo shaderInfo;
+	shaderInfo.codeSize = spirv.size()*4;
+	shaderInfo.pCode = spirv.data();
 
-    std::hash<std::string> hasher{};
-    id = hasher(std::string{reinterpret_cast<const char *>(spirv.data()),
-                            reinterpret_cast<const char *>(spirv.data() + spirv.size())});
+	handle = device.getHandle().createShaderModule(shaderInfo);
+
+	std::hash<std::string> hasher{};
+	id = hasher(std::string{ reinterpret_cast<const char*>(spirv.data()), reinterpret_cast<const char*>(spirv.data() + spirv.size()) });
 }
 
-size_t ShaderModule::get_id() const
+ShaderModule::~ShaderModule() {
+	device.getHandle().destroyShaderModule(handle);
+}
+
+size_t ShaderModule::getID() const
 {
-    return id;
+	return id;
 }
 
 vk::ShaderStageFlagBits ShaderModule::getStage() const
 {
-    return stage;
+	return stage;
 }
 
-const std::string &ShaderModule::getEntryPoint() const
+const std::string& ShaderModule::getEntryPoint() const
 {
-    return entryPoint;
+	return entryPoint;
 }
 
-const std::string &ShaderModule::getInfoLog() const
+const std::string& ShaderModule::getInfoLog() const
 {
-    return infoLog;
+	return infoLog;
 }
 
-const std::vector<uint32_t> &ShaderModule::getBinary() const
+const std::vector<uint32_t>& ShaderModule::getBinary() const
 {
-    return spirv;
+	return spirv;
 }

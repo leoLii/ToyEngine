@@ -20,7 +20,7 @@ public:
 
     const vk::SwapchainKHR getHandle() const;
 
-    std::vector<vk::Image> getSwapchainImages() const;
+    const std::vector<vk::Image>& getSwapchainImages() const;
 
     vk::Format getFormat();
 

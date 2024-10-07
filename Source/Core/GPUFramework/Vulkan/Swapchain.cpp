@@ -89,7 +89,7 @@ const vk::SwapchainKHR Swapchain::getHandle() const {
 	return this->handle;
 }
 
-std::vector<vk::Image> Swapchain::getSwapchainImages() const {
+const std::vector<vk::Image>& Swapchain::getSwapchainImages() const {
 	return this->images;
 }
 

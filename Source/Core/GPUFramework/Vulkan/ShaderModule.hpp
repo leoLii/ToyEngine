@@ -17,17 +17,13 @@ class Device;
 class ShaderModule
 {
   public:
-    ShaderModule(Device& device, vk::ShaderStageFlagBits stage, const std::string& content, const std::string& entry_point);
+    ShaderModule(const Device&, vk::ShaderStageFlagBits, const std::string&, const std::string& entry_point = "main");
 
-    ShaderModule(const ShaderModule &) = delete;
+    ShaderModule(const Device&, vk::ShaderStageFlagBits, const std::vector<uint32_t>&, const std::string& entry_point = "main"); 
 
-    ShaderModule(ShaderModule &&other);
+    ~ShaderModule();
 
-    ShaderModule &operator=(const ShaderModule &) = delete;
-
-    ShaderModule &operator=(ShaderModule &&) = delete;
-
-    size_t get_id() const;
+    size_t getID() const;
 
     vk::ShaderStageFlagBits getStage() const;
 
@@ -47,8 +43,14 @@ class ShaderModule
         debugName = name;
     }
 
+    vk::ShaderModule getHandle() {
+        return this->handle;
+    }
+
   private:
-    Device &device;
+    const Device &device;
+
+    vk::ShaderModule handle;
 
     /// Shader unique id
     size_t id;
@@ -57,17 +59,17 @@ class ShaderModule
     vk::ShaderStageFlagBits stage;
 
     /// Name of the main function
-    std::string entryPoint;
+    std::string entryPoint = "main";
 
     /// Human-readable name for the shader
-    std::string debugName;
+    std::string debugName = "";
 
-    std::string fileName;
+    std::string fileName = "";
 
-    std::string content;
+    std::string content = "";
 
     /// Compiled source
     std::vector<uint32_t> spirv;
 
-    std::string infoLog;
+    std::string infoLog = "";
 };

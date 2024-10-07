@@ -10,7 +10,7 @@ class RenderPass;
 class GraphicsPipeline {
 public:
 	GraphicsPipeline() = delete;
-	GraphicsPipeline(Device&, RenderPass&, std::vector<vk::ShaderModule>&);
+	GraphicsPipeline(const Device&, RenderPass&, std::vector<vk::ShaderModule>);
 
 	~GraphicsPipeline();
 
@@ -20,7 +20,7 @@ public:
 
 
 protected:
-	Device& device;
+	const Device& device;
 
 	RenderPass& renderPass;
 

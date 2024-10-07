@@ -86,6 +86,6 @@ vk::PhysicalDevice Device::getUsingGPU(){
     return this->gpu;
 }
 
-vk::Device Device::getHandle(){
+const vk::Device Device::getHandle() const {
     return this->handle;
 }

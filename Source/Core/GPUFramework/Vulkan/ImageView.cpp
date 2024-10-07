@@ -1,4 +1,4 @@
-#include "ImageView.h"
+#include "ImageView.hpp"
 #include "Device.hpp"
 
 ImageView::ImageView(Device& device, vk::Image image, vk::ImageViewType type, vk::Format format, vk::ComponentMapping components, vk::ImageSubresourceRange range):

@@ -8,7 +8,7 @@
 #include "CommandPool.hpp"
 #include "Device.hpp"
 
-CommandPool::CommandPool(Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount)
+CommandPool::CommandPool(const Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount)
 :device(device),
 queueFamilyIndex(queueFamilyIndex)
 {

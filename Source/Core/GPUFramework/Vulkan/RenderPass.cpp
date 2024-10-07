@@ -1,7 +1,7 @@
 #include "RenderPass.hpp"
 #include "Device.hpp"
 
-RenderPass::RenderPass(Device& device)
+RenderPass::RenderPass(const Device& device)
 	:device(device)
 {
 	vk::AttachmentDescription colorAttachment;
