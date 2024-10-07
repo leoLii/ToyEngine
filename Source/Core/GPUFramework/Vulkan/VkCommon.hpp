@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include "Common/Marcos.h"
+#include "Common/Marcos.hpp"
 
 #if defined ASRCH_OS_WINDOWS
 #define VK_USE_PLATFORM_WIN32_KHR

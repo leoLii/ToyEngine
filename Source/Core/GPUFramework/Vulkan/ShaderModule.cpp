@@ -8,10 +8,11 @@
 #include "ShaderModule.hpp"
 #include "Device.hpp"
 
+#include "Common/Logging.hpp"
+
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <fmt/format.h>
 
 #include <shaderc/shaderc.hpp>
 

@@ -1,7 +1,10 @@
 #include "Header.hpp"
+#include "Common/Logging.hpp"
 
 
 int main() {
+    logging::init();
+
     // 必须要先创建window再requireExtension
     window = std::make_shared<Window>("ToyEngine", WIDTH, HEIGHT);
     std::vector<const char*> layers;
@@ -18,7 +21,6 @@ int main() {
 #ifdef VK_ENABLE_VALIDATION
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
-
     auto windowExtensions = Window::requireWindowExtensions();
     extensions.insert(extensions.end(), windowExtensions.begin(), windowExtensions.end());
 
