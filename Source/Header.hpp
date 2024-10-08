@@ -228,51 +228,43 @@ void drawFrame()
 
     gpuContext->resetFences(fence);
 
-    commandPool->getCommandBuffer(currentFrame).reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-    recordCommandBuffer(static_cast<vk::CommandBuffer>(commandPool->getCommandBuffer(currentFrame)), std::get<1>(acquieResult));
+    auto commandBuffer = commandPool->getCommandBuffer(currentFrame);
+    commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+    recordCommandBuffer(static_cast<vk::CommandBuffer>(commandBuffer), std::get<1>(acquieResult));
 
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    vk::SubmitInfo submitInfo;
 
-    VkSemaphore waitSemaphores[] = { static_cast<VkSemaphore>(imageAvailableSemaphore) };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    auto cast = static_cast<VkCommandBuffer>(commandPool->getCommandBuffer(currentFrame));
-    submitInfo.pCommandBuffers = &cast;
+    submitInfo.pCommandBuffers = &commandBuffer;
 
-    VkSemaphore signalSemaphores[] = { static_cast<VkSemaphore>(renderFinishedSemaphore) };
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
 
-    if (vkQueueSubmit(gpuContext->getDevice()->getGraphicsQueue(), 1, &submitInfo, fence) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to submit draw command buffer!");
-    }
+    gpuContext->getDevice()->getGraphicsQueue().submit(submitInfo, fence);
 
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    vk::PresentInfoKHR presentInfo;
 
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
 
-    VkSwapchainKHR swapChains[] = { gpuContext->getSwapchain()->getHandle() };
+    auto swapChain = gpuContext->getSwapchain()->getHandle();
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
+    presentInfo.pSwapchains = &swapChain;
 
     presentInfo.pImageIndices = &(std::get<1>(acquieResult));
 
-    auto result = vkQueuePresentKHR(gpuContext->getDevice()->getPresentQueue(), &presentInfo);
+    auto result = gpuContext->getDevice()->getPresentQueue().presentKHR(presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
     {
         framebufferResized = false;
         recreateSwapChain();
     }
-    else if (result != VK_SUCCESS) { throw std::runtime_error("failed to present swap chain image!"); }
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
