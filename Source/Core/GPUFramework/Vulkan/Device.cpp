@@ -10,7 +10,8 @@
 //#include "Queue.hpp"
 #include <iostream>
 
-void Device::initGPU() {
+void Device::initGPU()
+{
     gpu = instance.getHandle().enumeratePhysicalDevices().front();
     if (!gpu) { throw std::runtime_error("failed to find a suitable GPU!"); }
     
@@ -29,8 +30,7 @@ Device::Device(Instance& instance)
     gpuExtensions = gpu.enumerateDeviceExtensionProperties();
 
     queueFamilyProperties = gpu.getQueueFamilyProperties();
-    
-    
+        
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     float queuePriority = 1.0f;
     for(int index = 0; index < queueFamilyProperties.size(); index++){
@@ -57,8 +57,8 @@ Device::Device(Instance& instance)
 
     graphicsQueue = handle.getQueue(0, 0);
     presentQueue = handle.getQueue(2, 0);
-    computeQueue = handle.getQueue(1, 0);
-    transferQueue = handle.getQueue(1, 1);
+    //computeQueue = handle.getQueue(1, 0);
+    //transferQueue = handle.getQueue(1, 1);
 
     // init allocator
     VmaVulkanFunctions vulkanFunctions = {};
@@ -82,10 +82,17 @@ Device::~Device() {
     handle.destroy();
 }
 
-vk::PhysicalDevice Device::getUsingGPU(){
+const vk::PhysicalDevice Device::getUsingGPU() const 
+{
     return this->gpu;
 }
 
-const vk::Device Device::getHandle() const {
+const vk::Device Device::getHandle() const
+{
     return this->handle;
+}
+
+const std::vector<vk::QueueFamilyProperties> Device::getQueueFamilyProperties() const
+{
+    return queueFamilyProperties;
 }

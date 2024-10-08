@@ -169,7 +169,7 @@ void recreateSwapChain()
 
 void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
     vk::CommandBufferBeginInfo beginInfo;
-    //beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
     commandBuffer.begin(beginInfo);
 
     vk::RenderPassBeginInfo renderPassInfo;
@@ -187,7 +187,6 @@ void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
 
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
-
     vk::Viewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -229,7 +228,7 @@ void drawFrame()
 
     gpuContext->resetFences(fence);
 
-    vkResetCommandBuffer(commandPool->getCommandBuffer(currentFrame), /*VkCommandBufferResetFlagBits*/ 0);
+    commandPool->getCommandBuffer(currentFrame).reset(vk::CommandBufferResetFlagBits::eReleaseResources);
     recordCommandBuffer(static_cast<vk::CommandBuffer>(commandPool->getCommandBuffer(currentFrame)), std::get<1>(acquieResult));
 
     VkSubmitInfo submitInfo{};

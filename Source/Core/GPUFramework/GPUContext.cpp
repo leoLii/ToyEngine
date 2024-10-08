@@ -20,14 +20,15 @@ GPUContext::GPUContext(const std::vector<const char*>& layers, const std::vector
 {
 	instance = std::make_unique<Instance>("ToyEngine", extensions, layers);
     device = std::make_unique<Device>(*instance);
-    fencePool = std::make_unique<FencePool>(*device);
-    semaphorePool = std::make_unique<SemaphorePool>(*device);
     // Deal with headless and normal rendering, only window rendering for now.
     if (window != nullptr) {
         window->createWindowSurface(this->instance->getHandle());
         this->window = window;
-        swapchain = std::make_unique<Swapchain>(*device, static_cast<vk::SurfaceKHR&>(window->getSurface()));
+        swapchain = std::make_unique<Swapchain>(*device, static_cast<const vk::SurfaceKHR&>(window->getSurface()));
     }
+
+    fencePool = std::make_unique<FencePool>(*device);
+    semaphorePool = std::make_unique<SemaphorePool>(*device);
     loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
 }
 

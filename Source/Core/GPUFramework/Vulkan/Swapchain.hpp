@@ -14,7 +14,7 @@ class Device;
 class Swapchain{
 public:
     Swapchain() = delete;
-    Swapchain(Device&, vk::SurfaceKHR&);
+    Swapchain(const Device&, const vk::SurfaceKHR);
 
     ~Swapchain();
 
@@ -31,7 +31,7 @@ public:
     void rebuild();
     
 protected:
-    Device& device;
+    const Device& device;
 
     vk::SurfaceKHR surface;
     vk::SwapchainKHR handle;

@@ -28,7 +28,7 @@ public:
     
     void createWindowSurface(vk::Instance);
     
-    vk::SurfaceKHR& getSurface();
+    const vk::SurfaceKHR& getSurface() const;
 
     static std::vector<const char*> requireWindowExtensions();
     

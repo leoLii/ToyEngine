@@ -27,9 +27,11 @@ public:
 
     Device(Instance&);
     
-    vk::PhysicalDevice getUsingGPU();
+    const vk::PhysicalDevice getUsingGPU() const;
     
     const vk::Device getHandle() const;
+
+    const std::vector<vk::QueueFamilyProperties> getQueueFamilyProperties() const;
     
     const vk::Queue getGraphicsQueue() const {
         return this->graphicsQueue;

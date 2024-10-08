@@ -8,10 +8,10 @@
 #include "SwapChain.hpp"
 #include "Device.hpp"
 
-Swapchain::Swapchain(Device& device, vk::SurfaceKHR& surface)
-	:device(device),
-	surface(surface) 
+Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
+	:device(device)
 {
+	this->surface = surface;
 	surfaceCapabilities = device.getUsingGPU().getSurfaceCapabilitiesKHR(surface);
 	surfaceFormats = device.getUsingGPU().getSurfaceFormatsKHR(surface);
 	presentModes = device.getUsingGPU().getSurfacePresentModesKHR(surface);

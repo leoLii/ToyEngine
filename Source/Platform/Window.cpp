@@ -44,7 +44,8 @@ void Window::createWindowSurface(vk::Instance instance){
     surface = static_cast<vk::SurfaceKHR>(VKSurface);
 }
 
-vk::SurfaceKHR& Window::getSurface() {
+const vk::SurfaceKHR& Window::getSurface() const
+{
     return this->surface;
 }
 

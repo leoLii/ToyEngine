@@ -14,6 +14,7 @@ class Window;
 class SemaphorePool;
 class FencePool;
 class Swapchain;
+//class CommandPool;
 
 /// <summary>
 /// GPUContext is designed to deal with physical level functions.
@@ -43,6 +44,9 @@ public:
 
 	const Swapchain* getSwapchain() const;
 
+	// CommandPool
+
+
 	// Fence & Semaphore
 	const vk::Fence requestFence() const;
 
@@ -59,6 +63,9 @@ public:
 	// ShaderModule
 	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
 
+	// Image & Buffer
+	
+
 protected:
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;
@@ -70,6 +77,8 @@ protected:
 	std::unique_ptr<SemaphorePool> semaphorePool;
 	std::unique_ptr<FencePool> fencePool;
 	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
+
+	//std::vector<std::unique_ptr<CommandPool>> commandPools;
 
 private:
 	void loadShaders(const std::string& dir);
