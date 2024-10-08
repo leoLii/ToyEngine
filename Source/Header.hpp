@@ -12,6 +12,7 @@
 #include "Core/GPUFramework/Vulkan/SemaphorePool.hpp"
 #include "Core/GPUFramework/Vulkan/FencePool.hpp"
 #include "Core/GPUFramework/Vulkan/ShaderModule.hpp"
+#include "Core/GPUFramework/Vulkan/Framebuffer.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -80,13 +81,13 @@ void main()
 )";
 
 std::shared_ptr<Window> window;
+
+std::unique_ptr<GPUContext> gpuContext;
+
 CommandPool* commandPool;
 RenderPass* renderPass;
 GraphicsPipeline* graphicsPipeline;
-std::unique_ptr<GPUContext> gpuContext;
-
-std::vector<VkFramebuffer> swapChainFramebuffers;
-
+std::vector<Framebuffer*> framebuffers;
 
 VkFormat swapChainImageFormat;
 VkExtent2D swapChainExtent;
@@ -97,11 +98,10 @@ uint32_t currentFrame = 0;
 bool framebufferResized = false;
 
 void cleanupSwapChain() {
-    for (auto framebuffer : swapChainFramebuffers)
-    {
-        vkDestroyFramebuffer(gpuContext->getDevice()->getHandle(), framebuffer, nullptr);
+    for (auto framebuffer : framebuffers) {
+        delete framebuffer;
     }
-
+    framebuffers.resize(0);
     for (auto imageView : swapChainImageViews)
     {
         vkDestroyImageView(gpuContext->getDevice()->getHandle(), imageView, nullptr);
@@ -135,29 +135,6 @@ void createImageViews() {
     }
 }
 
-void createFramebuffers() {
-    swapChainFramebuffers.resize(swapChainImageViews.size());
-
-    for (size_t i = 0; i < swapChainImageViews.size(); i++)
-    {
-        VkImageView attachments[] = { swapChainImageViews[i] };
-
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass->getHandle();
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = swapChainExtent.width;
-        framebufferInfo.height = swapChainExtent.height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(gpuContext->getDevice()->getHandle(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create framebuffer!");
-        }
-    }
-}
-
 void recreateSwapChain()
 {
     int width = 0, height = 0;
@@ -182,52 +159,55 @@ void recreateSwapChain()
     swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
     //swapchain->rebuildWithSize(vk::Extent2D(width, height));
     createImageViews();
-    createFramebuffers();
+
+    for (int i = 0; i < swapChainImageViews.size(); i++) {
+        std::vector<vk::ImageView> temp = { swapChainImageViews[i] };
+        auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
+        framebuffers.push_back(f);
+    }
 }
 
-void recordCommandBuffer(VkCommandBuffer commandBuffer, int imageIndex) {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
+    vk::CommandBufferBeginInfo beginInfo;
+    //beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    commandBuffer.begin(beginInfo);
 
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to begin recording command buffer!");
-    }
+    vk::RenderPassBeginInfo renderPassInfo;
 
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = renderPass->getHandle();
-    renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
-    renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = swapChainExtent;
+    renderPassInfo.framebuffer = framebuffers[imageIndex]->getHandle();
+    renderPassInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+    renderPassInfo.renderArea.extent = vk::Extent2D{ 1920, 1080 };
 
-    VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+
+    vk::ClearColorValue color{ 0.0f, 0.0f, 0.0f, 1.0f };
+    vk::ClearValue clearValue{ color };
     renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    renderPassInfo.pClearValues = &clearValue;
 
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getHandle());
-
-    VkViewport viewport{};
+    vk::Viewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
     viewport.width = (float)swapChainExtent.width;
     viewport.height = (float)swapChainExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-    VkRect2D scissor{};
-    scissor.offset = { 0, 0 };
+    commandBuffer.setViewport(0, 1, &viewport);
+
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = swapChainExtent;
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    commandBuffer.setScissor(0, 1, &scissor);
 
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    commandBuffer.draw(3, 1, 0, 0);
 
-    vkCmdEndRenderPass(commandBuffer);
+    commandBuffer.endRenderPass();
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) { throw std::runtime_error("failed to record command buffer!"); }
+    commandBuffer.end();
 }
 
 void drawFrame()
@@ -250,7 +230,7 @@ void drawFrame()
     gpuContext->resetFences(fence);
 
     vkResetCommandBuffer(commandPool->getCommandBuffer(currentFrame), /*VkCommandBufferResetFlagBits*/ 0);
-    recordCommandBuffer(commandPool->getCommandBuffer(currentFrame), std::get<1>(acquieResult));
+    recordCommandBuffer(static_cast<vk::CommandBuffer>(commandPool->getCommandBuffer(currentFrame)), std::get<1>(acquieResult));
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

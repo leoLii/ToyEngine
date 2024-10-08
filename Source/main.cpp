@@ -39,6 +39,12 @@ int main() {
     
     renderPass = new RenderPass(*gpuContext->getDevice());
 
+    for (int i = 0; i < swapChainImageViews.size(); i++) {
+        std::vector<vk::ImageView> temp = { swapChainImageViews[i] };
+        auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
+        framebuffers.push_back(f);
+    }
+
     auto vertShaderModule = gpuContext->findShader("triangle.vert");
     auto fragShaderModule = gpuContext->findShader("triangle.frag");
 
@@ -47,8 +53,6 @@ int main() {
     modules.push_back(fragShaderModule->getHandle());
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
 
-    createFramebuffers();
-    
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, MAX_FRAMES_IN_FLIGHT);
     
     while(!window->shouldClose()) {
