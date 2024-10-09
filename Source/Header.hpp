@@ -108,7 +108,7 @@ void recreateSwapChain()
         window->waitEvents();
     }
 
-    vkDeviceWaitIdle(gpuContext->getDevice()->getHandle());
+    gpuContext->getDevice()->getHandle().waitIdle();
 
     framebuffers.clear();
     swapChainImageViews.clear();
