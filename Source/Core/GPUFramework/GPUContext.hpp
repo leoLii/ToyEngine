@@ -6,15 +6,19 @@
 #include <memory>
 #include <unordered_map>
 
-class Instance;
-class Device;
-class ShaderModule;
-class Window;
-class SemaphorePool;
-class FencePool;
-class Swapchain;
-class ImageView;
-//class CommandPool;
+#include "Core/GPUFramework/Vulkan/Instance.hpp"
+#include "Core/GPUFramework/Vulkan/Device.hpp"
+#include "Core/GPUFramework/Vulkan/Framebuffer.hpp"
+#include "Core/GPUFramework/Vulkan/GraphicsPipeline.hpp"
+#include "Core/GPUFramework/Vulkan/CommandPool.hpp"
+#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
+#include "Core/GPUFramework/Vulkan/ImageView.hpp"
+#include "Core/GPUFramework/Vulkan/ShaderModule.hpp"
+#include "Core/GPUFramework/Vulkan/SemaphorePool.hpp"
+#include "Core/GPUFramework/Vulkan/FencePool.hpp"
+#include "Core/GPUFramework/Vulkan/Swapchain.hpp"
+
+#include "Platform/Window.hpp"
 
 /// <summary>
 /// GPUContext is designed to deal with physical level functions.
@@ -24,7 +28,11 @@ class GPUContext {
 public:
 	GPUContext() = delete;
 
-	GPUContext(const std::vector<const char*>& = {}, const std::vector<const char*>& = {}, const std::shared_ptr<Window> = nullptr);
+	GPUContext(
+		const std::string,
+		const std::vector<const char*>& = {}, 
+		const std::vector<const char*>& = {}, 
+		Window* = nullptr);
 
 	~GPUContext();
 
@@ -77,7 +85,6 @@ protected:
 
 	std::unique_ptr<Instance> instance;
 	std::unique_ptr<Device> device;
-	std::shared_ptr<Window> window;
 	std::unique_ptr<Swapchain> swapchain;
 	std::unique_ptr<SemaphorePool> semaphorePool;
 	std::unique_ptr<FencePool> fencePool;

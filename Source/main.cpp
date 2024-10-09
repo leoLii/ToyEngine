@@ -1,13 +1,13 @@
-#include "Header.hpp"
 #include "Common/Logging.hpp"
 
+#include "Platform/Application.hpp"
 
 int main() {
 /////////////////////////////////////////////////////////////////////
     logging::init();
 
-    // 必须要先创建window再requireExtension
-    window = std::make_shared<Window>("ToyEngine", WIDTH, HEIGHT);
+    Application app{};
+
     std::vector<const char*> layers;
 #ifdef VK_ENABLE_VALIDATION
     layers.push_back("VK_LAYER_KHRONOS_validation");
@@ -22,55 +22,14 @@ int main() {
 #ifdef VK_ENABLE_VALIDATION
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
-    auto windowExtensions = Window::requireWindowExtensions();
-    extensions.insert(extensions.end(), windowExtensions.begin(), windowExtensions.end());
-
-    gpuContext = std::make_unique<GPUContext>(layers, extensions, window);
- //////////////////////////////////////////////////////////////////
-
-
-    auto spImages = gpuContext->getSwapchainImages();
-    swapChainImages.resize(spImages.size());
-
-    std::transform(spImages.begin(), spImages.end(), swapChainImages.begin(), [](vk::Image i)->VkImage {
-        return static_cast<VkImage>(i);
-        });
-    swapChainImageFormat = static_cast<VkFormat>(gpuContext->getSwapchainFormat());
-    swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
     
-    for (int i = 0; i < swapChainImages.size(); i++) {
-        swapChainImageViews.push_back(gpuContext->createImageView(swapChainImages[i]));
-    }
+    ApplicationConfig config{ "ToyEngine", 1920, 1080, layers, extensions };
 
-    renderPass = new RenderPass(*gpuContext->getDevice());
-
-    for (int i = 0; i < swapChainImageViews.size(); i++) {
-        std::vector<vk::ImageView> temp = { swapChainImageViews[i]->getHandle()};
-        auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
-        framebuffers.push_back(f);
-    }
-
-    auto vertShaderModule = gpuContext->findShader("triangle.vert");
-    auto fragShaderModule = gpuContext->findShader("triangle.frag");
-
-    std::vector<vk::ShaderModule> modules;
-    modules.push_back(vertShaderModule->getHandle());
-    modules.push_back(fragShaderModule->getHandle());
-    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
-
-
-
-    commandPool = new CommandPool(*gpuContext->getDevice(), 0, MAX_FRAMES_IN_FLIGHT);
+    app.init(config);
     
+    app.run(0.0);
 
-
-
-    while(!window->shouldClose()) {
-        window->pollEvents();
-        drawFrame();
-    }
-
-    cleanup();
+    app.close();
 
     return 0;
 }

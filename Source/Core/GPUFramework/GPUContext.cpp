@@ -2,29 +2,22 @@
 
 #include "Common/Logging.hpp"
 
-#include "Vulkan/Instance.hpp"
-#include "Vulkan/Device.hpp"
-#include "Vulkan/SemaphorePool.hpp"
-#include "Vulkan/FencePool.hpp"
-#include "Vulkan/Swapchain.hpp"
-#include "Vulkan/ShaderModule.hpp"
-#include "Vulkan/ImageView.hpp"
-
-#include "Platform/Window.hpp"
-
 #include <vector>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 
-GPUContext::GPUContext(const std::vector<const char*>& layers, const std::vector<const char*>& extensions, const std::shared_ptr<Window> window)
+GPUContext::GPUContext(
+    const std::string name, 
+    const std::vector<const char*>& layers, 
+    const std::vector<const char*>& extensions, 
+    Window* window)
 {
-	instance = std::make_unique<Instance>("ToyEngine", extensions, layers);
+	instance = std::make_unique<Instance>(name, extensions, layers);
     device = std::make_unique<Device>(*instance);
     // Deal with headless and normal rendering, only window rendering for now.
     if (window != nullptr) {
         window->createWindowSurface(this->instance->getHandle());
-        this->window = window;
         swapchain = std::make_unique<Swapchain>(*device, static_cast<const vk::SurfaceKHR&>(window->getSurface()));
     }
 
