@@ -3,16 +3,24 @@
 #include "VkCommon.hpp"
 
 class Device;
-class Image;
+//class Image;
 
 class ImageView {
 public:
 	ImageView() = delete;
-	ImageView(Device&, vk::Image, vk::ImageViewType, vk::Format, vk::ComponentMapping, vk::ImageSubresourceRange);
+	ImageView(
+		const Device&,
+		const vk::Image,
+		const vk::ImageViewType,
+		const vk::Format,
+		const vk::ComponentMapping,
+		const vk::ImageSubresourceRange);
 	~ImageView();
 
+	const vk::ImageView getHandle() const;
+
 protected:
-	Device& device;
+	const Device& device;
 
 	vk::ImageView handle;
 	vk::Image image;

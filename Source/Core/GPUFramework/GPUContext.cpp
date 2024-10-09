@@ -8,10 +8,11 @@
 #include "Vulkan/FencePool.hpp"
 #include "Vulkan/Swapchain.hpp"
 #include "Vulkan/ShaderModule.hpp"
+#include "Vulkan/ImageView.hpp"
 
 #include "Platform/Window.hpp"
 
-
+#include <vector>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -113,6 +114,18 @@ const std::shared_ptr<ShaderModule> GPUContext::findShader(const std::string& na
         LOGE("ShaderModule{} not found", name);
         return nullptr;
     }
+}
+
+const std::shared_ptr<ImageView> GPUContext::createImageView(
+    const vk::Image image, 
+    const vk::ImageViewType type, 
+    const vk::Format format, 
+    const vk::ComponentMapping component, 
+    const vk::ImageSubresourceRange range)
+{
+    auto imageView = std::make_shared<ImageView>(*device, image, type, format, component, range);
+    imageViews.push_back(imageView);
+    return imageView;
 }
 
 void GPUContext::loadShaders(const std::string& dir)

@@ -3,6 +3,7 @@
 
 
 int main() {
+/////////////////////////////////////////////////////////////////////
     logging::init();
 
     // 必须要先创建window再requireExtension
@@ -25,6 +26,8 @@ int main() {
     extensions.insert(extensions.end(), windowExtensions.begin(), windowExtensions.end());
 
     gpuContext = std::make_unique<GPUContext>(layers, extensions, window);
+ //////////////////////////////////////////////////////////////////
+
 
     auto spImages = gpuContext->getSwapchainImages();
     swapChainImages.resize(spImages.size());
@@ -35,12 +38,14 @@ int main() {
     swapChainImageFormat = static_cast<VkFormat>(gpuContext->getSwapchainFormat());
     swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
     
-    createImageViews();
-    
+    for (int i = 0; i < swapChainImages.size(); i++) {
+        swapChainImageViews.push_back(gpuContext->createImageView(swapChainImages[i]));
+    }
+
     renderPass = new RenderPass(*gpuContext->getDevice());
 
     for (int i = 0; i < swapChainImageViews.size(); i++) {
-        std::vector<vk::ImageView> temp = { swapChainImageViews[i] };
+        std::vector<vk::ImageView> temp = { swapChainImageViews[i]->getHandle()};
         auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
         framebuffers.push_back(f);
     }
@@ -53,8 +58,13 @@ int main() {
     modules.push_back(fragShaderModule->getHandle());
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
 
+
+
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, MAX_FRAMES_IN_FLIGHT);
     
+
+
+
     while(!window->shouldClose()) {
         window->pollEvents();
         drawFrame();

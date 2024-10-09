@@ -13,6 +13,7 @@
 #include "Core/GPUFramework/Vulkan/FencePool.hpp"
 #include "Core/GPUFramework/Vulkan/ShaderModule.hpp"
 #include "Core/GPUFramework/Vulkan/Framebuffer.hpp"
+#include "Core/GPUFramework/Vulkan/ImageView.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -93,47 +94,9 @@ VkFormat swapChainImageFormat;
 VkExtent2D swapChainExtent;
 
 std::vector<VkImage> swapChainImages;
-std::vector<VkImageView> swapChainImageViews;
+std::vector<std::shared_ptr<ImageView>> swapChainImageViews;
 uint32_t currentFrame = 0;
 bool framebufferResized = false;
-
-void cleanupSwapChain() {
-    for (auto framebuffer : framebuffers) {
-        delete framebuffer;
-    }
-    framebuffers.resize(0);
-    for (auto imageView : swapChainImageViews)
-    {
-        vkDestroyImageView(gpuContext->getDevice()->getHandle(), imageView, nullptr);
-    }
-}
-
-void createImageViews() {
-    swapChainImageViews.resize(swapChainImages.size());
-
-    for (size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = swapChainImages[i];
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format = swapChainImageFormat;
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-
-        if (vkCreateImageView(gpuContext->getDevice()->getHandle(), &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create image views!");
-        }
-    }
-}
 
 void recreateSwapChain()
 {
@@ -147,7 +110,9 @@ void recreateSwapChain()
 
     vkDeviceWaitIdle(gpuContext->getDevice()->getHandle());
 
-    cleanupSwapChain();
+    framebuffers.clear();
+    swapChainImageViews.clear();
+
     gpuContext->rebuildSwapchainWithSize(vk::Extent2D(width, height));
     auto spImages = gpuContext->getSwapchainImages();
     swapChainImages.resize(spImages.size());
@@ -158,10 +123,12 @@ void recreateSwapChain()
     swapChainImageFormat = static_cast<VkFormat>(gpuContext->getSwapchainFormat());
     swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
     //swapchain->rebuildWithSize(vk::Extent2D(width, height));
-    createImageViews();
+    for (int i = 0; i < swapChainImages.size(); i++) {
+        swapChainImageViews.push_back(gpuContext->createImageView(swapChainImages[i]));
+    }
 
     for (int i = 0; i < swapChainImageViews.size(); i++) {
-        std::vector<vk::ImageView> temp = { swapChainImageViews[i] };
+        std::vector<vk::ImageView> temp = { swapChainImageViews[i]->getHandle() };
         auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
         framebuffers.push_back(f);
     }
@@ -275,7 +242,6 @@ void drawFrame()
 }
 
 void cleanup() {
-    cleanupSwapChain();
     delete graphicsPipeline;
     delete renderPass;
     delete commandPool;

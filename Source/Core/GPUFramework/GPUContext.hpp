@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <memory>
-#include <tuple>
 #include <unordered_map>
 
 class Instance;
@@ -14,6 +13,7 @@ class Window;
 class SemaphorePool;
 class FencePool;
 class Swapchain;
+class ImageView;
 //class CommandPool;
 
 /// <summary>
@@ -64,7 +64,12 @@ public:
 	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
 
 	// Image & Buffer
-	
+	const std::shared_ptr<ImageView> createImageView(
+		const vk::Image, 
+		const vk::ImageViewType = vk::ImageViewType::e2D,
+		const vk::Format = vk::Format::eB8G8R8A8Srgb,
+		const vk::ComponentMapping = vk::ComponentMapping{},
+		const vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
 
 protected:
 	std::vector<const char*> vulkanExtensions;
@@ -79,6 +84,8 @@ protected:
 	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
 
 	//std::vector<std::unique_ptr<CommandPool>> commandPools;
+
+	std::vector<std::shared_ptr<ImageView>> imageViews;
 
 private:
 	void loadShaders(const std::string& dir);
