@@ -43,23 +43,17 @@ protected:
 
 	bool vsyncOn = false;
 
-	uint32_t fps;
+	uint32_t fps = 0;
 
-	float frameTime;
+	float frameTime = 0.0;
 
 
 private:
 	void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex);
 
-	CommandPool* commandPool;
-	RenderPass* renderPass;
-	GraphicsPipeline* graphicsPipeline;
+	CommandPool* commandPool = nullptr;
+	RenderPass* renderPass = nullptr;
+	GraphicsPipeline* graphicsPipeline = nullptr;
 	std::vector<Framebuffer*> framebuffers;
-
-	VkFormat swapChainImageFormat;
-	VkExtent2D swapChainExtent;
-
-	std::vector<VkImage> swapChainImages;
-	std::vector<std::shared_ptr<ImageView>> swapChainImageViews;
 	uint32_t currentFrame = 0;
 };

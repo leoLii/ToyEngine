@@ -82,12 +82,12 @@ Device::~Device() {
     handle.destroy();
 }
 
-const vk::PhysicalDevice Device::getUsingGPU() const 
+vk::PhysicalDevice Device::getUsingGPU() const 
 {
     return this->gpu;
 }
 
-const vk::Device Device::getHandle() const
+vk::Device Device::getHandle() const
 {
     return this->handle;
 }

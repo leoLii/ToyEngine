@@ -13,6 +13,8 @@ GPUContext::GPUContext(
     const std::vector<const char*>& extensions, 
     Window* window)
 {
+    this->vulkanExtensions = extensions;
+    this->vulkanLayers = layers;
 	instance = std::make_unique<Instance>(name, extensions, layers);
     device = std::make_unique<Device>(*instance);
     // Deal with headless and normal rendering, only window rendering for now.
@@ -36,19 +38,30 @@ const Device* GPUContext::getDevice() const
     return this->device.get();
 }
 
-const std::vector<vk::Image>& GPUContext::getSwapchainImages() const
+const std::vector<Image>& GPUContext::getSwapchainImages() const
 {
-    return swapchain->getSwapchainImages();
+    return swapchain->getImages();
 }
 
-const vk::Format GPUContext::getSwapchainFormat() const
+const std::vector<ImageView>& GPUContext::getSwapchainImageViews() const
 {
-    return swapchain->getFormat();
+    return swapchain->getImageViews();
 }
 
-const vk::Extent2D GPUContext::getSwapchainExtent() const
+uint32_t GPUContext::getSwapchainImageCount() const
 {
-    return swapchain->getExtent();
+    return swapchain->getImageCount();
+}
+
+vk::Format GPUContext::getSwapchainFormat() const
+{
+    return swapchain->getSwapchainImageInfo().format;
+}
+
+vk::Extent2D GPUContext::getSwapchainExtent() const
+{
+    auto extent = swapchain->getSwapchainImageInfo().extent;
+    return vk::Extent2D(extent.width, extent.height);
 }
 
 void GPUContext::rebuildSwapchainWithSize(const vk::Extent2D extent) const
@@ -67,7 +80,7 @@ const Swapchain* GPUContext::getSwapchain() const
     return swapchain.get();
 }
 
-const vk::Fence GPUContext::requestFence() const
+vk::Fence GPUContext::requestFence() const
 {
     return fencePool->requestFence();
 }
@@ -87,7 +100,7 @@ void GPUContext::returnFence(const vk::Fence fence) const
     fencePool->returnFence(fence);
 }
 
-const vk::Semaphore GPUContext::requestSemaphore() const
+vk::Semaphore GPUContext::requestSemaphore() const
 {
     return semaphorePool->requestSemaphore();
 }

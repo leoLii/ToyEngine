@@ -15,7 +15,7 @@ public:
 
 	~Framebuffer();
 
-	const vk::Framebuffer getHandle() const;
+	vk::Framebuffer getHandle() const;
 
 protected:
 	const Device& device;

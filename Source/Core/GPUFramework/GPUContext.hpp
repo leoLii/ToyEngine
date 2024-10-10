@@ -2,23 +2,25 @@
 
 #include "Vulkan/VkCommon.hpp"
 
+#include "Vulkan/Instance.hpp"
+#include "Vulkan/Device.hpp"
+#include "Vulkan/Framebuffer.hpp"
+#include "Vulkan/GraphicsPipeline.hpp"
+#include "Vulkan/CommandPool.hpp"
+#include "Vulkan/RenderPass.hpp"
+#include "Vulkan/ImageView.hpp"
+#include "Vulkan/ShaderModule.hpp"
+#include "Vulkan/SemaphorePool.hpp"
+#include "Vulkan/FencePool.hpp"
+#include "Vulkan/Swapchain.hpp"
+#include "Vulkan/Image.hpp"
+#include "Vulkan/ImageView.hpp"
+
+#include "Platform/Window.hpp"
+
 #include <vector>
 #include <memory>
 #include <unordered_map>
-
-#include "Core/GPUFramework/Vulkan/Instance.hpp"
-#include "Core/GPUFramework/Vulkan/Device.hpp"
-#include "Core/GPUFramework/Vulkan/Framebuffer.hpp"
-#include "Core/GPUFramework/Vulkan/GraphicsPipeline.hpp"
-#include "Core/GPUFramework/Vulkan/CommandPool.hpp"
-#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
-#include "Core/GPUFramework/Vulkan/ImageView.hpp"
-#include "Core/GPUFramework/Vulkan/ShaderModule.hpp"
-#include "Core/GPUFramework/Vulkan/SemaphorePool.hpp"
-#include "Core/GPUFramework/Vulkan/FencePool.hpp"
-#include "Core/GPUFramework/Vulkan/Swapchain.hpp"
-
-#include "Platform/Window.hpp"
 
 /// <summary>
 /// GPUContext is designed to deal with physical level functions.
@@ -40,11 +42,15 @@ public:
 	const Device* getDevice() const;
 
 	// Swapchain
-	const std::vector<vk::Image>& getSwapchainImages() const;
+	const std::vector<Image>& getSwapchainImages() const;
 
-	const vk::Format getSwapchainFormat() const;
+	const std::vector<ImageView>& getSwapchainImageViews() const;
 
-	const vk::Extent2D getSwapchainExtent() const;
+	uint32_t getSwapchainImageCount() const;
+
+	vk::Format getSwapchainFormat() const;
+
+	vk::Extent2D getSwapchainExtent() const;
 
 	void rebuildSwapchainWithSize(const vk::Extent2D) const;
 
@@ -56,7 +62,7 @@ public:
 
 
 	// Fence & Semaphore
-	const vk::Fence requestFence() const;
+	vk::Fence requestFence() const;
 
 	void waitForFences(const vk::Fence) const;
 
@@ -64,7 +70,7 @@ public:
 
 	void returnFence(const vk::Fence) const;
 
-	const vk::Semaphore requestSemaphore() const;
+	vk::Semaphore requestSemaphore() const;
 
 	void returnSemaphore(const vk::Semaphore) const;
 

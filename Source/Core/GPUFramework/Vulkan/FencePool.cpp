@@ -3,8 +3,8 @@
 #include "Device.hpp"
 
 FencePool::FencePool(Device& device)
-	:device(device) {
-
+	:device(device) 
+{
 }
 
 FencePool::~FencePool() {

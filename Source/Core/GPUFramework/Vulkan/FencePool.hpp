@@ -27,7 +27,7 @@ public:
 	void waitForFences(std::vector<vk::Fence>, VkBool32 waitForAll = VK_TRUE, uint32_t timeout = std::numeric_limits<uint32_t>::max());
 
 protected:
-	Device& device;
+	const Device& device;
 
 	std::atomic<size_t> availableCount = 0;
 

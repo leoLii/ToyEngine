@@ -43,5 +43,5 @@ RenderPass::RenderPass(const Device& device)
 }
 
 RenderPass::~RenderPass() {
-	device.getHandle().destroyRenderPass();
+	device.getHandle().destroyRenderPass(handle);
 }

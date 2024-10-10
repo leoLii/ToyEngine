@@ -22,7 +22,7 @@ Framebuffer::~Framebuffer()
 	device.getHandle().destroyFramebuffer(handle);
 }
 
-const vk::Framebuffer Framebuffer::getHandle() const
+vk::Framebuffer Framebuffer::getHandle() const
 {
 	return handle;
 }

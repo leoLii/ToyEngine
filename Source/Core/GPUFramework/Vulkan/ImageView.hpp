@@ -17,7 +17,7 @@ public:
 		const vk::ImageSubresourceRange);
 	~ImageView();
 
-	const vk::ImageView getHandle() const;
+	vk::ImageView getHandle() const;
 
 protected:
 	const Device& device;

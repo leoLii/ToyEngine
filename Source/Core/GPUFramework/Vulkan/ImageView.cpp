@@ -22,7 +22,7 @@ ImageView::~ImageView() {
 	device.getHandle().destroyImageView(handle);
 }
 
-const vk::ImageView ImageView::getHandle() const
+vk::ImageView ImageView::getHandle() const
 {
 	return handle;
 }

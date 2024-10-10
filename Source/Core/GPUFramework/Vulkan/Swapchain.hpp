@@ -8,6 +8,8 @@
 #pragma once
 
 #include "VkCommon.hpp"
+#include "Image.hpp"
+#include "ImageView.hpp"
 
 class Device;
 
@@ -18,13 +20,15 @@ public:
 
     ~Swapchain();
 
-    const vk::SwapchainKHR getHandle() const;
+    vk::SwapchainKHR getHandle() const;
 
-    const std::vector<vk::Image>& getSwapchainImages() const;
+    const std::vector<Image>& getImages() const;
 
-    vk::Format getFormat();
+    const std::vector<ImageView>& getImageViews() const;
 
-    vk::Extent2D getExtent();
+    ImageInfo getSwapchainImageInfo() const;
+
+    uint32_t getImageCount() const;
 
     void rebuildWithSize(vk::Extent2D);
 
@@ -36,14 +40,15 @@ protected:
     vk::SurfaceKHR surface;
     vk::SwapchainKHR handle;
 
+    ImageInfo imageInfo;
+
     vk::SurfaceCapabilitiesKHR surfaceCapabilities;
     std::vector<vk::SurfaceFormatKHR> surfaceFormats;
     std::vector<vk::PresentModeKHR> presentModes;
 
-    std::vector<vk::Image> images;
-
-    vk::Format format;
-    vk::Extent2D extent;
+    uint32_t imageCount = 3;
+    std::vector<Image> images;
+    std::vector<ImageView> imageViews;
 
     vk::ImageCompressionFlagsEXT requestedCompression{ vk::ImageCompressionFlagBitsEXT::eDefault };
 

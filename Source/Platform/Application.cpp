@@ -44,23 +44,12 @@ void Application::init(ApplicationConfig& config)
 	
     gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
 
-    auto spImages = gpuContext->getSwapchainImages();
-    swapChainImages.resize(spImages.size());
-
-    std::transform(spImages.begin(), spImages.end(), swapChainImages.begin(), [](vk::Image i)->VkImage {
-        return static_cast<VkImage>(i);
-        });
-    swapChainImageFormat = static_cast<VkFormat>(gpuContext->getSwapchainFormat());
-    swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
-
-    for (int i = 0; i < swapChainImages.size(); i++) {
-        swapChainImageViews.push_back(gpuContext->createImageView(swapChainImages[i]));
-    }
-
     renderPass = new RenderPass(*gpuContext->getDevice());
 
-    for (int i = 0; i < swapChainImageViews.size(); i++) {
-        std::vector<vk::ImageView> temp = { swapChainImageViews[i]->getHandle() };
+    for (int i = 0; i < gpuContext->getSwapchainImageCount(); i++) {
+        auto swapChainImage = gpuContext->getSwapchainImages()[i];
+        std::vector<vk::ImageView> temp =
+        { gpuContext->createImageView(swapChainImage.getHandle())->getHandle() };
         auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
         framebuffers.push_back(f);
     }
@@ -73,10 +62,7 @@ void Application::init(ApplicationConfig& config)
     modules.push_back(fragShaderModule->getHandle());
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
 
-
-
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, config.maxFrames);
-
 }
 
 void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
@@ -102,8 +88,8 @@ void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int image
     vk::Viewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float)swapChainExtent.width;
-    viewport.height = (float)swapChainExtent.height;
+    viewport.width = (float)1920;
+    viewport.height = (float)1080;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
@@ -111,7 +97,7 @@ void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int image
 
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
-    scissor.extent = swapChainExtent;
+    scissor.extent = vk::Extent2D(1920, 1080);
     commandBuffer.setScissor(0, 1, &scissor);
 
     commandBuffer.draw(3, 1, 0, 0);
