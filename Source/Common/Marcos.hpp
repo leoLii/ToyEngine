@@ -11,3 +11,15 @@
 
 
 #define NOMINMAX
+
+#define NO_COPY(typeName) \
+    typeName(const typeName&) = delete; \
+    typeName& operator=(const typeName&) = delete;
+
+/// \def NO_MOVE(typeName)
+/// Deletes move constructors from \typeName class so the class can not be moved.
+///
+/// @ingroup CauldronHelpers
+#define NO_MOVE(typeName) \
+    typeName(const typeName&&) = delete; \
+    typeName& operator=(const typeName&&) = delete;

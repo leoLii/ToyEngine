@@ -2,9 +2,14 @@
 
 #include "Platform/Application.hpp"
 
+#include "Scene/Loader.hpp"
+
 int main() {
 /////////////////////////////////////////////////////////////////////
     logging::init();
+
+    AssimpLoader loader;
+    loader.loadModel("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/nanosuit/nanosuit.obj");
 
     Application app{};
 
