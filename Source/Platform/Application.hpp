@@ -49,6 +49,12 @@ protected:
 
 
 private:
+	vk::Fence fence;
+
+	vk::Semaphore imageAvailableSemaphore;
+
+	vk::Semaphore renderFinishedSemaphore;
+
 	void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex);
 
 	CommandPool* commandPool = nullptr;

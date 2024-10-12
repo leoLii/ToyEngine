@@ -63,6 +63,11 @@ void Application::init(ApplicationConfig& config)
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
 
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, config.maxFrames);
+    fence = gpuContext->requestFence();
+
+    imageAvailableSemaphore = gpuContext->requestSemaphore();
+
+    renderFinishedSemaphore = gpuContext->requestSemaphore();
 }
 
 void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
@@ -105,16 +110,15 @@ void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int image
     commandBuffer.endRenderPass();
 
     commandBuffer.end();
+
 }
 
 void Application::run(float deltaTime)
 {
     while (!window->shouldClose()) {
         window->pollEvents();
-        auto fence = gpuContext->requestFence();
+
         gpuContext->waitForFences(fence);
-        auto imageAvailableSemaphore = gpuContext->requestSemaphore();
-        auto renderFinishedSemaphore = gpuContext->requestSemaphore();
 
         auto acquieResult =
             gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
@@ -167,16 +171,15 @@ void Application::run(float deltaTime)
         }*/
 
         currentFrame = (currentFrame + 1) % config.maxFrames;
-
-        gpuContext->returnSemaphore(renderFinishedSemaphore);
-        gpuContext->returnSemaphore(imageAvailableSemaphore);
-
-        gpuContext->returnFence(fence);
     }
 }
 
 void Application::close()
 {
+    gpuContext->returnSemaphore(renderFinishedSemaphore);
+    gpuContext->returnSemaphore(imageAvailableSemaphore);
+
+    gpuContext->returnFence(fence);
     delete graphicsPipeline;
     delete renderPass;
     delete commandPool;
