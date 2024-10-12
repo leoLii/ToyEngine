@@ -3,6 +3,7 @@
 #include "Window.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
 
+#include <chrono>
 #include <string>
 #include <memory>
 #include <vector>
@@ -24,7 +25,7 @@ public:
 
 	void init(ApplicationConfig& config);
 
-	void run(float deltaTime);
+	void run();
 
 	void close();
 
@@ -45,15 +46,27 @@ protected:
 
 	uint32_t fps = 0;
 
-	float frameTime = 0.0;
+	uint64_t frameIndex = -1;
 
+	float deltaTime = 0.0;
 
-private:
+	std::chrono::time_point<std::chrono::system_clock> lastFrameTime;
+
 	vk::Fence fence;
 
 	vk::Semaphore imageAvailableSemaphore;
 
 	vk::Semaphore renderFinishedSemaphore;
+
+	vk::CommandBuffer commandBuffer;
+
+private:
+	
+	void beginFrame();
+
+	void endFrame();
+
+	void present(uint32_t);
 
 	void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex);
 
@@ -61,5 +74,4 @@ private:
 	RenderPass* renderPass = nullptr;
 	GraphicsPipeline* graphicsPipeline = nullptr;
 	std::vector<Framebuffer*> framebuffers;
-	uint32_t currentFrame = 0;
 };

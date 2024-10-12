@@ -1,5 +1,6 @@
 #include "Application.hpp"
 
+
 //void recreateSwapChain()
 //{
 //    int width = 0, height = 0;
@@ -70,11 +71,58 @@ void Application::init(ApplicationConfig& config)
     renderFinishedSemaphore = gpuContext->requestSemaphore();
 }
 
-void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) {
+void Application::beginFrame()
+{
+    commandBuffer = commandPool->getCommandBuffer(frameIndex % config.maxFrames);
+    
     vk::CommandBufferBeginInfo beginInfo;
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
     commandBuffer.begin(beginInfo);
+}
 
+void Application::endFrame()
+{
+    commandBuffer.end();
+
+    vk::SubmitInfo submitInfo;
+
+    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
+
+    gpuContext->getDevice()->getGraphicsQueue().submit(submitInfo, fence);
+}
+
+void Application::present(uint32_t index)
+{
+    vk::PresentInfoKHR presentInfo;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
+
+    auto swapChain = gpuContext->getSwapchain()->getHandle();
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &swapChain;
+    presentInfo.pImageIndices = &index;
+
+    auto result = gpuContext->getDevice()->getPresentQueue().presentKHR(presentInfo);
+
+    /*if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
+    {
+        framebufferResized = false;
+        recreateSwapChain();
+    }*/
+}
+
+void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) 
+{
     vk::RenderPassBeginInfo renderPassInfo;
 
     renderPassInfo.renderPass = renderPass->getHandle();
@@ -109,19 +157,25 @@ void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int image
 
     commandBuffer.endRenderPass();
 
-    commandBuffer.end();
-
 }
 
-void Application::run(float deltaTime)
+void Application::run()
 {
     while (!window->shouldClose()) {
+        ++frameIndex;
+
+        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+        deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;
+        lastFrameTime = now;
+
         window->pollEvents();
 
         gpuContext->waitForFences(fence);
 
         auto acquieResult =
             gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
+
+        uint32_t swapChainIndex = std::get<1>(acquieResult);
 
         /*if (std::get<0>(acquieResult) == vk::Result::eErrorOutOfDateKHR)
         {
@@ -132,45 +186,13 @@ void Application::run(float deltaTime)
 
         gpuContext->resetFences(fence);
 
-        auto commandBuffer = commandPool->getCommandBuffer(currentFrame);
-        commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-        recordCommandBuffer(commandBuffer, std::get<1>(acquieResult));
+        beginFrame();
 
-        vk::SubmitInfo submitInfo;
+        recordCommandBuffer(commandBuffer, swapChainIndex);
 
-        vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
-        submitInfo.pWaitDstStageMask = waitStages;
+        endFrame();
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
-
-        gpuContext->getDevice()->getGraphicsQueue().submit(submitInfo, fence);
-
-        vk::PresentInfoKHR presentInfo;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
-
-        auto swapChain = gpuContext->getSwapchain()->getHandle();
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = &swapChain;
-
-        presentInfo.pImageIndices = &(std::get<1>(acquieResult));
-
-        auto result = gpuContext->getDevice()->getPresentQueue().presentKHR(presentInfo);
-
-        /*if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
-        {
-            framebufferResized = false;
-            recreateSwapChain();
-        }*/
-
-        currentFrame = (currentFrame + 1) % config.maxFrames;
+        present(swapChainIndex);
     }
 }
 
