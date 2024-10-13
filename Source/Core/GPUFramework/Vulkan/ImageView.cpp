@@ -1,7 +1,7 @@
 #include "ImageView.hpp"
 #include "Device.hpp"
 
-ImageView::ImageView(const Device& device, const vk::Image image, const vk::ImageViewType type, const vk::Format format, const vk::ComponentMapping components, const vk::ImageSubresourceRange range):
+ImageView::ImageView(const Device& device, vk::Image image, vk::ImageViewType type, vk::Format format, vk::ComponentMapping components, vk::ImageSubresourceRange range):
 	device(device),
 	image(image),
 	imageViewType(type),

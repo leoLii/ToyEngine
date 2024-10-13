@@ -10,11 +10,11 @@ public:
 	ImageView() = delete;
 	ImageView(
 		const Device&,
-		const vk::Image,
-		const vk::ImageViewType,
-		const vk::Format,
-		const vk::ComponentMapping,
-		const vk::ImageSubresourceRange);
+		vk::Image,
+		vk::ImageViewType,
+		vk::Format,
+		vk::ComponentMapping,
+		vk::ImageSubresourceRange);
 	~ImageView();
 
 	vk::ImageView getHandle() const;

@@ -39,12 +39,12 @@ const Device* GPUContext::getDevice() const
     return this->device.get();
 }
 
-const std::vector<Image>& GPUContext::getSwapchainImages() const
+const std::vector<Image*>& GPUContext::getSwapchainImages() const
 {
     return swapchain->getImages();
 }
 
-const std::vector<ImageView>& GPUContext::getSwapchainImageViews() const
+const std::vector<ImageView*>& GPUContext::getSwapchainImageViews() const
 {
     return swapchain->getImageViews();
 }

@@ -41,10 +41,14 @@ public:
 	// Device
 	const Device* getDevice() const;
 
-	// Swapchain
-	const std::vector<Image>& getSwapchainImages() const;
+	const Device& getDeviceRef() const {
+		return *device.get();
+	}
 
-	const std::vector<ImageView>& getSwapchainImageViews() const;
+	// Swapchain
+	const std::vector<Image*>& getSwapchainImages() const;
+
+	const std::vector<ImageView*>& getSwapchainImageViews() const;
 
 	uint32_t getSwapchainImageCount() const;
 

@@ -22,9 +22,9 @@ public:
 
     vk::SwapchainKHR getHandle() const;
 
-    const std::vector<Image>& getImages() const;
+    const std::vector<Image*>& getImages() const;
 
-    const std::vector<ImageView>& getImageViews() const;
+    const std::vector<ImageView*>& getImageViews() const;
 
     ImageInfo getSwapchainImageInfo() const;
 
@@ -47,8 +47,8 @@ protected:
     std::vector<vk::PresentModeKHR> presentModes;
 
     uint32_t imageCount = 3;
-    std::vector<Image> images;
-    std::vector<ImageView> imageViews;
+    std::vector<Image*> images;
+    std::vector<ImageView*> imageViews;
 
     vk::ImageCompressionFlagsEXT requestedCompression{ vk::ImageCompressionFlagBitsEXT::eDefault };
 

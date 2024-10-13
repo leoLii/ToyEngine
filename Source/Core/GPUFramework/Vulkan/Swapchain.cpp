@@ -58,69 +58,79 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	handle = device.getHandle().createSwapchainKHR(createInfo);
 	auto nativeImages = device.getHandle().getSwapchainImagesKHR(handle);
 	for (auto i : nativeImages) {
-		images.push_back(Image(device, i, imageInfo));
-		imageViews.push_back(
-			ImageView(device, i, 
-				vk::ImageViewType::e2D, 
-				imageInfo.format, 
-				vk::ComponentMapping{},
-				vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }));
+		auto image = new Image(device, i, imageInfo);
+		auto imageView = new ImageView(
+			device, i,
+			vk::ImageViewType::e2D,
+			imageInfo.format,
+			vk::ComponentMapping{},
+			vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+		images.push_back(image);
+		imageViews.push_back(imageView);
 	}
 }
 
 
 Swapchain::~Swapchain() {
+	for (auto image : images) {
+		delete image;
+	}
+	images.clear();
+	for (auto imageView : imageViews) {
+		delete imageView;
+	}
+	imageViews.clear();
 	device.getHandle().destroySwapchainKHR(handle);
 }
 
 void Swapchain::rebuildWithSize(vk::Extent2D size) {
-	vk::SwapchainCreateInfoKHR createInfo;
-	createInfo.surface = surface;
-	createInfo.minImageCount = imageCount;
-	createInfo.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
-	createInfo.imageFormat = imageInfo.format;
-	createInfo.imageExtent = vk::Extent2D(imageInfo.extent.width, imageInfo.extent.height);
-	createInfo.imageArrayLayers = imageInfo.arrayLayers;
-	createInfo.imageUsage = imageInfo.usage;
-	createInfo.imageSharingMode = imageInfo.sharingMode;
-	createInfo.queueFamilyIndexCount = imageInfo.queueFamilyCount;
-	createInfo.pQueueFamilyIndices = imageInfo.pQueueFamilyIndices;
-	createInfo.preTransform = surfaceCapabilities.currentTransform;
-	createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-	createInfo.presentMode = vk::PresentModeKHR::eMailbox;
-	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = handle;
-
-#ifdef IMAGE_COMPRESSION
-	vk::ImageCompressionControlEXT compressionControl;
-	compressionControl.flags = requestedCompression;
-	compressionControl.compressionControlPlaneCount = 1;
-	compressionControl.pFixedRateFlags = requestedCompressionFixedRate.data();
-	createInfo.pNext = &compressionControl;
-#endif // IMAGE_COMPRESSION
-
-	handle = device.getHandle().createSwapchainKHR(createInfo);
-	auto nativeImages = device.getHandle().getSwapchainImagesKHR(handle);
-	for (auto i : nativeImages) {
-		images.push_back(Image(device, i, imageInfo));
-		imageViews.push_back(
-			ImageView(device, i, 
-				vk::ImageViewType::e2D, 
-				imageInfo.format, 
-				vk::ComponentMapping{}, 
-				vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }));
-	}
+//	vk::SwapchainCreateInfoKHR createInfo;
+//	createInfo.surface = surface;
+//	createInfo.minImageCount = imageCount;
+//	createInfo.imageColorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+//	createInfo.imageFormat = imageInfo.format;
+//	createInfo.imageExtent = vk::Extent2D(imageInfo.extent.width, imageInfo.extent.height);
+//	createInfo.imageArrayLayers = imageInfo.arrayLayers;
+//	createInfo.imageUsage = imageInfo.usage;
+//	createInfo.imageSharingMode = imageInfo.sharingMode;
+//	createInfo.queueFamilyIndexCount = imageInfo.queueFamilyCount;
+//	createInfo.pQueueFamilyIndices = imageInfo.pQueueFamilyIndices;
+//	createInfo.preTransform = surfaceCapabilities.currentTransform;
+//	createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+//	createInfo.presentMode = vk::PresentModeKHR::eMailbox;
+//	createInfo.clipped = VK_TRUE;
+//	createInfo.oldSwapchain = handle;
+//
+//#ifdef IMAGE_COMPRESSION
+//	vk::ImageCompressionControlEXT compressionControl;
+//	compressionControl.flags = requestedCompression;
+//	compressionControl.compressionControlPlaneCount = 1;
+//	compressionControl.pFixedRateFlags = requestedCompressionFixedRate.data();
+//	createInfo.pNext = &compressionControl;
+//#endif // IMAGE_COMPRESSION
+//
+//	handle = device.getHandle().createSwapchainKHR(createInfo);
+//	auto nativeImages = device.getHandle().getSwapchainImagesKHR(handle);
+//	for (auto i : nativeImages) {
+//		images.push_back(Image(device, i, imageInfo));
+//		imageViews.push_back(
+//			ImageView(device, i, 
+//				vk::ImageViewType::e2D, 
+//				imageInfo.format, 
+//				vk::ComponentMapping{}, 
+//				vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }));
+//	}
 }
 
 vk::SwapchainKHR Swapchain::getHandle() const {
 	return this->handle;
 }
 
-const std::vector<Image>& Swapchain::getImages() const {
+const std::vector<Image*>& Swapchain::getImages() const {
 	return this->images;
 }
 
-const std::vector<ImageView>& Swapchain::getImageViews() const {
+const std::vector<ImageView*>& Swapchain::getImageViews() const {
 	return this->imageViews;
 }
 

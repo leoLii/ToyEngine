@@ -78,7 +78,7 @@ void Application::endFrame(uint32_t index)
     imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
     imageMemoryBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
     imageMemoryBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
-    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index].getHandle();
+    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index]->getHandle();
     imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
     imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
     imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
@@ -133,7 +133,7 @@ void Application::recordCommandBuffer(uint32_t index)
     imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
     imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
     imageMemoryBarrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
-    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index].getHandle();
+    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index]->getHandle();
     imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
     imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
     imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
@@ -143,16 +143,8 @@ void Application::recordCommandBuffer(uint32_t index)
         vk::DependencyFlagBits::eByRegion,
         0, 0, { imageMemoryBarrier });
 
-    vk::ImageViewCreateInfo viewInfo;
-    viewInfo.format = vk::Format::eB8G8R8A8Srgb;
-    viewInfo.viewType = vk::ImageViewType::e2D;
-    viewInfo.image = gpuContext->getSwapchainImages()[index].getHandle();
-    viewInfo.components = vk::ComponentMapping{};
-    viewInfo.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
-    auto view = gpuContext->getDevice()->getHandle().createImageView(viewInfo);
-
     vk::RenderingAttachmentInfo colorAttachment;
-    colorAttachment.imageView = view;  // 使用交换链图像视图
+    colorAttachment.imageView = gpuContext->getSwapchainImageViews()[index]->getHandle();  // 使用交换链图像视图
     colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;  // 图像布局
     colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;  // 清除操作
     colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;  // 存储操作
@@ -185,8 +177,6 @@ void Application::recordCommandBuffer(uint32_t index)
     commandBuffer.draw(3, 1, 0, 0);
 
     commandBuffer.endRendering();
-
-    gpuContext->getDevice()->getHandle().destroyImageView(view);
 }
 
 void Application::run()
