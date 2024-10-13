@@ -64,11 +64,11 @@ private:
 	
 	void beginFrame();
 
-	void endFrame();
+	void endFrame(uint32_t);
 
 	void present(uint32_t);
 
-	void recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex);
+	void recordCommandBuffer(uint32_t);
 
 	CommandPool* commandPool = nullptr;
 	RenderPass* renderPass = nullptr;

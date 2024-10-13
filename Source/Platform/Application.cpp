@@ -47,14 +47,6 @@ void Application::init(ApplicationConfig& config)
 
     renderPass = new RenderPass(*gpuContext->getDevice());
 
-    for (int i = 0; i < gpuContext->getSwapchainImageCount(); i++) {
-        auto swapChainImage = gpuContext->getSwapchainImages()[i];
-        std::vector<vk::ImageView> temp =
-        { gpuContext->createImageView(swapChainImage.getHandle())->getHandle() };
-        auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
-        framebuffers.push_back(f);
-    }
-
     auto vertShaderModule = gpuContext->findShader("triangle.vert");
     auto fragShaderModule = gpuContext->findShader("triangle.frag");
 
@@ -80,8 +72,22 @@ void Application::beginFrame()
     commandBuffer.begin(beginInfo);
 }
 
-void Application::endFrame()
+void Application::endFrame(uint32_t index)
 {
+    vk::ImageMemoryBarrier imageMemoryBarrier;
+    imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    imageMemoryBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    imageMemoryBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index].getHandle();
+    imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+    imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+    imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits::eBottomOfPipe,
+        vk::DependencyFlagBits::eByRegion,
+        0, 0, { imageMemoryBarrier });
+
     commandBuffer.end();
 
     vk::SubmitInfo submitInfo;
@@ -121,22 +127,45 @@ void Application::present(uint32_t index)
     }*/
 }
 
-void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int imageIndex) 
+void Application::recordCommandBuffer(uint32_t index) 
 {
-    vk::RenderPassBeginInfo renderPassInfo;
+    vk::ImageMemoryBarrier imageMemoryBarrier;
+    imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+    imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
+    imageMemoryBarrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+    imageMemoryBarrier.image = gpuContext->getSwapchainImages()[index].getHandle();
+    imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+    imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+    imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+    
+    commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        vk::DependencyFlagBits::eByRegion,
+        0, 0, { imageMemoryBarrier });
 
-    renderPassInfo.renderPass = renderPass->getHandle();
-    renderPassInfo.framebuffer = framebuffers[imageIndex]->getHandle();
-    renderPassInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
-    renderPassInfo.renderArea.extent = vk::Extent2D{ 1920, 1080 };
+    vk::ImageViewCreateInfo viewInfo;
+    viewInfo.format = vk::Format::eB8G8R8A8Srgb;
+    viewInfo.viewType = vk::ImageViewType::e2D;
+    viewInfo.image = gpuContext->getSwapchainImages()[index].getHandle();
+    viewInfo.components = vk::ComponentMapping{};
+    viewInfo.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+    auto view = gpuContext->getDevice()->getHandle().createImageView(viewInfo);
 
+    vk::RenderingAttachmentInfo colorAttachment;
+    colorAttachment.imageView = view;  // 使用交换链图像视图
+    colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;  // 图像布局
+    colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;  // 清除操作
+    colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;  // 存储操作
+    colorAttachment.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 1.0f };// 清除颜色值（黑色）
 
-    vk::ClearColorValue color{ 0.0f, 0.0f, 0.0f, 1.0f };
-    vk::ClearValue clearValue{ color };
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearValue;
+    vk::RenderingInfo renderingInfo;
+    renderingInfo.layerCount = 1;
+    renderingInfo.renderArea.offset = vk::Offset2D{};
+    renderingInfo.renderArea.extent = gpuContext->getSwapchainExtent();
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachments = &colorAttachment;
 
-    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    commandBuffer.beginRendering(&renderingInfo);
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
     vk::Viewport viewport{};
     viewport.x = 0.0f;
@@ -150,13 +179,14 @@ void Application::recordCommandBuffer(vk::CommandBuffer commandBuffer, int image
 
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
-    scissor.extent = vk::Extent2D(1920, 1080);
+    scissor.extent = gpuContext->getSwapchainExtent();
     commandBuffer.setScissor(0, 1, &scissor);
 
     commandBuffer.draw(3, 1, 0, 0);
 
-    commandBuffer.endRenderPass();
+    commandBuffer.endRendering();
 
+    gpuContext->getDevice()->getHandle().destroyImageView(view);
 }
 
 void Application::run()
@@ -188,9 +218,9 @@ void Application::run()
 
         beginFrame();
 
-        recordCommandBuffer(commandBuffer, swapChainIndex);
+        recordCommandBuffer(swapChainIndex);
 
-        endFrame();
+        endFrame(swapChainIndex);
 
         present(swapChainIndex);
     }
@@ -198,10 +228,11 @@ void Application::run()
 
 void Application::close()
 {
+    gpuContext->getDevice()->getHandle().waitIdle();
     gpuContext->returnSemaphore(renderFinishedSemaphore);
     gpuContext->returnSemaphore(imageAvailableSemaphore);
-
     gpuContext->returnFence(fence);
+
     delete graphicsPipeline;
     delete renderPass;
     delete commandPool;

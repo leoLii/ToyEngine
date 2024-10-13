@@ -10,6 +10,12 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass,
     , renderPass(renderPass)
     , shaderModules(shaderModules)
 {
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+    pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+    layout = device.getHandle().createPipelineLayout(pipelineLayoutInfo);
+
     vk::PipelineShaderStageCreateInfo vertShaderStageInfo;
     vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageInfo.module = shaderModules[0];
@@ -70,11 +76,10 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass,
     dynamicState.dynamicStateCount = dynamicStates.size();
     dynamicState.pDynamicStates = dynamicStates.data();
 
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-
-    layout = device.getHandle().createPipelineLayout(pipelineLayoutInfo);
+    vk::Format format = vk::Format::eB8G8R8A8Srgb;
+    vk::PipelineRenderingCreateInfo renderingInfo;
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachmentFormats = &format;
 
     vk::GraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.stageCount = shaderModules.size();
@@ -87,9 +92,10 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass,
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = layout;
-    pipelineInfo.renderPass = renderPass.getHandle();
-    pipelineInfo.subpass = 0;
+    //pipelineInfo.renderPass = renderPass.getHandle();
+    //pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.pNext = &renderingInfo;
 
     vk::Result result;
     std::tie(result, handle) = device.getHandle().createGraphicsPipeline(nullptr, pipelineInfo);
@@ -107,5 +113,6 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass,
 
 
 GraphicsPipeline::~GraphicsPipeline() {
+    device.getHandle().destroyPipelineLayout(layout);
     device.getHandle().destroyPipeline(handle);
 }
