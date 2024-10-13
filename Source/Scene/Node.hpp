@@ -25,9 +25,11 @@ public:
 
 	void addChild(Node*);
 
-	const std::vector<Node*> getChildren() const;
+	const std::vector<Node*>& getChildren() const;
 
-	const uint32_t getID() const;
+	bool hasChild() const;
+
+	uint32_t getID() const;
 
 	void setMesh(const Mesh*);
 

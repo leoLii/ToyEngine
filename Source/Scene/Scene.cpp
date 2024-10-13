@@ -16,7 +16,6 @@ Scene::~Scene()
 	}
 	nodes.clear();
 	meshes.clear();
-	delete rootNode;
 }
 
 void Scene::loadModel(std::string& path)

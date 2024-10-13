@@ -38,12 +38,17 @@ void Node::addChild(Node* child)
 	this->children.push_back(child);
 }
 
-const std::vector<Node*> Node::getChildren() const
+const std::vector<Node*>& Node::getChildren() const
 {
 	return children;
 }
 
-const uint32_t Node::getID() const
+bool Node::hasChild() const
+{
+	return !this->children.empty();
+}
+
+uint32_t Node::getID() const
 {
 	return id;
 }
