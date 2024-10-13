@@ -2,14 +2,17 @@
 
 #include "Platform/Application.hpp"
 
-#include "Scene/Loader.hpp"
+#include "Scene/scene.hpp"
 
 int main() {
 /////////////////////////////////////////////////////////////////////
     logging::init();
 
-    AssimpLoader loader;
-    loader.loadModel("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/nanosuit/nanosuit.obj");
+    Scene scene{};
+
+    std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cube/cube.fbx" };
+    scene.loadModel(path);
+    scene.collectMeshes();
 
     Application app{};
 
@@ -32,7 +35,7 @@ int main() {
 
     app.init(config);
     
-    app.run(0.0);
+    app.run();
 
     app.close();
 

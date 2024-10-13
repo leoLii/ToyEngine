@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common/Math.hpp"
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -7,11 +9,13 @@
 #include <typeinfo>
 #include <typeindex>
 
-//class Component;
+class Mesh;
 
 class Node {
 public:
 	Node();
+
+	Node(const char* name);
 
 	~Node();
 
@@ -21,11 +25,15 @@ public:
 
 	void addChild(Node*);
 
-	const std::vector<std::shared_ptr<Node>> getChildren() const;
+	const std::vector<Node*> getChildren() const;
 
 	const uint32_t getID() const;
 
-	virtual void update(float deltaTime) = 0;
+	void setMesh(const Mesh*);
+
+	Mesh* getMesh();
+
+	//virtual void update(float deltaTime) = 0;
 
 	//void addComponent(Component*);
 
@@ -37,12 +45,16 @@ public:
 
 protected:
 	uint32_t id;
-
 	std::string name = "";
+	bool isActive = true;
 
 	Node* parent{ nullptr };
 
-	std::vector<std::shared_ptr<Node>> children;
+	std::vector<Node*> children;
+
+	Mat4 transform{ 1.0 };
+
+	Mesh* mesh = nullptr;
 
 	//std::unordered_map<std::type_index, Component*> components;
 };
