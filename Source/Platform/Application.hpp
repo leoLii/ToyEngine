@@ -71,7 +71,5 @@ private:
 	void recordCommandBuffer(uint32_t);
 
 	CommandPool* commandPool = nullptr;
-	RenderPass* renderPass = nullptr;
 	GraphicsPipeline* graphicsPipeline = nullptr;
-	std::vector<Framebuffer*> framebuffers;
 };

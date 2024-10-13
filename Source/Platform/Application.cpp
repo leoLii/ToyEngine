@@ -45,15 +45,13 @@ void Application::init(ApplicationConfig& config)
 	
     gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
 
-    renderPass = new RenderPass(*gpuContext->getDevice());
-
     auto vertShaderModule = gpuContext->findShader("triangle.vert");
     auto fragShaderModule = gpuContext->findShader("triangle.frag");
 
     std::vector<vk::ShaderModule> modules;
     modules.push_back(vertShaderModule->getHandle());
     modules.push_back(fragShaderModule->getHandle());
-    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *renderPass, modules);
+    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), modules);
 
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, config.maxFrames);
     fence = gpuContext->requestFence();
@@ -224,6 +222,5 @@ void Application::close()
     gpuContext->returnFence(fence);
 
     delete graphicsPipeline;
-    delete renderPass;
     delete commandPool;
 }

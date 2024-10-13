@@ -10,19 +10,16 @@ class RenderPass;
 class GraphicsPipeline {
 public:
 	GraphicsPipeline() = delete;
-	GraphicsPipeline(const Device&, RenderPass&, std::vector<vk::ShaderModule>);
+	GraphicsPipeline(const Device&, std::vector<vk::ShaderModule>);
 
 	~GraphicsPipeline();
 
-	vk::Pipeline getHandle() {
-		return this->handle;
-	}
-
+	vk::Pipeline getHandle();
 
 protected:
 	const Device& device;
 
-	RenderPass& renderPass;
+	//RenderPass& renderPass;
 
 	vk::Pipeline handle;
 

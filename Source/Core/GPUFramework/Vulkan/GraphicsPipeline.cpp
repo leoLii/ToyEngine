@@ -5,9 +5,8 @@
 
 #include <tuple>
 
-GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass, std::vector<vk::ShaderModule> shaderModules)
+GraphicsPipeline::GraphicsPipeline(const Device& device, std::vector<vk::ShaderModule> shaderModules)
 	:device(device)
-    , renderPass(renderPass)
     , shaderModules(shaderModules)
 {
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
@@ -110,9 +109,12 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, RenderPass& renderPass,
     }
 }
 
-
-
 GraphicsPipeline::~GraphicsPipeline() {
     device.getHandle().destroyPipelineLayout(layout);
     device.getHandle().destroyPipeline(handle);
+}
+
+vk::Pipeline GraphicsPipeline::getHandle()
+{
+    return handle;
 }
