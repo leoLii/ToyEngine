@@ -25,18 +25,14 @@ public:
     void waitEvents();
     
     void getFramebufferSize(int* width, int* height);
-    
-    void createWindowSurface(vk::Instance);
-    
-    const vk::SurfaceKHR& getSurface() const;
 
     static std::vector<const char*> requireWindowExtensions();
+
+    GLFWwindow* getHandle();
     
 protected:
     GLFWwindow* window;
     std::string name;
     size_t width;
     size_t height;
-    
-    vk::SurfaceKHR surface;
 };

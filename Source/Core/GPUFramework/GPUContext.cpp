@@ -19,8 +19,8 @@ GPUContext::GPUContext(
     device = std::make_unique<Device>(*instance);
     // Deal with headless and normal rendering, only window rendering for now.
     if (window != nullptr) {
-        window->createWindowSurface(this->instance->getHandle());
-        swapchain = std::make_unique<Swapchain>(*device, static_cast<const vk::SurfaceKHR&>(window->getSurface()));
+        createSurface(window);
+        swapchain = std::make_unique<Swapchain>(*device, static_cast<const vk::SurfaceKHR&>(this->surface));
     }
 
     fencePool = std::make_unique<FencePool>(*device);
@@ -30,7 +30,8 @@ GPUContext::GPUContext(
 
 GPUContext::~GPUContext() 
 {
-
+    swapchain.reset();
+    destroySurface();
 }
 
 const Device* GPUContext::getDevice() const 
@@ -162,4 +163,19 @@ void GPUContext::loadShaders(const std::string& dir)
             }
         }
     }
+}
+
+void GPUContext::createSurface(Window* window)
+{
+    VkSurfaceKHR VKSurface;
+    auto result = glfwCreateWindowSurface(instance->getHandle(), window->getHandle(), nullptr, &VKSurface);
+    if (result != VK_SUCCESS) {
+        throw VulkanException(static_cast<vk::Result>(result));
+    }
+    surface = static_cast<vk::SurfaceKHR>(VKSurface);
+}
+
+void GPUContext::destroySurface()
+{
+    instance->getHandle().destroySurfaceKHR(surface);
 }

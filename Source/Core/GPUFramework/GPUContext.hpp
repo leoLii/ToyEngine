@@ -58,6 +58,10 @@ public:
 
 	const Swapchain* getSwapchain() const;
 
+	// Surface
+
+	vk::SurfaceKHR getSurface() const;
+
 	// CommandPool
 
 
@@ -96,10 +100,14 @@ protected:
 	std::unique_ptr<FencePool> fencePool;
 	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
 
+	vk::SurfaceKHR surface;
+
 	//std::vector<std::unique_ptr<CommandPool>> commandPools;
 
 	std::vector<std::shared_ptr<ImageView>> imageViews;
 
 private:
 	void loadShaders(const std::string& dir);
+	void createSurface(Window*);
+	void destroySurface();
 };
