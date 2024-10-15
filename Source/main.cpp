@@ -33,7 +33,7 @@ int main() {
     
     ApplicationConfig config{ "ToyEngine", 1920, 1080, layers, extensions };
 
-    app.init(config);
+    app.init(config, &scene);
     
     app.run();
 
