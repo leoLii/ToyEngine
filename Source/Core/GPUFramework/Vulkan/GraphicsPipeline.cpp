@@ -1,32 +1,67 @@
 #include "GraphicsPipeline.hpp"
 
 #include "Device.hpp"
-#include "RenderPass.hpp"
+#include "ShaderModule.hpp"
+#include "PipelineLayout.hpp"
 
 #include <tuple>
 
-GraphicsPipeline::GraphicsPipeline(const Device& device, std::vector<vk::ShaderModule> shaderModules)
-	:device(device)
-    , shaderModules(shaderModules)
+GraphicsPipeline::GraphicsPipeline(
+    const Device& device, 
+    PipelineLayout& layout,
+    GraphicsPipelineState& state, 
+    std::vector<ShaderModule>& shaderModules)
+    :device{ device }
+    , state{ state }
 {
+    /*for (auto setLayout : layout.setLayouts) {
+        std::vector<vk::DescriptorSetLayoutBinding> bindings;
+        for (auto binding : setLayout.bindings) {
+            vk::DescriptorSetLayoutBinding bindingInfo;
+            bindingInfo.binding = binding.binding;
+            bindingInfo.descriptorType = binding.descriptorType;
+            bindingInfo.descriptorCount = binding.descriptorCount;
+            bindingInfo.stageFlags = binding.shaderStage;
+            bindingInfo.pImmutableSamplers = binding.immutableSamplers.data();
+        }
+
+        vk::DescriptorSetLayoutCreateInfo descriptorSetLayout;
+        descriptorSetLayout.bindingCount = bindings.size();
+        descriptorSetLayout.pBindings = bindings.data();
+
+        vk::DescriptorPoolCreateInfo info;
+        info.
+
+        device.getHandle().createDescriptorPool
+    }
+
+    for (auto constance : layout.constanceRanges) {
+        vk::PushConstantRange range
+    }
+
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
     pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.pSetLayouts = nullptr;
     pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.pPushConstantRanges = nullptr;*/
 
-    layout = device.getHandle().createPipelineLayout(pipelineLayoutInfo);
+    //layout = device.getHandle().createPipelineLayout(pipelineLayoutInfo);
 
     vk::PipelineShaderStageCreateInfo vertShaderStageInfo;
     vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
-    vertShaderStageInfo.module = shaderModules[0];
+    vertShaderStageInfo.module = shaderModules[0].getHandle();
     vertShaderStageInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo fragShaderStageInfo;
     fragShaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment;
-    fragShaderStageInfo.module = shaderModules[1];
+    fragShaderStageInfo.module = shaderModules[1].getHandle();
     fragShaderStageInfo.pName = "main";
 
     vk::PipelineShaderStageCreateInfo stages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+    vk::VertexInputBindingDescription vertexInput;
+    vertexInput.binding = 0;
+    vertexInput.stride = 0;
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
     vertexInputInfo.vertexBindingDescriptionCount = 0;
     vertexInputInfo.vertexAttributeDescriptionCount = 0;
@@ -90,7 +125,7 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, std::vector<vk::ShaderM
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
-    pipelineInfo.layout = layout;
+    pipelineInfo.layout = layout.getHandle();
     //pipelineInfo.renderPass = renderPass.getHandle();
     //pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -110,7 +145,6 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, std::vector<vk::ShaderM
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
-    device.getHandle().destroyPipelineLayout(layout);
     device.getHandle().destroyPipeline(handle);
 }
 
