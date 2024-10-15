@@ -4,17 +4,24 @@
 
 #include "Vulkan/Instance.hpp"
 #include "Vulkan/Device.hpp"
+#include "Vulkan/Swapchain.hpp"
+
 #include "Vulkan/Framebuffer.hpp"
-#include "Vulkan/GraphicsPipeline.hpp"
-#include "Vulkan/CommandPool.hpp"
 #include "Vulkan/RenderPass.hpp"
-#include "Vulkan/ImageView.hpp"
-#include "Vulkan/ShaderModule.hpp"
+
+#include "Vulkan/CommandPool.hpp"
 #include "Vulkan/SemaphorePool.hpp"
 #include "Vulkan/FencePool.hpp"
-#include "Vulkan/Swapchain.hpp"
+
+#include "Vulkan/ShaderModule.hpp"
+#include "Vulkan/DescriptorSetLayout.hpp"
+#include "Vulkan/PipelineLayout.hpp"
+#include "Vulkan/GraphicsPipeline.hpp"
+
 #include "Vulkan/Image.hpp"
 #include "Vulkan/ImageView.hpp"
+#include "Vulkan/Buffer.hpp"
+#include "Vulkan/BufferView.hpp"
 
 #include "Platform/Window.hpp"
 
@@ -85,6 +92,9 @@ public:
 	// ShaderModule
 	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
 
+	// Descriptor
+	std::vector<vk::DescriptorSet>&& requireDescriptorSet(std::vector<vk::DescriptorSetLayout>);
+
 	// Image & Buffer
 	const std::shared_ptr<ImageView> createImageView(
 		const vk::Image, 
@@ -92,6 +102,10 @@ public:
 		const vk::Format = vk::Format::eB8G8R8A8Srgb,
 		const vk::ComponentMapping = vk::ComponentMapping{},
 		const vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+	
+	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags);
+
+	void destroyBuffer(Buffer*);
 
 protected:
 	std::vector<const char*> vulkanExtensions;
@@ -104,6 +118,8 @@ protected:
 	std::unique_ptr<FencePool> fencePool;
 	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
 
+	vk::DescriptorPool descriptorPool;
+
 	vk::SurfaceKHR surface;
 
 	//std::vector<std::unique_ptr<CommandPool>> commandPools;
@@ -114,4 +130,6 @@ private:
 	void loadShaders(const std::string& dir);
 	void createSurface(Window*);
 	void destroySurface();
+	void createDescriptorPool();
+	void destroyDescriptorPool();
 };

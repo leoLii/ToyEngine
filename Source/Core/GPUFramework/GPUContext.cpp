@@ -26,10 +26,12 @@ GPUContext::GPUContext(
     fencePool = std::make_unique<FencePool>(*device);
     semaphorePool = std::make_unique<SemaphorePool>(*device);
     loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
+    createDescriptorPool();
 }
 
 GPUContext::~GPUContext() 
 {
+    destroyDescriptorPool();
     swapchain.reset();
     destroySurface();
 }
@@ -81,6 +83,11 @@ const Swapchain* GPUContext::getSwapchain() const
     return swapchain.get();
 }
 
+vk::SurfaceKHR GPUContext::getSurface() const
+{
+    return surface;
+}
+
 vk::Fence GPUContext::requestFence() const
 {
     return fencePool->requestFence();
@@ -123,6 +130,15 @@ const std::shared_ptr<ShaderModule> GPUContext::findShader(const std::string& na
     }
 }
 
+std::vector<vk::DescriptorSet>&& GPUContext::requireDescriptorSet(std::vector<vk::DescriptorSetLayout> layouts)
+{
+    vk::DescriptorSetAllocateInfo allocateInfo;
+    allocateInfo.descriptorPool = descriptorPool;
+    allocateInfo.descriptorSetCount = layouts.size();
+    allocateInfo.pSetLayouts = layouts.data();
+    return device->getHandle().allocateDescriptorSets(allocateInfo);
+}
+
 const std::shared_ptr<ImageView> GPUContext::createImageView(
     const vk::Image image, 
     const vk::ImageViewType type, 
@@ -133,6 +149,17 @@ const std::shared_ptr<ImageView> GPUContext::createImageView(
     auto imageView = std::make_shared<ImageView>(*device, image, type, format, component, range);
     imageViews.push_back(imageView);
     return imageView;
+}
+
+Buffer* GPUContext::createBuffer(uint64_t size, vk::BufferUsageFlags usage)
+{
+    Buffer* buffer = new Buffer{ *device, size, usage };
+    return buffer;
+}
+
+void GPUContext::destroyBuffer(Buffer* buffer)
+{
+    delete buffer;
 }
 
 void GPUContext::loadShaders(const std::string& dir)
@@ -178,4 +205,28 @@ void GPUContext::createSurface(Window* window)
 void GPUContext::destroySurface()
 {
     instance->getHandle().destroySurfaceKHR(surface);
+}
+
+void GPUContext::createDescriptorPool()
+{
+    std::array<vk::DescriptorPoolSize, 4> poolSize;
+    poolSize[0].type = vk::DescriptorType::eUniformBuffer;
+    poolSize[0].descriptorCount = 64;
+    poolSize[1].type = vk::DescriptorType::eCombinedImageSampler;
+    poolSize[1].descriptorCount = 64;
+    poolSize[2].type = vk::DescriptorType::eStorageBuffer;
+    poolSize[2].descriptorCount = 64;
+    poolSize[3].type = vk::DescriptorType::eStorageImage;
+    poolSize[3].descriptorCount = 64;
+    vk::DescriptorPoolCreateInfo createInfo;
+    createInfo.maxSets = 10000;
+    createInfo.poolSizeCount = poolSize.size();
+    createInfo.pPoolSizes = poolSize.data();
+
+    descriptorPool = device->getHandle().createDescriptorPool(createInfo);
+}
+
+void GPUContext::destroyDescriptorPool()
+{
+    device->getHandle().destroyDescriptorPool(descriptorPool);
 }
