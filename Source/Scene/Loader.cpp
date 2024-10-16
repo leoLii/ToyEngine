@@ -36,6 +36,7 @@ Node* AssimpLoader::processNode(aiNode* node, const aiScene* scene) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         Mesh* processedMesh = processMesh(mesh);
         if (processedMesh) {
+            sceneNode->setName(processedMesh->getName());
             sceneNode->setMesh(processedMesh);
         }
     }
