@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/common.hpp>
 
 using Vec2 = glm::vec2;
 using Vec3 = glm::vec3;

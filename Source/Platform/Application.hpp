@@ -2,6 +2,7 @@
 
 #include "Window.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
+#include "Scene/Mesh.hpp"
 
 #include <chrono>
 #include <string>
@@ -18,12 +19,14 @@ struct ApplicationConfig
 	uint32_t maxFrames = 2;
 };
 
+class Scene;
+
 class Application {
 public:
 	Application() = default;
 	~Application() = default;
 
-	void init(ApplicationConfig& config);
+	void init(ApplicationConfig& config, Scene* scene);
 
 	void run();
 
@@ -60,6 +63,8 @@ protected:
 
 	vk::CommandBuffer commandBuffer;
 
+	Scene* scene;
+
 private:
 	
 	void beginFrame();
@@ -72,4 +77,14 @@ private:
 
 	CommandPool* commandPool = nullptr;
 	GraphicsPipeline* graphicsPipeline = nullptr;
+	PipelineLayout* pipelineLayout = nullptr;
+	DescriptorSetLayout* descriptorSetLayout = nullptr;
+	std::vector<vk::DescriptorSet> descriptorSets;
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	Buffer* vertexBuffer;
+	Mat4 mvp;
+	Buffer* uniformBuffer;
+	Buffer* indexBuffer;
 };

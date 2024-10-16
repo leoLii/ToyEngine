@@ -93,7 +93,7 @@ public:
 	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
 
 	// Descriptor
-	std::vector<vk::DescriptorSet>&& requireDescriptorSet(std::vector<vk::DescriptorSetLayout>);
+	std::vector<vk::DescriptorSet> requireDescriptorSet(std::vector<vk::DescriptorSetLayout>);
 
 	// Image & Buffer
 	const std::shared_ptr<ImageView> createImageView(

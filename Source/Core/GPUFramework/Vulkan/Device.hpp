@@ -49,7 +49,7 @@ public:
         return this->presentQueue;
     }
 
-    VmaAllocator getAllocator() const {
+    const VmaAllocator& getAllocator() const {
         return this->allocator;
     }
     

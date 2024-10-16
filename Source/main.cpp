@@ -30,6 +30,7 @@ int main() {
 #ifdef VK_ENABLE_VALIDATION
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
+    extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
     
     ApplicationConfig config{ "ToyEngine", 1920, 1080, layers, extensions };
 

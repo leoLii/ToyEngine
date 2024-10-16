@@ -1,5 +1,10 @@
 #include "Application.hpp"
 
+#include "Scene/Scene.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cstddef>
 
 //void recreateSwapChain()
 //{
@@ -37,21 +42,52 @@
 //    }
 //}
 
-void Application::init(ApplicationConfig& config)
+void Application::init(ApplicationConfig& config, Scene* scene)
 {
-	window = std::make_unique<Window>(config.name, config.width, config.height);
+    window = std::make_unique<Window>(config.name, config.width, config.height);
     auto windowExtensions = Window::requireWindowExtensions();
     config.extensions.insert(config.extensions.end(), windowExtensions.begin(), windowExtensions.end());
-	
+
     gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
 
-    auto vertShaderModule = gpuContext->findShader("triangle.vert");
-    auto fragShaderModule = gpuContext->findShader("triangle.frag");
+    auto vertShaderModule = gpuContext->findShader("base.vert");
+    auto fragShaderModule = gpuContext->findShader("base.frag");
 
-    std::vector<vk::ShaderModule> modules;
-    modules.push_back(vertShaderModule->getHandle());
-    modules.push_back(fragShaderModule->getHandle());
-    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), modules);
+    std::vector<ShaderModule*> modules = { vertShaderModule.get(), fragShaderModule.get()};
+
+    std::vector<vk::DescriptorSetLayoutBinding> bindings;
+    bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex });
+    descriptorSetLayout = new DescriptorSetLayout{ *gpuContext->getDevice(), 0, bindings };
+    std::vector<vk::DescriptorSetLayout> setLayouts;
+    setLayouts.push_back(descriptorSetLayout->getHandle());
+    std::vector<vk::PushConstantRange> pushConstanceRanges;
+
+    descriptorSets = gpuContext->requireDescriptorSet(setLayouts);
+
+    std::vector<vk::VertexInputBindingDescription> vertexBindings;
+    vertexBindings.push_back(
+        vk::VertexInputBindingDescription{ 0, sizeof(Vertex), vk::VertexInputRate::eVertex });
+
+    std::vector<vk::VertexInputAttributeDescription> vertexAttributes;
+    // Position
+    vertexAttributes.push_back(
+        vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, position)));
+    // Texcoord
+    vertexAttributes.push_back(
+        vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texcoord)));
+    // Normal
+    vertexAttributes.push_back(
+        vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal)));
+
+    GraphicsPipelineState state;
+    state.vertexInputState.bindings = vertexBindings;
+    state.vertexInputState.attributes = vertexAttributes;
+    state.dynamicStates.push_back(vk::DynamicState::eViewport);
+    state.dynamicStates.push_back(vk::DynamicState::eScissor);
+    state.renderingInfo.colorAttachmentFormats.push_back(gpuContext->getSwapchainFormat());
+    
+    pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), setLayouts, pushConstanceRanges };
+    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *pipelineLayout, state, modules);
 
     commandPool = new CommandPool(*gpuContext->getDevice(), 0, config.maxFrames);
     fence = gpuContext->requestFence();
@@ -59,6 +95,45 @@ void Application::init(ApplicationConfig& config)
     imageAvailableSemaphore = gpuContext->requestSemaphore();
 
     renderFinishedSemaphore = gpuContext->requestSemaphore();
+
+    this->scene = scene;
+
+    vertices = scene->getMeshes()[0]->assembleVertexData();
+    vertexBuffer = gpuContext->createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);
+    vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(Vertex));
+    
+    indices = scene->getMeshes()[0]->getIndices();
+    indexBuffer = gpuContext->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
+    indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
+
+    float fov = glm::radians(45.0f);
+    fov *= (1920.0 / 1080.0);
+    auto projection = glm::perspectiveFov(fov, 1920.0f, 1080.0f, 0.1f, 3000.0f);
+    auto view = glm::lookAt(glm::vec3(-5.0f, 3.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    auto model = Mat4(1.0);
+    auto clip = Mat4{
+        1.0f,  0.0f, 0.0f, 0.0f,
+        0.0f, -1.0f, 0.0f, 0.0f,
+        0.0f,  0.0f, 0.5f, 0.0f,
+        0.0f,  0.0f, 0.5f, 1.0f
+    };
+    auto mvp = clip * projection * view * model;
+    uniformBuffer = gpuContext->createBuffer(sizeof(Mat4), vk::BufferUsageFlagBits::eUniformBuffer);
+    uniformBuffer->copyToGPU(static_cast<const void*>(glm::value_ptr(mvp)), sizeof(mvp));
+
+    vk::DescriptorBufferInfo descriptorBufferInfo;
+    descriptorBufferInfo.buffer = uniformBuffer->getHandle();
+    descriptorBufferInfo.offset = 0;
+    descriptorBufferInfo.range = sizeof(Mat4);
+
+    vk::WriteDescriptorSet writeDescriptorSet;
+    writeDescriptorSet.dstSet = descriptorSets[0];
+    writeDescriptorSet.dstBinding = 0;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.descriptorType = vk::DescriptorType::eUniformBuffer;
+    writeDescriptorSet.pBufferInfo = &descriptorBufferInfo;
+
+    gpuContext->getDevice()->getHandle().updateDescriptorSets(writeDescriptorSet, nullptr);
 }
 
 void Application::beginFrame()
@@ -156,6 +231,7 @@ void Application::recordCommandBuffer(uint32_t index)
     renderingInfo.pColorAttachments = &colorAttachment;
 
     commandBuffer.beginRendering(&renderingInfo);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, descriptorSets, nullptr);
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
     vk::Viewport viewport{};
     viewport.x = 0.0f;
@@ -172,7 +248,9 @@ void Application::recordCommandBuffer(uint32_t index)
     scissor.extent = gpuContext->getSwapchainExtent();
     commandBuffer.setScissor(0, 1, &scissor);
 
-    commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.bindVertexBuffers(0, vertexBuffer->getHandle(), { 0 });
+    commandBuffer.bindIndexBuffer(indexBuffer->getHandle(), 0, vk::IndexType::eUint32);
+    commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
 
     commandBuffer.endRendering();
 }
@@ -217,10 +295,14 @@ void Application::run()
 void Application::close()
 {
     gpuContext->getDevice()->getHandle().waitIdle();
+    gpuContext->destroyBuffer(vertexBuffer);
+    gpuContext->destroyBuffer(uniformBuffer);
+    gpuContext->destroyBuffer(indexBuffer);
     gpuContext->returnSemaphore(renderFinishedSemaphore);
     gpuContext->returnSemaphore(imageAvailableSemaphore);
     gpuContext->returnFence(fence);
-
+    delete descriptorSetLayout;
+    delete pipelineLayout;
     delete graphicsPipeline;
     delete commandPool;
 }

@@ -46,7 +46,12 @@ Device::Device(Instance& instance)
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyProperties.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
-    std::vector<const char*> enabledExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
+    std::vector<const char*> enabledExtensions = { 
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
+        VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+        VK_KHR_MAINTENANCE_5_EXTENSION_NAME};
 #ifdef ARCH_OS_MACOS
     enabledExtensions.push_back("VK_KHR_portability_subset");
 #endif // ARCH_OS_MACOS
@@ -68,7 +73,7 @@ Device::Device(Instance& instance)
     vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
     VmaAllocatorCreateInfo allocatorCreateInfo = {};
-    allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+    allocatorCreateInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
     allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     allocatorCreateInfo.physicalDevice = gpu;
     allocatorCreateInfo.device = handle;

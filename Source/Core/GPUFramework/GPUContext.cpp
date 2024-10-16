@@ -130,13 +130,14 @@ const std::shared_ptr<ShaderModule> GPUContext::findShader(const std::string& na
     }
 }
 
-std::vector<vk::DescriptorSet>&& GPUContext::requireDescriptorSet(std::vector<vk::DescriptorSetLayout> layouts)
+std::vector<vk::DescriptorSet> GPUContext::requireDescriptorSet(std::vector<vk::DescriptorSetLayout> layouts)
 {
     vk::DescriptorSetAllocateInfo allocateInfo;
     allocateInfo.descriptorPool = descriptorPool;
     allocateInfo.descriptorSetCount = layouts.size();
     allocateInfo.pSetLayouts = layouts.data();
-    return device->getHandle().allocateDescriptorSets(allocateInfo);
+    auto result = device->getHandle().allocateDescriptorSets(allocateInfo);
+    return result;
 }
 
 const std::shared_ptr<ImageView> GPUContext::createImageView(
