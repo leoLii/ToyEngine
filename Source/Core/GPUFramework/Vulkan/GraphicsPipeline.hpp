@@ -36,6 +36,8 @@ struct RasterizationState
 	vk::FrontFace front_face{ vk::FrontFace::eClockwise };
 
 	vk::Bool32 depth_bias_enable{ vk::False };
+
+	float line_width{ 1.0f };
 };
 
 struct ViewportState
@@ -123,7 +125,7 @@ struct ColorBlendState
 
 struct RenderingInfo
 {
-	uint32_t colorAttachmentCount = 0;
+	//uint32_t colorAttachmentCount = 0;
 	std::vector<vk::Format> colorAttachmentFormats;
 	vk::Format depthAttachmentFormat{ vk::Format::eD32Sfloat };
 	vk::Format stencilAttachmentFormat{ vk::Format::eD32Sfloat };
@@ -141,6 +143,7 @@ struct GraphicsPipelineState
 	ColorBlendAttachmentState colorBlendAttachmentState;
 	ColorBlendState colorBlendState;
 	RenderingInfo renderingInfo;
+	std::vector<vk::DynamicState> dynamicStates;
 };
 
 class GraphicsPipeline {
@@ -150,7 +153,7 @@ public:
 		const Device&, 
 		PipelineLayout&,
 		GraphicsPipelineState&, 
-		std::vector<ShaderModule>&);
+		std::vector<ShaderModule*>&);
 
 	~GraphicsPipeline();
 
