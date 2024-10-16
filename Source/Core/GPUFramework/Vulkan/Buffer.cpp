@@ -5,24 +5,19 @@
 Buffer::Buffer(const Device& device, uint64_t size, vk::BufferUsageFlags usage)
 	:device{ device }
 {
-	uint32_t familyIndices[2] = {0, 2};
-	vk::BufferCreateInfo createInfo;
-	createInfo.usage = usage;
-	createInfo.queueFamilyIndexCount = 2;
-	createInfo.pQueueFamilyIndices = familyIndices;
-	createInfo.sharingMode = vk::SharingMode::eConcurrent;
-	createInfo.size = size;
+	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	bufferInfo.size = size;
+	bufferInfo.usage = static_cast<VkBufferUsageFlags>(usage);
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	auto cCreateInfo = static_cast<VkBufferCreateInfo>(createInfo);
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+	allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
-	VmaAllocationCreateInfo allocationInfo;
-	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	VkBuffer buffer;
+	auto result = vmaCreateBuffer(device.getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
 
-	VkBuffer cHandle;
-	VmaAllocation allocation;
-	vmaCreateBuffer(device.getAllocator(), &cCreateInfo, &allocationInfo, &cHandle, &allocation, nullptr);
-
-	handle = static_cast<vk::Buffer>(cHandle);
+	handle = static_cast<vk::Buffer>(buffer);
 }
 
 Buffer::~Buffer() 
