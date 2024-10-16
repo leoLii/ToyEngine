@@ -39,8 +39,10 @@ void Scene::collectMeshesFromNode(Node* node)
 
 	nodes.push_back(node);
 	Mesh* nodeMesh = node->getMesh();
-	this->meshes.push_back(nodeMesh);
-
+	if (nodeMesh) {
+		this->meshes.push_back(nodeMesh);
+	}
+	
 	// 递归遍历子节点
 	const std::vector<Node*>& children = node->getChildren();
 	for (Node* child : children) {

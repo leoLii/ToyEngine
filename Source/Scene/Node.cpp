@@ -53,7 +53,17 @@ uint32_t Node::getID() const
 	return id;
 }
 
-void Node::setMesh(const Mesh*)
+void Node::setName(std::string name)
+{
+	this->name = name;
+}
+
+std::string Node::getName()
+{
+	return this->name;
+}
+
+void Node::setMesh(Mesh* mesh)
 {
 	this->mesh = mesh;
 }

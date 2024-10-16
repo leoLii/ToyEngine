@@ -31,9 +31,15 @@ public:
 
 	uint32_t getID() const;
 
-	void setMesh(const Mesh*);
+	void setName(std::string);
+
+	std::string getName();
+
+	void setMesh(Mesh*);
 
 	Mesh* getMesh();
+
+	
 
 	//virtual void update(float deltaTime) = 0;
 
