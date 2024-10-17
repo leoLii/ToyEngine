@@ -10,6 +10,7 @@
 #include <typeindex>
 
 class Mesh;
+class Component;
 
 class Node {
 public:
@@ -39,17 +40,15 @@ public:
 
 	Mesh* getMesh();
 
-	
-
 	//virtual void update(float deltaTime) = 0;
 
-	//void addComponent(Component*);
+	void addComponent(Component*);
 
-	//Component* getComponent() const;
+	Component* getComponent() const;
 
-	//void removeComponent(std::type_index);
+	void removeComponent(std::type_index);
 
-	//bool hasComponent(Component*);
+	bool hasComponent(std::type_index);
 
 protected:
 	uint32_t id;
@@ -64,5 +63,5 @@ protected:
 
 	Mesh* mesh = nullptr;
 
-	//std::unordered_map<std::type_index, Component*> components;
+	std::unordered_map<std::type_index, Component*> components;
 };

@@ -1,8 +1,7 @@
 #include "Application.hpp"
 
 #include "Scene/Scene.hpp"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "Scene/Components/Camera.hpp"
 
 #include <cstddef>
 
@@ -106,10 +105,8 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     indexBuffer = gpuContext->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
     indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 
-    float fov = glm::radians(45.0f);
-    fov *= (1920.0 / 1080.0);
-    auto projection = glm::perspectiveFov(fov, 1920.0f, 1080.0f, 0.1f, 3000.0f);
-    auto view = glm::lookAt(glm::vec3(-5.0f, 3.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    auto camera = scene->getCamera();
+    camera->lookAt(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
     auto model = Mat4(1.0);
     auto clip = Mat4{
         1.0f,  0.0f, 0.0f, 0.0f,
@@ -117,6 +114,8 @@ void Application::init(ApplicationConfig& config, Scene* scene)
         0.0f,  0.0f, 0.5f, 0.0f,
         0.0f,  0.0f, 0.5f, 1.0f
     };
+    auto view = camera->getViewMatrix();
+    auto projection = camera->getProjectionMatrix();
     auto mvp = clip * projection * view * model;
     uniformBuffer = gpuContext->createBuffer(sizeof(Mat4), vk::BufferUsageFlagBits::eUniformBuffer);
     uniformBuffer->copyToGPU(static_cast<const void*>(glm::value_ptr(mvp)), sizeof(mvp));

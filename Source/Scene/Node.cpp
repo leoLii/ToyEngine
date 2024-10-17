@@ -1,6 +1,8 @@
 #include "Node.hpp"
 #include "Mesh.hpp"
 
+#include "Component.hpp"
+
 #include <random>
 
 Node::Node() {
@@ -21,6 +23,10 @@ Node::Node(const char* name)
 
 Node::~Node() {
 	delete mesh;
+	for (auto component : components) {
+		delete component.second;
+	}
+	components.clear();
 }
 
 void Node::setParent(Node* parent) {
@@ -70,5 +76,10 @@ void Node::setMesh(Mesh* mesh)
 
 Mesh* Node::getMesh() {
 	return this->mesh;
+}
+
+void Node::addComponent(Component* component)
+{
+	this->components[typeid(component)] = component;
 }
 

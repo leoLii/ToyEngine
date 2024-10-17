@@ -3,6 +3,8 @@
 #include "Platform/Application.hpp"
 
 #include "Scene/scene.hpp"
+#include "Scene/Node.hpp"
+#include "Scene/Components/Camera.hpp"
 
 int main() {
 /////////////////////////////////////////////////////////////////////
@@ -12,7 +14,6 @@ int main() {
 
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cube/cube.fbx" };
     scene.loadModel(path);
-    scene.collectMeshes();
 
     Application app{};
 
