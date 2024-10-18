@@ -63,6 +63,8 @@ protected:
 
 	vk::CommandBuffer commandBuffer;
 
+	vk::RenderingAttachmentInfo colorAttachment;
+
 	Scene* scene;
 
 private:
@@ -75,7 +77,6 @@ private:
 
 	void recordCommandBuffer(uint32_t);
 
-	CommandPool* commandPool = nullptr;
 	GraphicsPipeline* graphicsPipeline = nullptr;
 	PipelineLayout* pipelineLayout = nullptr;
 	DescriptorSetLayout* descriptorSetLayout = nullptr;

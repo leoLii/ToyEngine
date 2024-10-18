@@ -8,9 +8,9 @@
 #include <sstream>
 
 GPUContext::GPUContext(
-    const std::string name, 
-    const std::vector<const char*>& layers, 
-    const std::vector<const char*>& extensions, 
+    const std::string name,
+    const std::vector<const char*>& layers,
+    const std::vector<const char*>& extensions,
     Window* window)
 {
     this->vulkanExtensions = extensions;
@@ -27,11 +27,14 @@ GPUContext::GPUContext(
     semaphorePool = std::make_unique<SemaphorePool>(*device);
     loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
     createDescriptorPool();
+    createCommandPools();
 }
 
 GPUContext::~GPUContext() 
 {
+    destroyCommandPools();
     destroyDescriptorPool();
+    destroyShaders();
     swapchain.reset();
     destroySurface();
 }
@@ -86,6 +89,11 @@ const Swapchain* GPUContext::getSwapchain() const
 vk::SurfaceKHR GPUContext::getSurface() const
 {
     return surface;
+}
+
+vk::CommandBuffer GPUContext::requestCommandBuffer(vk::CommandBufferLevel level)
+{
+    return commandPools[0]->requestCommandBuffer(level);
 }
 
 vk::Fence GPUContext::requestFence() const
@@ -163,6 +171,18 @@ void GPUContext::destroyBuffer(Buffer* buffer)
     delete buffer;
 }
 
+void GPUContext::createCommandPools()
+{
+    commandPools.push_back(new CommandPool{ *device, 0 });
+}
+
+void GPUContext::destroyCommandPools()
+{
+    for (auto commandPool : commandPools) {
+        delete commandPool;
+    }
+}
+
 void GPUContext::loadShaders(const std::string& dir)
 {
     for (const auto& entry: std::filesystem::directory_iterator(dir)) {
@@ -191,6 +211,14 @@ void GPUContext::loadShaders(const std::string& dir)
             }
         }
     }
+}
+
+void GPUContext::destroyShaders()
+{
+    for (auto shader : shaderModules) {
+        shader.second.reset();
+    }
+    shaderModules.clear();
 }
 
 void GPUContext::createSurface(Window* window)

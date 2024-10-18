@@ -8,7 +8,7 @@
 #include "CommandPool.hpp"
 #include "Device.hpp"
 
-CommandPool::CommandPool(const Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount)
+CommandPool::CommandPool(const Device &device, uint32_t queueFamilyIndex)
 :device(device),
 queueFamilyIndex(queueFamilyIndex)
 {
@@ -18,21 +18,19 @@ queueFamilyIndex(queueFamilyIndex)
     
     handle = device.getHandle().createCommandPool(createInfo);
 
-    commandBuffers.resize(commandBufferCount);
-
-    vk::CommandBufferAllocateInfo allocateInfo;
-    allocateInfo.commandPool = handle;
-    allocateInfo.commandBufferCount = commandBufferCount;
-    allocateInfo.level = vk::CommandBufferLevel::ePrimary;
-
-    commandBuffers = device.getHandle().allocateCommandBuffers(allocateInfo);
+    
 }
 
 CommandPool::~CommandPool(){
     device.getHandle().destroyCommandPool(handle);
 }
 
-vk::CommandBuffer CommandPool::getCommandBuffer(uint32_t index)
+vk::CommandBuffer CommandPool::requestCommandBuffer(vk::CommandBufferLevel level)
 {
-    return commandBuffers[index];
+    vk::CommandBufferAllocateInfo allocateInfo;
+    allocateInfo.commandPool = handle;
+    allocateInfo.commandBufferCount = 1;
+    allocateInfo.level = level;
+    auto commandBuffer = device.getHandle().allocateCommandBuffers(allocateInfo);
+    return commandBuffer[0];
 }

@@ -74,7 +74,7 @@ public:
 	vk::SurfaceKHR getSurface() const;
 
 	// CommandPool
-
+	vk::CommandBuffer requestCommandBuffer(vk::CommandBufferLevel level);
 
 	// Fence & Semaphore
 	vk::Fence requestFence() const;
@@ -122,12 +122,15 @@ protected:
 
 	vk::SurfaceKHR surface;
 
-	//std::vector<std::unique_ptr<CommandPool>> commandPools;
+	std::vector<CommandPool*> commandPools;
 
 	std::vector<std::shared_ptr<ImageView>> imageViews;
 
 private:
+	void createCommandPools();
+	void destroyCommandPools();
 	void loadShaders(const std::string& dir);
+	void destroyShaders();
 	void createSurface(Window*);
 	void destroySurface();
 	void createDescriptorPool();

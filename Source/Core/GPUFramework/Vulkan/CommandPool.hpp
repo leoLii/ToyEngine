@@ -20,17 +20,12 @@ public:
 //                    size_t                   thread_index = 0,
 //                    CommandBuffer::ResetMode reset_mode   = CommandBuffer::ResetMode::ResetPool);
 
-    CommandPool(const Device &device, uint32_t queueFamilyIndex, uint32_t commandBufferCount);
+    CommandPool(const Device &device, uint32_t queueFamilyIndex);
 
-    CommandPool(const CommandPool &) = delete;
-
-    CommandPool(CommandPool &&other) = delete;
+    NO_MOVE(CommandPool);
+    NO_COPY(CommandPool);
 
     ~CommandPool();
-
-    CommandPool &operator=(const CommandPool &) = delete;
-
-    CommandPool &operator=(CommandPool &&) = delete;
 
     uint32_t getQueueFamilyIndex() const{
         return this->queueFamilyIndex;
@@ -46,11 +41,10 @@ public:
 
     VkResult resetPool();
 
-    vk::CommandBuffer getCommandBuffer(uint32_t index);
+    vk::CommandBuffer requestCommandBuffer(vk::CommandBufferLevel level);
 
 //    CommandBuffer &requestCommandBuffer(VkCommandBufferLevel level = VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-    //const CommandBuffer::ResetMode get_reset_mode() const;
 protected:
     const Device& device;
     

@@ -88,7 +88,6 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), setLayouts, pushConstanceRanges };
     graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *pipelineLayout, state, modules);
 
-    commandPool = new CommandPool(*gpuContext->getDevice(), 0, config.maxFrames);
     fence = gpuContext->requestFence();
 
     imageAvailableSemaphore = gpuContext->requestSemaphore();
@@ -133,12 +132,12 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     writeDescriptorSet.pBufferInfo = &descriptorBufferInfo;
 
     gpuContext->getDevice()->getHandle().updateDescriptorSets(writeDescriptorSet, nullptr);
+    commandBuffer = gpuContext->requestCommandBuffer(vk::CommandBufferLevel::ePrimary);
 }
 
 void Application::beginFrame()
 {
-    commandBuffer = commandPool->getCommandBuffer(frameIndex % config.maxFrames);
-    
+    commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
     vk::CommandBufferBeginInfo beginInfo;
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
     commandBuffer.begin(beginInfo);
@@ -176,6 +175,7 @@ void Application::endFrame(uint32_t index)
     submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
 
     gpuContext->getDevice()->getGraphicsQueue().submit(submitInfo, fence);
+    gpuContext->waitForFences(fence);
 }
 
 void Application::present(uint32_t index)
@@ -294,6 +294,7 @@ void Application::run()
 void Application::close()
 {
     gpuContext->getDevice()->getHandle().waitIdle();
+    
     gpuContext->destroyBuffer(vertexBuffer);
     gpuContext->destroyBuffer(uniformBuffer);
     gpuContext->destroyBuffer(indexBuffer);
@@ -303,5 +304,4 @@ void Application::close()
     delete descriptorSetLayout;
     delete pipelineLayout;
     delete graphicsPipeline;
-    delete commandPool;
 }
