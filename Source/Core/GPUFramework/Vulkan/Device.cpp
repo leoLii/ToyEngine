@@ -24,27 +24,98 @@ void Device::initGPU()
     std::cout<<"Found: "<<gpuInfo.deviceName<<std::endl;
 }
 
+uint32_t Device::getQueueFamilyIndex(vk::QueueFlagBits queueFlag)
+{
+    // Dedicated queue for compute
+    // Try to find a queue family index that supports compute but not graphics
+    if (queueFlag & vk::QueueFlagBits::eCompute)
+    {
+        for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+        {
+            if ((queueFamilyProperties[i].queueFlags & queueFlag) && 
+                !(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics))
+            {
+                return i;
+                break;
+            }
+        }
+    }
+
+    // Dedicated queue for transfer
+    // Try to find a queue family index that supports transfer but not graphics and compute
+    if (queueFlag & vk::QueueFlagBits::eTransfer)
+    {
+        for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+        {
+            if ((queueFamilyProperties[i].queueFlags & queueFlag) && 
+                !(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) && 
+                !(queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eCompute))
+            {
+                return i;
+                break;
+            }
+        }
+    }
+
+    // For other queue types or if no separate compute queue is present, return the first one to support the requested flags
+    for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+    {
+        if (queueFamilyProperties[i].queueFlags & queueFlag)
+        {
+            return i;
+            break;
+        }
+    }
+
+    throw std::runtime_error("Could not find a matching queue family index");
+}
+
+std::vector<vk::DeviceQueueCreateInfo> Device::createQueueInfos()
+{
+    uint32_t  queueFamilyCount = static_cast<uint32_t>(queueFamilyProperties.size());
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos(queueFamilyCount, vk::DeviceQueueCreateInfo{});
+    std::vector<std::vector<float>> queue_priorities(queueFamilyCount);
+
+    for (uint32_t queueFamilyIndex = 0U; queueFamilyIndex < queueFamilyCount; ++queueFamilyIndex)
+    {
+        const vk::QueueFamilyProperties& queueFamilyProperty = queueFamilyProperties[queueFamilyIndex];
+            uint32_t graphicsQueueFamily = getQueueFamilyIndex(vk::QueueFlagBits::eGraphics);
+            if (graphicsQueueFamily == queueFamilyIndex)
+            {
+                queue_priorities[queueFamilyIndex].reserve(queueFamilyProperty.queueCount);
+                queue_priorities[queueFamilyIndex].push_back(1.0f);
+                for (uint32_t i = 1; i < queueFamilyProperty.queueCount; i++)
+                {
+                    queue_priorities[queueFamilyIndex].push_back(0.5f);
+                }
+            }
+            else
+            {
+                queue_priorities[queueFamilyIndex].resize(queueFamilyProperty.queueCount, 0.5f);
+            }
+
+        vk::DeviceQueueCreateInfo& queueCreateInfo = queueCreateInfos[queueFamilyIndex];
+
+        queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+        queueCreateInfo.queueCount = queueFamilyProperty.queueCount;
+        queueCreateInfo.pQueuePriorities = queue_priorities[queueFamilyIndex].data();
+    }
+    return queueCreateInfos;
+}
+
 Device::Device(Instance& instance)
     :instance(instance)
 {
     initGPU();
 
-    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-    float queuePriority = 1.0f;
-    for(int index = 0; index < queueFamilyProperties.size(); index++){
-        vk::DeviceQueueCreateInfo queueCreateInfo;
-        queueCreateInfo.queueFamilyIndex = index;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
     vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature;
     dynamicRenderingFeature.dynamicRendering = true;
     
+    auto queueInfos = createQueueInfos();
+    auto queueFamilyCount = queueFamilyProperties.size();
     vk::DeviceCreateInfo createInfo{};
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyProperties.size());
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueFamilyCount);
+    createInfo.pQueueCreateInfos = queueInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
     std::vector<const char*> enabledExtensions = { 
         VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
@@ -61,6 +132,7 @@ Device::Device(Instance& instance)
     createInfo.pNext = &dynamicRenderingFeature;
     
     handle = gpu.createDevice(createInfo);
+
 
     graphicsQueue = handle.getQueue(0, 0);
     presentQueue = handle.getQueue(2, 0);

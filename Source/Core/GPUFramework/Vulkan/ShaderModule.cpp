@@ -15,6 +15,7 @@
 #include <string>
 
 #include <shaderc/shaderc.hpp>
+#include <spirv_cross/spirv_reflect.hpp>
 
 shaderc_shader_kind translateShaderStage(vk::ShaderStageFlagBits stage)
 {

@@ -14,6 +14,10 @@
 
 class Device;
 
+struct ShaderReflection {
+
+};
+
 class ShaderModule
 {
   public:

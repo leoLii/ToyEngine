@@ -83,4 +83,8 @@ protected:
     vk::Queue computeQueue{ VK_NULL_HANDLE };
     vk::Queue presentQueue{ VK_NULL_HANDLE };
     vk::Queue transferQueue{ VK_NULL_HANDLE };
+
+private:
+    std::vector<vk::DeviceQueueCreateInfo> createQueueInfos();
+    uint32_t getQueueFamilyIndex(vk::QueueFlagBits);
 };
