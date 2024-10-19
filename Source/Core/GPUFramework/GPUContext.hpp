@@ -90,7 +90,7 @@ public:
 	void returnSemaphore(const vk::Semaphore) const;
 
 	// ShaderModule
-	const std::shared_ptr<ShaderModule> findShader(const std::string&) const;
+	const ShaderModule* findShader(const std::string&) const;
 
 	// Descriptor
 	std::vector<vk::DescriptorSet> requireDescriptorSet(std::vector<vk::DescriptorSetLayout>);
@@ -107,6 +107,20 @@ public:
 
 	void destroyBuffer(Buffer*);
 
+
+	// Commands
+	void submit(
+		uint32_t,
+		std::vector<vk::Semaphore>&,
+		std::vector<vk::PipelineStageFlags>&,
+		std::vector<vk::CommandBuffer>&,
+		std::vector<vk::Semaphore>&,
+		vk::Fence fence);
+	void present(
+		uint32_t,
+		std::vector<vk::Semaphore>&
+	);
+
 protected:
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;
@@ -116,7 +130,7 @@ protected:
 	std::unique_ptr<Swapchain> swapchain;
 	std::unique_ptr<SemaphorePool> semaphorePool;
 	std::unique_ptr<FencePool> fencePool;
-	std::unordered_map<std::string, std::shared_ptr<ShaderModule>> shaderModules;
+	std::unordered_map<std::string, ShaderModule*> shaderModules;
 
 	vk::DescriptorPool descriptorPool;
 

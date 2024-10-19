@@ -126,7 +126,7 @@ void GPUContext::returnSemaphore(const vk::Semaphore semaphore) const
     semaphorePool->returnSemaphore(semaphore);
 }
 
-const std::shared_ptr<ShaderModule> GPUContext::findShader(const std::string& name) const
+const ShaderModule* GPUContext::findShader(const std::string& name) const
 {
     auto it = shaderModules.find(name);
     if (it != shaderModules.end()) {
@@ -171,6 +171,43 @@ void GPUContext::destroyBuffer(Buffer* buffer)
     delete buffer;
 }
 
+void GPUContext::submit(
+    uint32_t type,
+    std::vector<vk::Semaphore>& waitSemaphores,
+    std::vector<vk::PipelineStageFlags>& waitStages,
+    std::vector<vk::CommandBuffer>& commandBuffers,
+    std::vector<vk::Semaphore>& signalSemaphores,
+    vk::Fence fence)
+{
+    vk::SubmitInfo submitInfo;
+    submitInfo.waitSemaphoreCount = waitSemaphores.size();
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStages.data();
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = commandBuffers.data();
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
+
+    device->getGraphicsQueue().submit(submitInfo, fence);
+}
+
+void GPUContext::present(uint32_t index, std::vector<vk::Semaphore>& waitSemaphores)
+{
+    vk::PresentInfoKHR presentInfo;
+    presentInfo.waitSemaphoreCount = waitSemaphores.size();
+    presentInfo.pWaitSemaphores = waitSemaphores.data();
+
+    presentInfo.swapchainCount = 1;
+    auto swapchainHandle = swapchain->getHandle();
+    presentInfo.pSwapchains = &swapchainHandle;
+    presentInfo.pImageIndices = &index;
+
+    auto result = device->getPresentQueue().presentKHR(presentInfo);
+    if (result != vk::Result::eSuccess) {
+        std::runtime_error("Error present");
+    }
+}
+
 void GPUContext::createCommandPools()
 {
     commandPools.push_back(new CommandPool{ *device, 0 });
@@ -194,13 +231,13 @@ void GPUContext::loadShaders(const std::string& dir)
                 std::string extension = entry.path().extension().string();
                 std::string name = entry.path().filename().string();
                 if (!extension.compare(".vert")) {
-                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eVertex, content.str());
+                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eVertex, content.str());
                 }
                 else if (!extension.compare(".frag")) {
-                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eFragment, content.str());
+                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eFragment, content.str());
                 }
                 else if (!extension.compare(".comp")) {
-                    shaderModules[name] = std::make_shared<ShaderModule>(*device, vk::ShaderStageFlagBits::eCompute, content.str());
+                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eCompute, content.str());
                 }
                 else {
                     continue;
@@ -216,7 +253,7 @@ void GPUContext::loadShaders(const std::string& dir)
 void GPUContext::destroyShaders()
 {
     for (auto shader : shaderModules) {
-        shader.second.reset();
+        delete shader.second;
     }
     shaderModules.clear();
 }

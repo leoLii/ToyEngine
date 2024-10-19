@@ -5,42 +5,6 @@
 
 #include <cstddef>
 
-//void recreateSwapChain()
-//{
-//    int width = 0, height = 0;
-//    window->getFramebufferSize(&width, &height);
-//    while (width == 0 || height == 0)
-//    {
-//        window->getFramebufferSize(&width, &height);
-//        window->waitEvents();
-//    }
-//
-//    gpuContext->getDevice()->getHandle().waitIdle();
-//
-//    framebuffers.clear();
-//    swapChainImageViews.clear();
-//
-//    gpuContext->rebuildSwapchainWithSize(vk::Extent2D(width, height));
-//    auto spImages = gpuContext->getSwapchainImages();
-//    swapChainImages.resize(spImages.size());
-//
-//    std::transform(spImages.begin(), spImages.end(), swapChainImages.begin(), [](vk::Image i)->VkImage {
-//        return static_cast<VkImage>(i);
-//        });
-//    swapChainImageFormat = static_cast<VkFormat>(gpuContext->getSwapchainFormat());
-//    swapChainExtent = static_cast<VkExtent2D>(gpuContext->getSwapchainExtent());
-//    //swapchain->rebuildWithSize(vk::Extent2D(width, height));
-//    for (int i = 0; i < swapChainImages.size(); i++) {
-//        swapChainImageViews.push_back(gpuContext->createImageView(swapChainImages[i]));
-//    }
-//
-//    for (int i = 0; i < swapChainImageViews.size(); i++) {
-//        std::vector<vk::ImageView> temp = { swapChainImageViews[i]->getHandle() };
-//        auto f = new Framebuffer{ *gpuContext->getDevice(), *renderPass, temp };
-//        framebuffers.push_back(f);
-//    }
-//}
-
 void Application::init(ApplicationConfig& config, Scene* scene)
 {
     window = std::make_unique<Window>(config.name, config.width, config.height);
@@ -49,10 +13,22 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 
     gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
 
-    auto vertShaderModule = gpuContext->findShader("base.vert");
-    auto fragShaderModule = gpuContext->findShader("base.frag");
+    fence = gpuContext->requestFence();
 
-    std::vector<ShaderModule*> modules = { vertShaderModule.get(), fragShaderModule.get()};
+    imageAvailableSemaphore = gpuContext->requestSemaphore();
+
+    renderFinishedSemaphore = gpuContext->requestSemaphore();
+
+    this->scene = scene;
+
+    prepareRenderResources();
+}
+
+void Application::prepareRenderResources()
+{
+    commandBuffer = gpuContext->requestCommandBuffer(vk::CommandBufferLevel::ePrimary);
+
+    std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("base.vert"), gpuContext->findShader("base.frag") };
 
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
     bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex });
@@ -84,28 +60,19 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     state.dynamicStates.push_back(vk::DynamicState::eViewport);
     state.dynamicStates.push_back(vk::DynamicState::eScissor);
     state.renderingInfo.colorAttachmentFormats.push_back(gpuContext->getSwapchainFormat());
-    
+
     pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), setLayouts, pushConstanceRanges };
-    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *pipelineLayout, state, modules);
-
-    fence = gpuContext->requestFence();
-
-    imageAvailableSemaphore = gpuContext->requestSemaphore();
-
-    renderFinishedSemaphore = gpuContext->requestSemaphore();
-
-    this->scene = scene;
-
+    graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), *pipelineLayout, state, baseModules);
     vertices = scene->getMeshes()[0]->assembleVertexData();
     vertexBuffer = gpuContext->createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);
     vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(Vertex));
-    
+
     indices = scene->getMeshes()[0]->getIndices();
     indexBuffer = gpuContext->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
     indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 
     auto camera = scene->getCamera();
-    camera->lookAt(Vec3(0.0f, 0.0f, 10.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
+    camera->lookAt(Vec3(5.0f, 5.0f, -10.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
     auto model = Mat4(1.0);
     auto clip = Mat4{
         1.0f,  0.0f, 0.0f, 0.0f,
@@ -115,7 +82,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     };
     auto view = camera->getViewMatrix();
     auto projection = camera->getProjectionMatrix();
-    auto mvp = clip * projection * view * model;
+    auto mvp = projection * view * model;
     uniformBuffer = gpuContext->createBuffer(sizeof(Mat4), vk::BufferUsageFlagBits::eUniformBuffer);
     uniformBuffer->copyToGPU(static_cast<const void*>(glm::value_ptr(mvp)), sizeof(mvp));
 
@@ -132,7 +99,6 @@ void Application::init(ApplicationConfig& config, Scene* scene)
     writeDescriptorSet.pBufferInfo = &descriptorBufferInfo;
 
     gpuContext->getDevice()->getHandle().updateDescriptorSets(writeDescriptorSet, nullptr);
-    commandBuffer = gpuContext->requestCommandBuffer(vk::CommandBufferLevel::ePrimary);
 }
 
 void Application::beginFrame()
@@ -161,42 +127,11 @@ void Application::endFrame(uint32_t index)
 
     commandBuffer.end();
 
-    vk::SubmitInfo submitInfo;
-
-    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
-    submitInfo.pWaitDstStageMask = waitStages;
-
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
-
-    gpuContext->getDevice()->getGraphicsQueue().submit(submitInfo, fence);
-    gpuContext->waitForFences(fence);
-}
-
-void Application::present(uint32_t index)
-{
-    vk::PresentInfoKHR presentInfo;
-
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
-
-    auto swapChain = gpuContext->getSwapchain()->getHandle();
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapChain;
-    presentInfo.pImageIndices = &index;
-
-    auto result = gpuContext->getDevice()->getPresentQueue().presentKHR(presentInfo);
-
-    /*if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
-    {
-        framebufferResized = false;
-        recreateSwapChain();
-    }*/
+    std::vector<vk::Semaphore> submitSemaphores{ imageAvailableSemaphore };
+    std::vector<vk::PipelineStageFlags> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+    std::vector<vk::CommandBuffer> commandBuffers = { commandBuffer };
+    std::vector<vk::Semaphore> signalSemaphores = { renderFinishedSemaphore };
+    gpuContext->submit(0, submitSemaphores, waitStages, commandBuffers, signalSemaphores, fence);
 }
 
 void Application::recordCommandBuffer(uint32_t index) 
@@ -287,7 +222,10 @@ void Application::run()
 
         endFrame(swapChainIndex);
 
-        present(swapChainIndex);
+        {
+            std::vector<vk::Semaphore> waitSemaphores = { renderFinishedSemaphore };
+            gpuContext->present(swapChainIndex, waitSemaphores);
+        }
     }
 }
 

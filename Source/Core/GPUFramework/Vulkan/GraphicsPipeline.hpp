@@ -153,7 +153,7 @@ public:
 		const Device&, 
 		PipelineLayout&,
 		GraphicsPipelineState&, 
-		std::vector<ShaderModule*>&);
+		std::vector<const ShaderModule*>&);
 
 	~GraphicsPipeline();
 

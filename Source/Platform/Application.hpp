@@ -55,6 +55,8 @@ protected:
 
 	std::chrono::time_point<std::chrono::system_clock> lastFrameTime;
 
+	// RenderResources
+	//////////////////////////////////////
 	vk::Fence fence;
 
 	vk::Semaphore imageAvailableSemaphore;
@@ -63,29 +65,36 @@ protected:
 
 	vk::CommandBuffer commandBuffer;
 
+	vk::RenderingInfo renderingInfo;
+
 	vk::RenderingAttachmentInfo colorAttachment;
+
+	GraphicsPipeline* graphicsPipeline = nullptr;
+	PipelineLayout* pipelineLayout = nullptr;
+	DescriptorSetLayout* descriptorSetLayout = nullptr;
+
+	std::vector<vk::DescriptorSet> descriptorSets;
+
+	std::vector<Vertex> vertices;
+	std::vector<uint32_t> indices;
+	
+	Mat4 mvp;
+
+	Buffer* vertexBuffer;
+	Buffer* uniformBuffer;
+	Buffer* indexBuffer;
+
+	///////////////////////////////////
 
 	Scene* scene;
 
 private:
+
+	void prepareRenderResources();
 	
 	void beginFrame();
 
 	void endFrame(uint32_t);
 
-	void present(uint32_t);
-
 	void recordCommandBuffer(uint32_t);
-
-	GraphicsPipeline* graphicsPipeline = nullptr;
-	PipelineLayout* pipelineLayout = nullptr;
-	DescriptorSetLayout* descriptorSetLayout = nullptr;
-	std::vector<vk::DescriptorSet> descriptorSets;
-
-	std::vector<Vertex> vertices;
-	std::vector<uint32_t> indices;
-	Buffer* vertexBuffer;
-	Mat4 mvp;
-	Buffer* uniformBuffer;
-	Buffer* indexBuffer;
 };

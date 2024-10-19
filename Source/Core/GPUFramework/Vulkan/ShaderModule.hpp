@@ -47,7 +47,7 @@ class ShaderModule
         debugName = name;
     }
 
-    vk::ShaderModule getHandle() {
+    vk::ShaderModule getHandle() const {
         return this->handle;
     }
 

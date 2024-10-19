@@ -10,7 +10,7 @@ GraphicsPipeline::GraphicsPipeline(
     const Device& device, 
     PipelineLayout& layout,
     GraphicsPipelineState& state, 
-    std::vector<ShaderModule*>& shaderModules)
+    std::vector<const ShaderModule*>& shaderModules)
     :device{ device }
     , state{ state }
 {
