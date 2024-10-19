@@ -68,13 +68,16 @@ Instance::Instance(const std::string                            &applicationName
     createInfo.ppEnabledLayerNames = validationLayers.data();
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
+#ifdef VK_ENABLE_VALIDATION
     createInfo.pNext = &debugUtilsCreateInfo;
+#endif
   
     VK_CHECK(vk::createInstance(&createInfo, nullptr, &handle));
 
     functionLoader = vk::DispatchLoaderDynamic(handle, vkGetInstanceProcAddr);
-
+#ifdef VK_ENABLE_VALIDATION
     debugMessenger = handle.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, nullptr, functionLoader);
+#endif
 }
 
 vk::Instance Instance::getHandle(){
@@ -82,6 +85,8 @@ vk::Instance Instance::getHandle(){
 }
 
 Instance::~Instance(){
+#ifdef VK_ENABLE_VALIDATION
     handle.destroyDebugUtilsMessengerEXT(debugMessenger, nullptr, functionLoader);
+#endif
     handle.destroy();
 }
