@@ -13,7 +13,15 @@ int main() {
     Scene scene{};
 
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cube/cube.fbx" };
-    scene.loadModel(path);
+    auto node1 = scene.loadModel(path);
+    auto node2 = scene.loadModel(path);
+    Mat4 matrix{ 1.0 };
+    matrix = glm::translate(matrix, Vec3(1, 1, 2));
+    matrix = glm::scale(matrix, Vec3(0.5, 2, 1));
+    node1->setTransform(matrix);
+    scene.getRootNode()->addChild(node1);
+    scene.getRootNode()->addChild(node2);
+    scene.collectMeshes();
 
     Application app{};
 

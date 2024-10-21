@@ -4,6 +4,8 @@
 #include <string>
 #include "Common/Math.hpp"
 
+#include "Node.hpp"
+
 struct Vertex {
 	Vec3 position;
 	Vec2 texcoord;
@@ -78,8 +80,18 @@ public:
 		return vertexData;
 	}
 
+	void setAttachNode(Node* node) {
+		this->attachNode = node;
+	}
+
+	Node* getAttachNode() {
+		return this->attachNode;
+	}
+
 protected:
 	std::string name = "";
+
+	Node* attachNode = nullptr;
 
 	uint32_t vertexCount = 0;
 	std::vector<Vec3> vertices;

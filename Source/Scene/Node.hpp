@@ -40,6 +40,10 @@ public:
 
 	Mesh* getMesh();
 
+	void setTransform(Mat4);
+
+	Mat4 getTransform();
+
 	//virtual void update(float deltaTime) = 0;
 
 	void addComponent(Component*);

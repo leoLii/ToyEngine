@@ -41,6 +41,7 @@ const Node* Node::getParent() const
 void Node::addChild(Node* child)
 {
 	child->setParent(this);
+	child->setTransform(this->getTransform());
 	this->children.push_back(child);
 }
 
@@ -72,10 +73,25 @@ std::string Node::getName()
 void Node::setMesh(Mesh* mesh)
 {
 	this->mesh = mesh;
+	mesh->setAttachNode(this);
 }
 
 Mesh* Node::getMesh() {
 	return this->mesh;
+}
+
+void Node::setTransform(Mat4 matrix)
+{
+	this->transform *= matrix;
+	for (auto child : children)
+	{
+		child->setTransform(matrix);
+	}
+}
+
+Mat4 Node::getTransform()
+{
+	return transform;
 }
 
 void Node::addComponent(Component* component)

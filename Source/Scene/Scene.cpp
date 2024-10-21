@@ -8,7 +8,7 @@
 Scene::Scene() 
 {
 	rootNode = new Node("root");
-	Node* cameraNode = new Node{ "camera" };
+	cameraNode = new Node{ "camera" };
 	camera = new Camera{ CameraType::Perspect, Frustum{60.0f, 1920.0f, 1080.0f, 0.1f, 3000.0f} };
 	cameraNode->addComponent(camera);
 	rootNode->addChild(cameraNode);
@@ -28,11 +28,10 @@ Node* Scene::getRootNode()
 	return this->rootNode;
 }
 
-void Scene::loadModel(std::string& path)
+Node* Scene::loadModel(std::string& path)
 {
 	AssimpLoader loader;
-	rootNode->addChild(loader.loadModel(path));
-	collectMeshes();
+	return loader.loadModel(path);
 }
 
 void Scene::collectMeshes()
@@ -60,6 +59,30 @@ void Scene::collectMeshes()
 		// 调用 lambda
 		collectMeshesLambda(collectMeshesLambda, rootNode);
 	}
+
+	// 收集完成后，对节点进行排序（根据相机距离，从远到近）
+	std::sort(meshes.begin(), meshes.end(), [&](Mesh* a, Mesh* b) {
+		Vec3 positionA = extractTranslation(a->getAttachNode()->getTransform());  // 提取节点 A 的世界坐标
+		Vec3 positionB = extractTranslation(b->getAttachNode()->getTransform());  // 提取节点 B 的世界坐标
+		
+		Vec3 cameraPosition = extractTranslation(cameraNode->getTransform());
+
+		float distanceA = distanceSquared(positionA, cameraPosition);  // 计算 A 到相机的距离
+		float distanceB = distanceSquared(positionB, cameraPosition);  // 计算 B 到相机的距离
+
+		return distanceA < distanceB;  // 从远到近排序
+		});
+}
+
+// 从矩阵中提取平移分量（假设列主序矩阵）
+Vec3 Scene::extractTranslation(const Mat4& matrix) const {
+	return Vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
+}
+
+// 计算两个向量的平方距离
+float Scene::distanceSquared(const Vec3& a, const Vec3& b) const {
+	Vec3 diff = a - b;
+	return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
 }
 
 std::vector<Mesh*> Scene::getMeshes() const

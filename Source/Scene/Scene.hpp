@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "Common/Math.hpp"
+
 class Node;
 class Mesh;
 class Camera;
@@ -14,17 +16,19 @@ public:
 
 	Node* getRootNode();
 
-	void loadModel(std::string& path);
+	Node* loadModel(std::string& path);
 
 	std::vector<Mesh*> getMeshes() const;
 	Camera* getCamera();
-
+	void collectMeshes();
 protected:
 	Node* rootNode = nullptr;
+	Node* cameraNode = nullptr;
 	std::vector<Node*> nodes;
 	Camera* camera;
 	std::vector<Mesh*> meshes;
 
 private:
-	void collectMeshes();
+	Vec3 extractTranslation(const Mat4& matrix) const;
+	float distanceSquared(const Vec3& a, const Vec3& b) const;
 };
