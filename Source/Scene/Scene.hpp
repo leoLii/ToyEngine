@@ -4,10 +4,9 @@
 #include <string>
 
 #include "Common/Math.hpp"
-
-class Node;
-class Mesh;
-class Camera;
+#include "Mesh.hpp"
+#include "Node.hpp"
+#include "Scene/Components/Camera.hpp"
 
 class Scene {
 public:
@@ -21,6 +20,10 @@ public:
 	std::vector<Mesh*> getMeshes() const;
 	Camera* getCamera();
 	void collectMeshes();
+
+	std::vector<Vertex>& getVertices();
+	std::vector<uint32_t>& getIndices();
+	std::vector<Mat4>& getUniforms();
 protected:
 	Node* rootNode = nullptr;
 	Node* cameraNode = nullptr;

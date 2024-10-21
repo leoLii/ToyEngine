@@ -1,9 +1,6 @@
 #include "Scene.hpp"
 
-#include "Mesh.hpp"
 #include "Loader.hpp"
-#include "Node.hpp"
-#include "Scene/Components/Camera.hpp"
 
 Scene::Scene() 
 {
@@ -72,6 +69,36 @@ void Scene::collectMeshes()
 
 		return distanceA < distanceB;  // 从远到近排序
 		});
+}
+
+std::vector<Vertex>& Scene::getVertices()
+{
+	std::vector<Vertex> allVertexData;
+	for (auto mesh : meshes) {
+		auto vertexData = mesh->assembleVertexData();
+		allVertexData.insert(allVertexData.end(), vertexData.begin(), vertexData.end());
+	}
+	return allVertexData;
+}
+
+std::vector<uint32_t>& Scene::getIndices()
+{
+	std::vector<uint32_t> allIndexData;
+	for (auto mesh : meshes) {
+		auto indexData = mesh->getIndices();
+		allIndexData.insert(allIndexData.end(), indexData.begin(), indexData.end());
+	}
+	return allIndexData;
+}
+
+std::vector<Mat4>& Scene::getUniforms()
+{
+	std::vector<Mat4> allTransform;
+	for (auto mesh : meshes) {
+		auto transform = mesh->getAttachNode()->getTransform();
+		allTransform.push_back(transform);
+	}
+	return allTransform;
 }
 
 // 从矩阵中提取平移分量（假设列主序矩阵）
