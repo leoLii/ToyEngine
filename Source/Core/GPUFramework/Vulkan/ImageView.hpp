@@ -1,16 +1,16 @@
 #pragma once
 
 #include "VkCommon.hpp"
+#include "Image.hpp"
 
 class Device;
-//class Image;
 
 class ImageView {
 public:
 	ImageView() = delete;
 	ImageView(
 		const Device&,
-		vk::Image,
+		Image*,
 		vk::ImageViewType,
 		vk::Format,
 		vk::ComponentMapping,
@@ -23,7 +23,7 @@ protected:
 	const Device& device;
 
 	vk::ImageView handle;
-	vk::Image image;
+	Image* image;
 	vk::ImageViewType imageViewType;
 	vk::Format imageFormat;
 	vk::ComponentMapping componentMapping;

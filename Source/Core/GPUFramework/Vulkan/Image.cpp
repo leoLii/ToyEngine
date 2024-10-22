@@ -2,40 +2,41 @@
 
 #include "Device.hpp"
 
-Image::Image(const Device& device, vk::Image image, ImageInfo& imageInfo)
+Image::Image(const Device& device, vk::Image image, ImageInfo imageInfo)
 	:device{device}
 	,handle(image)
 	,imageInfo(imageInfo)
 {
 }
 
-Image::Image(const Device& device, ImageInfo& imageInfo)
+Image::Image(const Device& device, ImageInfo imageInfo)
 	:device{ device }
 	, imageInfo(imageInfo)
 {
-	vk::ImageCreateInfo createInfo;
-	createInfo.imageType = imageInfo.type;
-	createInfo.format = imageInfo.format;
-	createInfo.extent = imageInfo.extent;
-	createInfo.usage = imageInfo.usage;
+	VkImageCreateInfo createInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	createInfo.imageType = static_cast<VkImageType>(imageInfo.type);
+	createInfo.format = static_cast<VkFormat>(imageInfo.format);
+	createInfo.extent = static_cast<VkExtent3D>(imageInfo.extent);
+	createInfo.usage = static_cast<VkImageUsageFlags>(imageInfo.usage);
 	createInfo.arrayLayers = imageInfo.arrayLayers;
 	createInfo.mipLevels = imageInfo.mipmapLevel;
 	createInfo.queueFamilyIndexCount = imageInfo.queueFamilyCount;
 	createInfo.pQueueFamilyIndices = imageInfo.pQueueFamilyIndices;
-	createInfo.tiling = imageInfo.tiling;
-	createInfo.sharingMode = imageInfo.sharingMode;
-	createInfo.flags = imageInfo.createFlag;
+	createInfo.tiling = static_cast<VkImageTiling>(imageInfo.tiling);
+	createInfo.sharingMode = static_cast<VkSharingMode>(imageInfo.sharingMode);
+	createInfo.flags = static_cast<VkImageCreateFlags>(imageInfo.createFlag);
+	createInfo.samples = static_cast<VkSampleCountFlagBits>(imageInfo.samples);
+	createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	auto cCreateInfo = static_cast<VkImageCreateInfo>(createInfo);
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-	VmaAllocationCreateInfo allocationInfo;
-	allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
-
-	VkImage cHandle;
+	VkImage image;
 	VmaAllocation allocation;
-	vmaCreateImage(device.getAllocator(), &cCreateInfo, &allocationInfo, &cHandle, &allocation, nullptr);
+	auto result = vmaCreateImage(device.getAllocator(), &createInfo, &allocInfo, &image, &allocation, nullptr);
 	
-	handle = static_cast<vk::Image>(cHandle);
+	handle = static_cast<vk::Image>(image);
 }
 
 Image::~Image()

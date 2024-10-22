@@ -8,10 +8,9 @@ struct ImageInfo {
 	vk::Format format;
 	vk::Extent3D extent;
 	vk::ImageType type;
-	vk::ImageLayout layout;
 	uint32_t mipmapLevel;
 	uint32_t arrayLayers;
-	uint32_t samples;
+	vk::SampleCountFlagBits samples = vk::SampleCountFlagBits::e1;
 	vk::ImageCreateFlags createFlag;
 	vk::SharingMode sharingMode;
 	vk::ImageTiling tiling;
@@ -23,8 +22,8 @@ struct ImageInfo {
 class Image {
 public:
 	Image() = delete;
-	Image(const Device&, vk::Image, ImageInfo&);
-	Image(const Device&, ImageInfo&);
+	Image(const Device&, vk::Image, ImageInfo);
+	Image(const Device&, ImageInfo);
 
 	~Image();
 
