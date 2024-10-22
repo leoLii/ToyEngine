@@ -3,6 +3,7 @@
 #include "VkCommon.hpp"
 
 #include <vector>
+#include <unordered_map>
 
 class Device;
 
@@ -11,8 +12,10 @@ public:
 	DescriptorSetLayout(
 		const Device&, 
 		uint32_t, 
-		std::vector<vk::DescriptorSetLayoutBinding>&);
+		std::vector<vk::DescriptorSetLayoutBinding>);
 	~DescriptorSetLayout();
+
+	vk::DescriptorSetLayoutBinding getBindingInfo(uint32_t);
 
 	vk::DescriptorSetLayout getHandle() const;
 
@@ -23,7 +26,5 @@ protected:
 
 	const uint32_t setIndex;
 
-	std::vector<vk::DescriptorSetLayoutBinding> bindings;
-
-	std::vector<vk::DescriptorBindingFlags> bindingFlags;
+	std::unordered_map<uint32_t, vk::DescriptorSetLayoutBinding> bindingVector;
 };
