@@ -15,6 +15,7 @@
 
 #include "Vulkan/ShaderModule.hpp"
 #include "Vulkan/DescriptorSetLayout.hpp"
+#include "Vulkan/DescriptorSet.hpp"
 #include "Vulkan/PipelineLayout.hpp"
 #include "Vulkan/GraphicsPipeline.hpp"
 
@@ -74,7 +75,12 @@ public:
 	vk::SurfaceKHR getSurface() const;
 
 	// CommandPool
-	vk::CommandBuffer requestCommandBuffer(vk::CommandBufferLevel level);
+	vk::CommandBuffer requestCommandBuffer(vk::CommandBufferLevel level) const;
+
+	// Pipeline
+	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;
+	GraphicsPipeline* createGraphicsPipeline(PipelineLayout*, GraphicsPipelineState*, std::vector<const ShaderModule*>) const;
+
 
 	// Fence & Semaphore
 	vk::Fence requestFence() const;
@@ -93,20 +99,27 @@ public:
 	const ShaderModule* findShader(const std::string&) const;
 
 	// Descriptor
-	std::vector<vk::DescriptorSet> requireDescriptorSet(std::vector<vk::DescriptorSetLayout>);
+	DescriptorSetLayout* createDescriptorSetLayout(uint32_t, std::vector<vk::DescriptorSetLayoutBinding>) const;
+
+	DescriptorSet* requireDescriptorSet(
+		DescriptorSetLayout,
+		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>&,
+		std::unordered_map<uint32_t, vk::DescriptorImageInfo>&) const;
 
 	// Image & Buffer
-	const std::shared_ptr<ImageView> createImageView(
-		const vk::Image, 
-		const vk::ImageViewType = vk::ImageViewType::e2D,
-		const vk::Format = vk::Format::eB8G8R8A8Srgb,
-		const vk::ComponentMapping = vk::ComponentMapping{},
-		const vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
-	
-	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags);
+	ImageView* createImageView(
+		Image*, 
+		vk::ImageViewType = vk::ImageViewType::e2D,
+		vk::Format = vk::Format::eB8G8R8A8Srgb,
+		vk::ComponentMapping = vk::ComponentMapping{},
+		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }) const;
+	void destroyImageView(ImageView*) const;
 
-	void destroyBuffer(Buffer*);
+	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags) const;
+	void destroyBuffer(Buffer*) const;
 
+	Image* createImage(ImageInfo) const;
+	void destroyImage(Image*) const;
 
 	// Commands
 	void submit(
@@ -115,7 +128,7 @@ public:
 		std::vector<vk::PipelineStageFlags>&,
 		std::vector<vk::CommandBuffer>&,
 		std::vector<vk::Semaphore>&,
-		vk::Fence fence);
+		vk::Fence fence) const;
 	void present(
 		uint32_t,
 		std::vector<vk::Semaphore>&

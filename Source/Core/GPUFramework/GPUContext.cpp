@@ -91,9 +91,19 @@ vk::SurfaceKHR GPUContext::getSurface() const
     return surface;
 }
 
-vk::CommandBuffer GPUContext::requestCommandBuffer(vk::CommandBufferLevel level)
+vk::CommandBuffer GPUContext::requestCommandBuffer(vk::CommandBufferLevel level) const
 {
     return commandPools[0]->requestCommandBuffer(level);
+}
+
+PipelineLayout* GPUContext::createPipelineLayout(std::vector<vk::DescriptorSetLayout> setLayouts, std::vector<vk::PushConstantRange> constants) const
+{
+    return new PipelineLayout{ *device, setLayouts, constants };
+}
+
+GraphicsPipeline* GPUContext::createGraphicsPipeline(PipelineLayout* layout, GraphicsPipelineState* state, std::vector<const ShaderModule*> shaders) const
+{
+    return new GraphicsPipeline{ *device, layout, state, shaders };
 }
 
 vk::Fence GPUContext::requestFence() const
@@ -138,37 +148,53 @@ const ShaderModule* GPUContext::findShader(const std::string& name) const
     }
 }
 
-std::vector<vk::DescriptorSet> GPUContext::requireDescriptorSet(std::vector<vk::DescriptorSetLayout> layouts)
+DescriptorSetLayout* GPUContext::createDescriptorSetLayout(uint32_t index, std::vector<vk::DescriptorSetLayoutBinding> bindings) const
 {
-    vk::DescriptorSetAllocateInfo allocateInfo;
-    allocateInfo.descriptorPool = descriptorPool;
-    allocateInfo.descriptorSetCount = layouts.size();
-    allocateInfo.pSetLayouts = layouts.data();
-    auto result = device->getHandle().allocateDescriptorSets(allocateInfo);
-    return result;
+    auto descriptorSetLayout = new DescriptorSetLayout{ *device, index, bindings };
+    return descriptorSetLayout;
 }
 
-const std::shared_ptr<ImageView> GPUContext::createImageView(
-    const vk::Image image, 
-    const vk::ImageViewType type, 
-    const vk::Format format, 
-    const vk::ComponentMapping component, 
-    const vk::ImageSubresourceRange range)
+DescriptorSet* GPUContext::requireDescriptorSet(
+    DescriptorSetLayout layout,
+    std::unordered_map<uint32_t, vk::DescriptorBufferInfo>& bufferInfos,
+    std::unordered_map<uint32_t, vk::DescriptorImageInfo>& imageInfos) const
 {
-    auto imageView = std::make_shared<ImageView>(*device, image, type, format, component, range);
-    imageViews.push_back(imageView);
-    return imageView;
+    return new DescriptorSet{ *device, layout, descriptorPool, bufferInfos, imageInfos };
 }
 
-Buffer* GPUContext::createBuffer(uint64_t size, vk::BufferUsageFlags usage)
+ImageView* GPUContext::createImageView(
+    Image* image, 
+    vk::ImageViewType type, 
+    vk::Format format, 
+    vk::ComponentMapping component, 
+    vk::ImageSubresourceRange range) const
 {
-    Buffer* buffer = new Buffer{ *device, size, usage };
-    return buffer;
+    return new ImageView(*device, image, type, format, component, range);
 }
 
-void GPUContext::destroyBuffer(Buffer* buffer)
+void GPUContext::destroyImageView(ImageView* imageView) const
+{
+    delete imageView;
+}
+
+Buffer* GPUContext::createBuffer(uint64_t size, vk::BufferUsageFlags usage) const
+{
+    return new Buffer{ *device, size, usage };
+}
+
+void GPUContext::destroyBuffer(Buffer* buffer) const
 {
     delete buffer;
+}
+
+Image* GPUContext::createImage(ImageInfo imageInfo) const
+{
+    return new Image{ *device, imageInfo };
+}
+
+void GPUContext::destroyImage(Image* image) const
+{
+    delete image;
 }
 
 void GPUContext::submit(
@@ -177,7 +203,7 @@ void GPUContext::submit(
     std::vector<vk::PipelineStageFlags>& waitStages,
     std::vector<vk::CommandBuffer>& commandBuffers,
     std::vector<vk::Semaphore>& signalSemaphores,
-    vk::Fence fence)
+    vk::Fence fence) const
 {
     vk::SubmitInfo submitInfo;
     submitInfo.waitSemaphoreCount = waitSemaphores.size();
