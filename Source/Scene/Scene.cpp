@@ -69,36 +69,35 @@ void Scene::collectMeshes()
 
 		return distanceA < distanceB;  // 从远到近排序
 		});
-}
 
-std::vector<Vertex>& Scene::getVertices()
-{
-	std::vector<Vertex> allVertexData;
 	for (auto mesh : meshes) {
+		vertexOffsets.push_back(vertices.size());
 		auto vertexData = mesh->assembleVertexData();
-		allVertexData.insert(allVertexData.end(), vertexData.begin(), vertexData.end());
-	}
-	return allVertexData;
-}
+		vertices.insert(vertices.end(), vertexData.begin(), vertexData.end());
 
-std::vector<uint32_t>& Scene::getIndices()
-{
-	std::vector<uint32_t> allIndexData;
-	for (auto mesh : meshes) {
+		indexOffsets.push_back(indices.size());
 		auto indexData = mesh->getIndices();
-		allIndexData.insert(allIndexData.end(), indexData.begin(), indexData.end());
+		indices.insert(indices.end(), indexData.begin(), indexData.end());
+
+		bufferOffsets.push_back(uniforms.size() * sizeof(Mat4));
+		auto transform = mesh->getAttachNode()->getTransform();
+		uniforms.push_back(transform);
 	}
-	return allIndexData;
 }
 
-std::vector<Mat4>& Scene::getUniforms()
+const std::vector<Vertex> Scene::getVertices() const
 {
-	std::vector<Mat4> allTransform;
-	for (auto mesh : meshes) {
-		auto transform = mesh->getAttachNode()->getTransform();
-		allTransform.push_back(transform);
-	}
-	return allTransform;
+	return vertices;
+}
+
+const std::vector<uint32_t> Scene::getIndices() const
+{
+	return indices;
+}
+
+const std::vector<Mat4> Scene::getUniforms() const
+{
+	return uniforms;
 }
 
 // 从矩阵中提取平移分量（假设列主序矩阵）
@@ -117,7 +116,7 @@ std::vector<Mesh*> Scene::getMeshes() const
 	return this->meshes;
 }
 
-Camera* Scene::getCamera()
+Camera* Scene::getCamera() const
 {
 	return this->camera;
 }
