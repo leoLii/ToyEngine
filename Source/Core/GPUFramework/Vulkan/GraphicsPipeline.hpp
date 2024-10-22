@@ -127,8 +127,7 @@ struct RenderingInfo
 {
 	//uint32_t colorAttachmentCount = 0;
 	std::vector<vk::Format> colorAttachmentFormats;
-	vk::Format depthAttachmentFormat{ vk::Format::eD32Sfloat };
-	vk::Format stencilAttachmentFormat{ vk::Format::eD32Sfloat };
+	vk::Format depthStencilAttachmentFormat{ vk::Format::eD32Sfloat };
 };
 
 struct GraphicsPipelineState
@@ -151,9 +150,9 @@ public:
 	GraphicsPipeline() = delete;
 	GraphicsPipeline(
 		const Device&, 
-		PipelineLayout&,
-		GraphicsPipelineState&, 
-		std::vector<const ShaderModule*>&);
+		PipelineLayout*,
+		GraphicsPipelineState*, 
+		std::vector<const ShaderModule*>);
 
 	~GraphicsPipeline();
 
@@ -164,5 +163,5 @@ protected:
 
 	vk::Pipeline handle;
 
-	GraphicsPipelineState state;
+	GraphicsPipelineState* state;
 };

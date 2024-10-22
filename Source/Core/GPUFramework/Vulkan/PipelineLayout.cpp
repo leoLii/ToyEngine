@@ -4,10 +4,9 @@
 
 PipelineLayout::PipelineLayout(
 	const Device& device, 
-	std::vector<vk::DescriptorSetLayout>& descriptorSetLayouts,
-	std::vector<vk::PushConstantRange>& pushConstanceRanges)
+	std::vector<vk::DescriptorSetLayout> descriptorSetLayouts,
+	std::vector<vk::PushConstantRange> pushConstanceRanges)
 	:device{device}
-	, descriptorSetLayouts{ descriptorSetLayouts }
 	,pushConstanceRanges{pushConstanceRanges}
 {
 	vk::PipelineLayoutCreateInfo createInfo;

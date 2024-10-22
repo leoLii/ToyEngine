@@ -2,14 +2,16 @@
 
 #include "VkCommon.hpp"
 
+#include "DescriptorSetLayout.hpp"
+
 class Device;
 
 class PipelineLayout {
 public:
 	PipelineLayout(
 		const Device&, 
-		std::vector<vk::DescriptorSetLayout>&, 
-		std::vector<vk::PushConstantRange>&);
+		std::vector<vk::DescriptorSetLayout>, 
+		std::vector<vk::PushConstantRange>);
 	~PipelineLayout();
 
 	vk::PipelineLayout getHandle() const;
