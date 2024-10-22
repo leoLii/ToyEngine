@@ -23,7 +23,6 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	imageInfo.type = vk::ImageType::e2D;
 	imageInfo.mipmapLevel = 1;
 	imageInfo.tiling = vk::ImageTiling::eLinear;
-	imageInfo.layout = vk::ImageLayout::eColorAttachmentOptimal;
 	imageInfo.arrayLayers = 1;
 	imageInfo.usage = vk::ImageUsageFlagBits::eColorAttachment;
 	imageInfo.sharingMode = vk::SharingMode::eConcurrent;
@@ -60,7 +59,7 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	for (auto i : nativeImages) {
 		auto image = new Image(device, i, imageInfo);
 		auto imageView = new ImageView(
-			device, i,
+			device, image,
 			vk::ImageViewType::e2D,
 			imageInfo.format,
 			vk::ComponentMapping{},
