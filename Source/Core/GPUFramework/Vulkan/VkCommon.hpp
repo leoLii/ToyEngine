@@ -106,3 +106,10 @@ private:
             throw std::runtime_error("Detected Vulkan error: " + vk_string(err)); \
         }                                                                              \
     } while (0)
+
+enum CommandType
+{
+	Graphics,
+	Compute,
+	Transfer
+};
