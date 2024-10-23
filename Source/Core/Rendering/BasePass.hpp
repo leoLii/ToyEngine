@@ -21,19 +21,17 @@ public:
 
 	void prepare();
 
-	vk::CommandBuffer record();
+	void record(vk::CommandBuffer);
 
 	void end();
 
-	vk::CommandBuffer getCommandBuffer() {
-		return commandBuffer;
+	const Image* getImage() const {
+		return colorAttachment->image;
 	}
 
 protected:
 	const GPUContext* gpuContext;
 	const Scene* scene;
-
-	vk::CommandBuffer commandBuffer;
 
 	Attachment* colorAttachment;
 	Attachment* depthAttachment;

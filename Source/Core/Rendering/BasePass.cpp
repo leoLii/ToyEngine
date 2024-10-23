@@ -121,21 +121,13 @@ void BasePass::prepare()
     auto indices = scene->getIndices();
     indexBuffer = gpuContext->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
     indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
-
-    commandBuffer = gpuContext->requestCommandBuffer(vk::CommandBufferLevel::ePrimary);
 }
 
-vk::CommandBuffer BasePass::record()
+ void BasePass::record(vk::CommandBuffer commandBuffer)
 {
     auto camera = scene->getCamera();
     auto matrix = camera->getProjectionMatrix() * camera->getViewMatrix();
-    commandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-    vk::CommandBufferBeginInfo beginInfo;
-    beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-    commandBuffer.begin(beginInfo);
-
     commandBuffer.beginRendering(&renderingInfo);
-
 
     commandBuffer.pushConstants<Mat4>(pipelineLayout->getHandle(), vk::ShaderStageFlagBits::eVertex, 0, { matrix });
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
@@ -156,8 +148,4 @@ vk::CommandBuffer BasePass::record()
     }
     
     commandBuffer.endRendering();
-
-    commandBuffer.end();
-
-    return commandBuffer;
 }
