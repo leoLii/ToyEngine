@@ -123,11 +123,11 @@ public:
 
 	// Commands
 	void submit(
-		uint32_t,
-		std::vector<vk::Semaphore>&,
-		std::vector<vk::PipelineStageFlags>&,
-		std::vector<vk::CommandBuffer>&,
-		std::vector<vk::Semaphore>&,
+		CommandType,
+		std::vector<vk::Semaphore>,
+		std::vector<vk::PipelineStageFlags>,
+		std::vector<vk::CommandBuffer>,
+		std::vector<vk::Semaphore>,
 		vk::Fence fence) const;
 	void present(
 		uint32_t,

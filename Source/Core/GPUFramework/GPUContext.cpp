@@ -198,11 +198,11 @@ void GPUContext::destroyImage(Image* image) const
 }
 
 void GPUContext::submit(
-    uint32_t type,
-    std::vector<vk::Semaphore>& waitSemaphores,
-    std::vector<vk::PipelineStageFlags>& waitStages,
-    std::vector<vk::CommandBuffer>& commandBuffers,
-    std::vector<vk::Semaphore>& signalSemaphores,
+    CommandType type,
+    std::vector<vk::Semaphore> waitSemaphores,
+    std::vector<vk::PipelineStageFlags> waitStages,
+    std::vector<vk::CommandBuffer> commandBuffers,
+    std::vector<vk::Semaphore> signalSemaphores,
     vk::Fence fence) const
 {
     vk::SubmitInfo submitInfo;
@@ -214,7 +214,21 @@ void GPUContext::submit(
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores.data();
 
-    device->getGraphicsQueue().submit(submitInfo, fence);
+    switch (type)
+    {
+    case Graphics:
+        device->getGraphicsQueue().submit(submitInfo, fence);
+        break;
+    case Compute:
+        device->getComputeQueue().submit(submitInfo, fence);
+        break;
+    case Transfer:
+        device->getTransferQueue().submit(submitInfo, fence);
+        break;
+    default:
+        break;
+    }
+    
 }
 
 void GPUContext::present(uint32_t index, std::vector<vk::Semaphore>& waitSemaphores)
