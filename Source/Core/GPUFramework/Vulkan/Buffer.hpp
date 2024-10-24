@@ -25,4 +25,5 @@ protected:
 	vk::Buffer handle;
 
 	VmaAllocation allocation = nullptr;
+	VmaAllocationInfo allocInfo;
 };

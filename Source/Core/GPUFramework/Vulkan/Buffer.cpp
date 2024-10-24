@@ -10,12 +10,13 @@ Buffer::Buffer(const Device& device, uint64_t size, vk::BufferUsageFlags usage)
 	bufferInfo.usage = static_cast<VkBufferUsageFlags>(usage);
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-	allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	VmaAllocationCreateInfo createInfo = {};
+	createInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+	createInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	createInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
 	VkBuffer buffer;
-	auto result = vmaCreateBuffer(device.getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
+	auto result = vmaCreateBuffer(device.getAllocator(), &bufferInfo, &createInfo, &buffer, &allocation, &allocInfo);
 
 	handle = static_cast<vk::Buffer>(buffer);
 }
@@ -39,8 +40,5 @@ VmaAllocation Buffer::getAllocation()
 
 void Buffer::copyToGPU(const void* bufferData, const uint64_t bufferSize)
 {
-	void* data;
-	vmaMapMemory(device.getAllocator(), allocation, &data);
-	memcpy(data, bufferData, bufferSize);
-	vmaUnmapMemory(device.getAllocator(), allocation);
+	memcpy(allocInfo.pMappedData, bufferData, bufferSize);
 }

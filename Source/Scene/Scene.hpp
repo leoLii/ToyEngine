@@ -13,6 +13,8 @@ public:
 	Scene();
 	~Scene();
 
+	void update(uint32_t);
+
 	Node* getRootNode();
 
 	Node* loadModel(std::string& path);

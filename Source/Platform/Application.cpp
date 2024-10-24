@@ -41,7 +41,11 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 void Application::run()
 {
 	while (!window->shouldClose()) {
+		
 		++frameIndex;
+
+		scene->update(frameIndex);
+		basePass->update();
 
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 		deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;

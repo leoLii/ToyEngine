@@ -82,7 +82,7 @@ Mesh* Node::getMesh() {
 
 void Node::setTransform(Mat4 matrix)
 {
-	this->transform *= matrix;
+	transform = transform * matrix;
 	for (auto child : children)
 	{
 		child->setTransform(matrix);

@@ -23,7 +23,7 @@ public:
 
 	void record(vk::CommandBuffer);
 
-	void end();
+	void update();
 
 	const Image* getImage() const {
 		return colorAttachment->image;
