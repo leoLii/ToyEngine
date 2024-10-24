@@ -53,6 +53,8 @@ void Application::run()
 
 		window->pollEvents();
 
+		gpuContext->waitForFences(fence);
+		gpuContext->resetFences(fence);
 		auto acquieResult = gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
 		uint32_t swapChainIndex = std::get<1>(acquieResult);
 
@@ -116,19 +118,17 @@ void Application::run()
 			{ vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput },
 			{ transferCommandBuffer },
 			{ transferFinishedSemaphore },
-			VK_NULL_HANDLE);
-
+			fence);
 
 		// Present the image to the screen
 		gpuContext->present(swapChainIndex, { transferFinishedSemaphore });
 
-		// Wait for device to idle before the next frame (you can optimize this further)
-		gpuContext->getDevice()->getHandle().waitIdle();
 	}
 }
 
 void Application::close()
 {
+	gpuContext->getDevice()->getHandle().waitIdle();
 	gpuContext->returnSemaphore(renderFinishedSemaphore);
 	gpuContext->returnSemaphore(imageAvailableSemaphore);
 	gpuContext->returnSemaphore(transferFinishedSemaphore);
