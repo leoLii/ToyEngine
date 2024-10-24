@@ -33,7 +33,6 @@ Image::Image(const Device& device, ImageInfo imageInfo)
 	allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
 	VkImage image;
-	VmaAllocation allocation;
 	auto result = vmaCreateImage(device.getAllocator(), &createInfo, &allocInfo, &image, &allocation, nullptr);
 	
 	handle = static_cast<vk::Image>(image);
