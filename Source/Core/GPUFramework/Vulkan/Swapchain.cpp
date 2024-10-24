@@ -24,7 +24,7 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	imageInfo.mipmapLevel = 1;
 	imageInfo.tiling = vk::ImageTiling::eLinear;
 	imageInfo.arrayLayers = 1;
-	imageInfo.usage = vk::ImageUsageFlagBits::eColorAttachment;
+	imageInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
 	imageInfo.sharingMode = vk::SharingMode::eConcurrent;
 	imageInfo.queueFamilyCount = 2;
 	uint32_t queueFamilyIndices[2] = { 0, 2 };

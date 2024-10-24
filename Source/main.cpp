@@ -12,7 +12,7 @@ int main() {
 
     Scene scene{};
     auto camera = scene.getCamera();
-    camera->lookAt(Vec3(5.0f, 5.0f, -10.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
+    camera->lookAt(Vec3(5.0f, 5.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cube/cube.fbx" };
     auto node1 = scene.loadModel(path);
     auto node2 = scene.loadModel(path);

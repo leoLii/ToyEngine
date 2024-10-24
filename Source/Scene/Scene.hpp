@@ -44,8 +44,6 @@ protected:
 	std::vector<uint32_t> indices;
 	std::vector<Mat4> uniforms;
 
-	
-
 private:
 	Vec3 extractTranslation(const Mat4& matrix) const;
 	float distanceSquared(const Vec3& a, const Vec3& b) const;

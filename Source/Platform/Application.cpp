@@ -6,6 +6,9 @@
 #include "Core/Rendering/BasePass.hpp"
 
 #include <cstddef>
+#include <functional>
+#include <thread>
+#include <future>
 
 void Application::init(ApplicationConfig& config, Scene* scene)
 {
@@ -22,8 +25,17 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
 	renderFinishedSemaphore = gpuContext->requestSemaphore();
+	transferFinishedSemaphore = gpuContext->requestSemaphore();
 
-	basePass->prepare();
+	renderCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
+	transferCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
+
+	vk::CommandBufferBeginInfo beginInfo;
+	beginInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+	renderCommandBuffer.begin(beginInfo);
+	basePass->prepare(renderCommandBuffer);
+	basePass->record(renderCommandBuffer);
+	renderCommandBuffer.end();
 }
 
 void Application::run()
@@ -37,75 +49,86 @@ void Application::run()
 
 		window->pollEvents();
 
-		gpuContext->waitForFences(fence);
-
-		auto acquieResult =
-			gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
-
+		auto acquieResult = gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
 		uint32_t swapChainIndex = std::get<1>(acquieResult);
 
-		/*if (std::get<0>(acquieResult) == vk::Result::eErrorOutOfDateKHR)
-		{
-			recreateSwapChain();
-			return;
-		}
-		else if (std::get<0>(acquieResult) != vk::Result::eSuccess && std::get<0>(acquieResult) != vk::Result::eSuboptimalKHR) { throw std::runtime_error("failed to acquire swap chain image!"); }*/
+		gpuContext->submit(CommandType::Graphics, {}, {}, { renderCommandBuffer }, { renderFinishedSemaphore }, VK_NULL_HANDLE);
+		vk::CommandBufferBeginInfo beginInfo;
+		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+		transferCommandBuffer.begin(beginInfo);
 
-		gpuContext->resetFences(fence);
+		gpuContext->transferImage(
+			transferCommandBuffer,
+			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer,
+			vk::AccessFlagBits::eNone, vk::AccessFlagBits::eTransferWrite,
+			vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
+			gpuContext->getSwapchainImages()[swapChainIndex]);
 
-		commandBuffer = basePass->record();
+		gpuContext->transferImage(
+			transferCommandBuffer,
+			vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eTransfer,
+			vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eTransferRead,
+			vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal,
+			basePass->getImage());
 
-		std::vector<vk::Semaphore> waitSemaphores{ imageAvailableSemaphore };
-		std::vector<vk::PipelineStageFlags> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-		std::vector<vk::CommandBuffer> commandBuffers = { commandBuffer };
-		std::vector<vk::Semaphore> signalSemaphores = { renderFinishedSemaphore };
-		gpuContext->submit(0, waitSemaphores, waitStages, commandBuffers, signalSemaphores, fence);
 
-		/*{
-			vk::ImageMemoryBarrier imageMemoryBarrier;
-			imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
-			imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-			imageMemoryBarrier.oldLayout = vk::ImageLayout::eUndefined;
-			imageMemoryBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
-			imageMemoryBarrier.image = gpuContext->getSwapchainImages()[swapChainIndex]->getHandle();
-			imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
-			imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-			imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+		vk::ImageCopy copyRegion;
+		copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		copyRegion.srcSubresource.mipLevel = 0;
+		copyRegion.srcSubresource.layerCount = 1;
+		copyRegion.srcOffset = vk::Offset3D{ 0, 0, 0 };
+		copyRegion.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		copyRegion.dstSubresource.mipLevel = 0;
+		copyRegion.dstSubresource.layerCount = 1;
+		copyRegion.dstOffset = vk::Offset3D{ 0, 0, 0 };
+		copyRegion.extent.width = gpuContext->getSwapchainExtent().width;
+		copyRegion.extent.height = gpuContext->getSwapchainExtent().height;
+		copyRegion.extent.depth = 1;
 
-			commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-				vk::PipelineStageFlagBits::eColorAttachmentOutput,
-				vk::DependencyFlagBits::eByRegion,
-				0, 0, { imageMemoryBarrier });
-		}
+		transferCommandBuffer.copyImage(
+			basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
+			gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
+			{ copyRegion });
 
-		{
-			vk::ImageMemoryBarrier imageMemoryBarrier;
-			imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-			imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eNone;
-			imageMemoryBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-			imageMemoryBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
-			imageMemoryBarrier.image = gpuContext->getSwapchainImages()[swapChainIndex]->getHandle();
-			imageMemoryBarrier.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
-			imageMemoryBarrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-			imageMemoryBarrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+		gpuContext->transferImage(
+			transferCommandBuffer,
+			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
+			vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eNone,
+			vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
+			gpuContext->getSwapchainImages()[swapChainIndex]);
 
-			commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
-				vk::PipelineStageFlagBits::eBottomOfPipe,
-				vk::DependencyFlagBits::eByRegion,
-				0, 0, { imageMemoryBarrier });
-		}*/
+		gpuContext->transferImage(
+			transferCommandBuffer,
+			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
+			vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eNone,
+			vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+			basePass->getImage());
 
-		{
-			std::vector<vk::Semaphore> waitSemaphores = { renderFinishedSemaphore };
-			gpuContext->present(swapChainIndex, waitSemaphores);
-		}
+		transferCommandBuffer.end();
+
+		gpuContext->submit(
+			CommandType::Transfer,
+			{ imageAvailableSemaphore, renderFinishedSemaphore },
+			{ vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput },
+			{ transferCommandBuffer },
+			{ transferFinishedSemaphore },
+			VK_NULL_HANDLE);
+
+
+		// Present the image to the screen
+		gpuContext->present(swapChainIndex, { transferFinishedSemaphore });
+
+		// Wait for device to idle before the next frame (you can optimize this further)
+		gpuContext->getDevice()->getHandle().waitIdle();
 	}
 }
 
 void Application::close()
 {
-	gpuContext->getDevice()->getHandle().waitIdle();
 	gpuContext->returnSemaphore(renderFinishedSemaphore);
 	gpuContext->returnSemaphore(imageAvailableSemaphore);
+	gpuContext->returnSemaphore(transferFinishedSemaphore);
 	gpuContext->returnFence(fence);
+
+	delete basePass;
 }

@@ -134,6 +134,17 @@ public:
 		std::vector<vk::Semaphore>
 	);
 
+	void transferImage(
+		vk::CommandBuffer,
+		vk::PipelineStageFlags, vk::PipelineStageFlags,
+		vk::AccessFlags, vk::AccessFlags,
+		vk::ImageLayout, vk::ImageLayout,
+		const Image*, 
+		vk::DependencyFlags = vk::DependencyFlagBits::eByRegion,
+		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 },
+		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
+		) const;
+
 protected:
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;

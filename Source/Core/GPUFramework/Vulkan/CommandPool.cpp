@@ -17,8 +17,6 @@ queueFamilyIndex(queueFamilyIndex)
     createInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     
     handle = device.getHandle().createCommandPool(createInfo);
-
-    
 }
 
 CommandPool::~CommandPool(){

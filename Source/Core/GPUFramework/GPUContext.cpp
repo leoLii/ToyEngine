@@ -209,9 +209,9 @@ void GPUContext::submit(
     submitInfo.waitSemaphoreCount = waitSemaphores.size();
     submitInfo.pWaitSemaphores = waitSemaphores.data();
     submitInfo.pWaitDstStageMask = waitStages.data();
-    submitInfo.commandBufferCount = 1;
+    submitInfo.commandBufferCount = commandBuffers.size();
     submitInfo.pCommandBuffers = commandBuffers.data();
-    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.signalSemaphoreCount = signalSemaphores.size();
     submitInfo.pSignalSemaphores = signalSemaphores.data();
 
     switch (type)
@@ -246,6 +246,32 @@ void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphor
     if (result != vk::Result::eSuccess) {
         std::runtime_error("Error present");
     }
+}
+
+void GPUContext::transferImage(
+    vk::CommandBuffer commandBuffer,
+    vk::PipelineStageFlags srcStage, vk::PipelineStageFlags dstStage,
+    vk::AccessFlags srcAccess, vk::AccessFlags dstAccess, 
+    vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+    const Image* image, 
+    vk::DependencyFlags dependencyFlags,
+    vk::ImageSubresourceRange range, 
+    uint32_t srcFamily, uint32_t dstFamily) const
+{
+    vk::ImageMemoryBarrier imageMemoryBarrier;
+    imageMemoryBarrier.srcAccessMask = srcAccess;
+    imageMemoryBarrier.dstAccessMask = dstAccess;
+    imageMemoryBarrier.oldLayout = oldLayout;
+    imageMemoryBarrier.newLayout = newLayout;
+    imageMemoryBarrier.image = image->getHandle();
+    imageMemoryBarrier.subresourceRange = range;
+    imageMemoryBarrier.srcQueueFamilyIndex = srcFamily;
+    imageMemoryBarrier.dstQueueFamilyIndex = dstFamily;
+    commandBuffer.pipelineBarrier(
+        srcStage,
+        dstStage,
+        dependencyFlags,
+        0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
 void GPUContext::createCommandPools()

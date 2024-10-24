@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <thread>
 
 class BasePass;
 
@@ -59,7 +60,8 @@ protected:
 
 	vk::Fence fence;
 
-	vk::CommandBuffer commandBuffer;
+	vk::CommandBuffer renderCommandBuffer;
+	vk::CommandBuffer transferCommandBuffer;
 
 	BasePass* basePass = nullptr;
 	Scene* scene;
@@ -67,6 +69,7 @@ protected:
 	vk::Semaphore imageAvailableSemaphore;
 
 	vk::Semaphore renderFinishedSemaphore;
+	vk::Semaphore transferFinishedSemaphore;
 
 private:
 };

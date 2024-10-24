@@ -13,26 +13,29 @@ BasePass::~BasePass()
     gpuContext->destroyBuffer(uniformBuffer);
     gpuContext->destroyBuffer(indexBuffer);
     gpuContext->destroyBuffer(vertexBuffer);
-    gpuContext->destroyBuffer(indirectDrawBuffer);
+    //gpuContext->destroyBuffer(indirectDrawBuffer);
     gpuContext->destroyImage(colorAttachment->image);
-    gpuContext->destroyImage(depthAttachment->image);
+    //gpuContext->destroyImage(depthAttachment->image);
     gpuContext->destroyImageView(colorAttachment->view);
-    gpuContext->destroyImageView(depthAttachment->view);
+    //gpuContext->destroyImageView(depthAttachment->view);
     delete graphicsPipeline;
     delete pipelineLayout;
     delete descriptorSet;
     delete descriptorSetLayout;
-    delete pipelineState;
+    //delete pipelineState;
 }
 
-void BasePass::prepare()
+void BasePass::prepare(vk::CommandBuffer commandBuffer)
 {
     {
         ImageInfo imageInfo{};
         imageInfo.format = vk::Format::eB8G8R8A8Srgb;
         imageInfo.type = vk::ImageType::e2D;
         imageInfo.extent = vk::Extent3D{ 1920, 1080, 1 };
-        imageInfo.usage = vk::ImageUsageFlagBits::eColorAttachment;
+        imageInfo.usage = 
+            vk::ImageUsageFlagBits::eColorAttachment | 
+            vk::ImageUsageFlagBits::eTransferSrc |
+            vk::ImageUsageFlagBits::eSampled;
         imageInfo.sharingMode = vk::SharingMode::eExclusive;
         imageInfo.arrayLayers = 1;
         imageInfo.mipmapLevel = 1;
@@ -55,6 +58,13 @@ void BasePass::prepare()
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment->attachmentInfo;
     }
+
+    gpuContext->transferImage(
+        commandBuffer,
+        vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+        vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+        colorAttachment->image);
 
     viewport.x = 0.0f;
     viewport.y = 0.0f;

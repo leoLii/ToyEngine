@@ -19,7 +19,7 @@ public:
 	BasePass(const GPUContext*, const Scene*);
 	~BasePass();
 
-	void prepare();
+	void prepare(vk::CommandBuffer);
 
 	void record(vk::CommandBuffer);
 
