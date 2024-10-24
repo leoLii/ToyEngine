@@ -75,7 +75,7 @@ public:
 	vk::SurfaceKHR getSurface() const;
 
 	// CommandPool
-	vk::CommandBuffer requestCommandBuffer(vk::CommandBufferLevel level) const;
+	vk::CommandBuffer requestCommandBuffer(CommandType, vk::CommandBufferLevel level) const;
 
 	// Pipeline
 	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;
@@ -131,7 +131,7 @@ public:
 		vk::Fence fence) const;
 	void present(
 		uint32_t,
-		std::vector<vk::Semaphore>&
+		std::vector<vk::Semaphore>
 	);
 
 protected:

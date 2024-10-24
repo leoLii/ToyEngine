@@ -91,7 +91,7 @@ vk::SurfaceKHR GPUContext::getSurface() const
     return surface;
 }
 
-vk::CommandBuffer GPUContext::requestCommandBuffer(vk::CommandBufferLevel level) const
+vk::CommandBuffer GPUContext::requestCommandBuffer(CommandType type, vk::CommandBufferLevel level) const
 {
     return commandPools[0]->requestCommandBuffer(level);
 }
@@ -231,7 +231,7 @@ void GPUContext::submit(
     
 }
 
-void GPUContext::present(uint32_t index, std::vector<vk::Semaphore>& waitSemaphores)
+void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphores)
 {
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = waitSemaphores.size();
