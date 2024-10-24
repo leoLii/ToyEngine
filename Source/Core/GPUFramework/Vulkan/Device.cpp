@@ -135,9 +135,9 @@ Device::Device(Instance& instance)
 
 
     graphicsQueue = handle.getQueue(0, 0);
-    presentQueue = handle.getQueue(2, 0);
-    //computeQueue = handle.getQueue(1, 0);
-    //transferQueue = handle.getQueue(1, 1);
+    presentQueue = handle.getQueue(0, 1);
+    computeQueue = handle.getQueue(0, 2);
+    transferQueue = handle.getQueue(0, 3);
 
     // init allocator
     VmaVulkanFunctions vulkanFunctions = {};
