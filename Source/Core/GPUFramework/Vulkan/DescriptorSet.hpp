@@ -11,7 +11,7 @@ class DescriptorSet {
 public:
 	DescriptorSet(
 		const Device&,
-		DescriptorSetLayout&,
+		DescriptorSetLayout*,
 		vk::DescriptorPool,
 		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>&,
 		std::unordered_map<uint32_t, vk::DescriptorImageInfo>&);
@@ -26,9 +26,9 @@ public:
 protected:
 	const Device& device;
 
-	DescriptorSetLayout& layout;
+	DescriptorSetLayout* layout;
 
-	vk::DescriptorPool& pool;
+	vk::DescriptorPool pool;
 
 	vk::DescriptorSet handle;
 

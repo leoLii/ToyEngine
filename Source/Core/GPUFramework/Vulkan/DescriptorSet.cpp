@@ -6,7 +6,7 @@
 
 DescriptorSet::DescriptorSet(
 	const Device& device,
-	DescriptorSetLayout& layout,
+	DescriptorSetLayout* layout,
 	vk::DescriptorPool pool,
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo>& bufferInfos,
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo>& imageInfos)
@@ -19,7 +19,7 @@ DescriptorSet::DescriptorSet(
 	vk::DescriptorSetAllocateInfo allocateInfo;
 	allocateInfo.descriptorPool = pool;
 	allocateInfo.descriptorSetCount = 1;
-	auto layoutHandle = layout.getHandle();
+	auto layoutHandle = layout->getHandle();
 	allocateInfo.pSetLayouts = &layoutHandle;
 	handle = device.getHandle().allocateDescriptorSets(allocateInfo).front();
 
@@ -33,7 +33,7 @@ DescriptorSet::DescriptorSet(
 	{
 		auto  bindingIndex = bindingInfo.first;
 		auto& bufferInfo = bindingInfo.second;
-		auto bindingInfo = layout.getBindingInfo(bindingIndex);
+		auto bindingInfo = layout->getBindingInfo(bindingIndex);
 
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstBinding = bindingIndex;
@@ -51,7 +51,7 @@ DescriptorSet::DescriptorSet(
 	{
 		auto  bindingIndex = bindingInfo.first;
 		auto& imageInfo = bindingInfo.second;
-		auto bindingInfo = layout.getBindingInfo(bindingIndex);
+		auto bindingInfo = layout->getBindingInfo(bindingIndex);
 
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstBinding = bindingIndex;
@@ -63,11 +63,13 @@ DescriptorSet::DescriptorSet(
 
 		writeDescriptorSets.push_back(writeDescriptorSet);
 	}
+
+	device.getHandle().updateDescriptorSets(writeDescriptorSets, nullptr);
 }
 
 void DescriptorSet::updateDescriptorSet(uint32_t)
 {
-	device.getHandle().updateDescriptorSets(writeDescriptorSets, nullptr);
+	
 }
 
 

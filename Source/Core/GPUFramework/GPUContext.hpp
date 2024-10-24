@@ -102,7 +102,7 @@ public:
 	DescriptorSetLayout* createDescriptorSetLayout(uint32_t, std::vector<vk::DescriptorSetLayoutBinding>) const;
 
 	DescriptorSet* requireDescriptorSet(
-		DescriptorSetLayout,
+		DescriptorSetLayout*,
 		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>&,
 		std::unordered_map<uint32_t, vk::DescriptorImageInfo>&) const;
 

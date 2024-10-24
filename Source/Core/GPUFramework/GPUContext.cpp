@@ -155,7 +155,7 @@ DescriptorSetLayout* GPUContext::createDescriptorSetLayout(uint32_t index, std::
 }
 
 DescriptorSet* GPUContext::requireDescriptorSet(
-    DescriptorSetLayout layout,
+    DescriptorSetLayout* layout,
     std::unordered_map<uint32_t, vk::DescriptorBufferInfo>& bufferInfos,
     std::unordered_map<uint32_t, vk::DescriptorImageInfo>& imageInfos) const
 {

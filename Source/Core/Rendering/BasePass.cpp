@@ -20,8 +20,8 @@ BasePass::~BasePass()
 	//gpuContext->destroyImageView(depthAttachment->view);
 	delete graphicsPipeline;
 	delete pipelineLayout;
-	delete descriptorSet;
 	delete descriptorSetLayout;
+	delete descriptorSet;
 	//delete pipelineState;
 }
 
@@ -120,7 +120,7 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
-	descriptorSet = gpuContext->requireDescriptorSet(*descriptorSetLayout, bufferInfos, imageInfos);
+	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 	descriptorSet->updateDescriptorSet(0);
 
 	auto vertices = scene->getVertices();
