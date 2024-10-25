@@ -20,6 +20,8 @@ public:
 
 	~Node();
 
+	void update(float, uint32_t);
+
 	void setParent(Node*);
 
 	const Node* getParent() const;

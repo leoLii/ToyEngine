@@ -13,7 +13,7 @@ public:
 	const std::string& getName() const;
 	virtual std::type_index getType() = 0;
 
-	virtual void update(float deltaTime) = 0;
+	virtual void update(float deltaTime, uint32_t frameIndex) = 0;
 
 protected:
 	std::string name;

@@ -17,6 +17,8 @@ Camera::Camera(CameraType type, Frustum frustum)
 	default:
 		break;
 	}
+
+	generateTAAJitterSamples();
 }
 
 std::type_index Camera::getType()
@@ -34,6 +36,11 @@ const Mat4 Camera::getViewMatrix() const
 	return view;
 }
 
+const Mat4 Camera::getViewMatrixPrev() const
+{
+	return prevView;
+}
+
 const Mat4 Camera::getProjectionMatrix() const
 {
 	return projection;
@@ -44,6 +51,54 @@ const Mat4 Camera::getProjectionMatrixJittered() const
 	return projectionJittered;
 }
 
-void Camera::update(float deltaTime)
+const Mat4 Camera::getPV() const
 {
+	return projection * view;
+}
+
+const Mat4 Camera::getPVJittered() const
+{
+	return projectionJittered * view;
+}
+
+const Mat4 Camera::getPVPrev() const
+{
+	return projection * prevView;
+}
+
+void Camera::update(float deltaTime, uint32_t frameIndex)
+{
+	prevView = view;
+	projectionJittered = projection;
+
+	//updateview
+	projectionJitter(frameIndex);
+}
+
+void Camera::generateTAAJitterSamples() 
+{
+	auto HaltonSequence = [](int index, int base) -> float {
+		float result = 0;
+		float fraction = 1.0f / base;
+		while (index > 0) {
+			result += (index % base) * fraction;
+			index /= base;
+			fraction /= base;
+		}
+		return result;
+		};
+	for (int i = 0; i < 16; i++) {
+		float jitterX = HaltonSequence(i + 1, 2) - 0.5f;
+		float jitterY = HaltonSequence(i + 1, 3) - 0.5f;
+		jitterSamples.push_back(glm::vec2(jitterX, jitterY));
+	}
+}
+
+void Camera::projectionJitter(uint32_t frameIndex)
+{
+	uint32_t width = 960;
+	uint32_t height = 540;
+	Vec2 jitter = jitterSamples[frameIndex % 16];
+	projectionJittered[2][0] += (jitter.x / width);// 对x方向应用抖动
+	projectionJittered[2][1] += (jitter.y / height);  // 对y方向应用抖动
 }

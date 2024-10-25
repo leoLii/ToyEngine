@@ -29,6 +29,13 @@ Node::~Node() {
 	components.clear();
 }
 
+void Node::update(float deltaTime, uint32_t frameIndex)
+{
+	for (auto component : components) {
+		component.second->update(deltaTime, frameIndex);
+	}
+}
+
 void Node::setParent(Node* parent) {
 	this->parent = parent;
 }

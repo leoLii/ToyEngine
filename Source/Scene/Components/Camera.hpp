@@ -4,6 +4,8 @@
 
 #include "Scene/Component.hpp"
 
+#include <vector>
+
 enum CameraType {
 	Perspect,
 	Ortho
@@ -26,18 +28,28 @@ public:
 	void lookAt(Vec3, Vec3, Vec3);
 
 	const Mat4 getViewMatrix() const;
+	const Mat4 getViewMatrixPrev() const;
 	const Mat4 getProjectionMatrix() const;
 	const Mat4 getProjectionMatrixJittered() const;
 
-	virtual void update(float deltaTime) override;
+	const Mat4 getPV() const;
+	const Mat4 getPVJittered() const;
+	const Mat4 getPVPrev() const;
+
+	virtual void update(float deltaTime, uint32_t frameIndex) override;
 
 protected:
 	CameraType type;
 	Frustum frustum;
 	Mat4 view{ 1.0 };
 	Mat4 projection{ 1.0 };
+	Mat4 prevView{ 1.0 };
 	Mat4 projectionJittered{ 1.0 };
 	Mat4 viewProjection{ 1.0 };
-	float jitterX = 0.0;
-	float jitterY = 0.0;
+
+	std::vector<Vec2> jitterSamples;
+
+private:
+	void projectionJitter(uint32_t);
+	void generateTAAJitterSamples();
 };

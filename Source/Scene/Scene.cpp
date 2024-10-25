@@ -44,6 +44,10 @@ void Scene::update(uint32_t frameIndex)
 
 		uniforms.push_back(node->getTransform());
 	}
+
+	for (auto node : nodes) {
+		node->update(0.0, frameIndex);
+	}
 }
 
 Node* Scene::getRootNode()
