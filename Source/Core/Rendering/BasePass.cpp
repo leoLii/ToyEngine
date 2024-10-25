@@ -176,18 +176,6 @@ void BasePass::initAttachments()
 		depthAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 		depthAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
 	}
-}
-
-void BasePass::prepare()
-{
-	initAttachments();
-
-	renderingInfo.layerCount = 1;
-	renderingInfo.renderArea.offset = vk::Offset2D{};
-	renderingInfo.renderArea.extent = vk::Extent2D{ 960, 540 };
-	renderingInfo.colorAttachmentCount = renderingAttachments.size();
-	renderingInfo.pColorAttachments = renderingAttachments.data();
-	renderingInfo.pDepthAttachment = &depthAttachment->attachmentInfo;
 
 	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;
@@ -233,7 +221,20 @@ void BasePass::prepare()
 	commandBuffer.end();
 
 	gpuContext->submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	
 	gpuContext->getDevice()->getTransferQueue().waitIdle();
+}
+
+void BasePass::prepare()
+{
+	initAttachments();
+
+	renderingInfo.layerCount = 1;
+	renderingInfo.renderArea.offset = vk::Offset2D{};
+	renderingInfo.renderArea.extent = vk::Extent2D{ 960, 540 };
+	renderingInfo.colorAttachmentCount = renderingAttachments.size();
+	renderingInfo.pColorAttachments = renderingAttachments.data();
+	renderingInfo.pDepthAttachment = &depthAttachment->attachmentInfo;
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -250,7 +251,7 @@ void BasePass::prepare()
 	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, { binding });
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eVertex;
-	constants.size = sizeof(Mat4);
+	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
 	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), { descriptorSetLayout->getHandle() }, {constants} };
@@ -304,10 +305,14 @@ void BasePass::prepare()
 void BasePass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
-	auto matrix = camera->getPVJittered();
+
 	commandBuffer.beginRendering(&renderingInfo);
 
-	commandBuffer.pushConstants<Mat4>(pipelineLayout->getHandle(), vk::ShaderStageFlagBits::eVertex, 0, { matrix });
+	commandBuffer.pushConstants<Constant>(
+		pipelineLayout->getHandle(), 
+		vk::ShaderStageFlagBits::eVertex, 0,
+		{ Constant(camera->getPVPrev(), camera->getPVJittered()) });
+	
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
 
 	commandBuffer.setViewport(0, 1, &viewport);

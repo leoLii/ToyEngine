@@ -24,6 +24,11 @@ public:
 	}
 
 protected:
+	struct Constant {
+		Mat4 prevPV;
+		Mat4 jitteredPV;
+	};
+
 	const GPUContext* gpuContext;
 	const Scene* scene;
 

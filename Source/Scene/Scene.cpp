@@ -27,23 +27,23 @@ void Scene::update(uint32_t frameIndex)
 	float movementSpeed = 0.0001f;
 	float movementRange = 1.0f;
 
-	uniforms.clear();
+	//uniforms.clear();
 
-	for (auto mesh : meshes) {
-		Mat4 transform{ 1.0 };
-		auto node = mesh->getAttachNode();
+	//for (auto mesh : meshes) {
+	//	Mat4 transform{ 1.0 };
+	//	auto node = mesh->getAttachNode();
 
-		float angle = rotationSpeed * deltaTime;
+	//	float angle = rotationSpeed * deltaTime;
 
-		Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
+	//	Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
 
-		node->setTransform(rotationMatrix);
-		//float positionX = movementRange * sin(deltaTime * frameIndex / 100.0);
-		//Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(positionX, 0.0f, 0.0f));
-		//node->setTransform(translationMatrix);
+	//	node->setTransform(rotationMatrix);
+	//	//float positionX = movementRange * sin(deltaTime * frameIndex / 100.0);
+	//	//Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(positionX, 0.0f, 0.0f));
+	//	//node->setTransform(translationMatrix);
 
-		uniforms.push_back(node->getTransform());
-	}
+	//	uniforms.push_back(node->getTransform());
+	//}
 
 	for (auto node : nodes) {
 		node->update(0.0, frameIndex);
