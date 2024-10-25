@@ -29,6 +29,11 @@ protected:
 		Mat4 jitteredPV;
 	};
 
+	struct Uniform {
+		Mat4 prevModel;
+		Mat4 currModel;
+	};
+
 	const GPUContext* gpuContext;
 	const Scene* scene;
 
@@ -58,6 +63,8 @@ protected:
 
 	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
 	std::vector<vk::Format> attachmentFormats;
+
+	std::vector<Uniform> uniforms;
 
 private:
 	void initAttachments();

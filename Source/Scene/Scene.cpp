@@ -27,23 +27,25 @@ void Scene::update(uint32_t frameIndex)
 	float movementSpeed = 0.0001f;
 	float movementRange = 1.0f;
 
-	//uniforms.clear();
+	prevUniforms.assign(uniforms.begin(), uniforms.end());
 
-	//for (auto mesh : meshes) {
-	//	Mat4 transform{ 1.0 };
-	//	auto node = mesh->getAttachNode();
+	uniforms.clear();
 
-	//	float angle = rotationSpeed * deltaTime;
+	for (auto mesh : meshes) {
+		Mat4 transform{ 1.0 };
+		auto node = mesh->getAttachNode();
 
-	//	Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
+		float angle = rotationSpeed * deltaTime;
 
-	//	node->setTransform(rotationMatrix);
-	//	//float positionX = movementRange * sin(deltaTime * frameIndex / 100.0);
-	//	//Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(positionX, 0.0f, 0.0f));
-	//	//node->setTransform(translationMatrix);
+		Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
 
-	//	uniforms.push_back(node->getTransform());
-	//}
+		//node->setTransform(rotationMatrix);
+		float positionX = movementRange * sin(deltaTime * frameIndex / 1000000.0);
+		Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(positionX, 0.0f, 0.0f));
+		node->setTransform(translationMatrix);
+
+		uniforms.push_back(node->getTransform());
+	}
 
 	for (auto node : nodes) {
 		node->update(0.0, frameIndex);
@@ -109,10 +111,12 @@ void Scene::collectMeshes()
 		auto indexData = mesh->getIndices();
 		indices.insert(indices.end(), indexData.begin(), indexData.end());
 
-		bufferOffsets.push_back(uniforms.size() * sizeof(Mat4));
+		bufferOffsets.push_back(uniforms.size() * sizeof(Mat4) * 2);
 		auto transform = mesh->getAttachNode()->getTransform();
 		uniforms.push_back(transform);
 	}
+
+	prevUniforms.assign(uniforms.begin(), uniforms.end());
 }
 
 const std::vector<Vertex> Scene::getVertices() const
@@ -128,6 +132,11 @@ const std::vector<uint32_t> Scene::getIndices() const
 const std::vector<Mat4> Scene::getUniforms() const
 {
 	return uniforms;
+}
+
+const std::vector<Mat4> Scene::getPrevUniforms() const
+{
+	return prevUniforms;
 }
 
 // 从矩阵中提取平移分量（假设列主序矩阵）

@@ -67,7 +67,7 @@ void BasePass::initAttachments()
 
 	{
 		ImageInfo imageInfo{};
-		imageInfo.format = vk::Format::eR8G8B8A8Snorm;
+		imageInfo.format = vk::Format::eR16G16B16A16Sfloat;
 		imageInfo.type = vk::ImageType::e2D;
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
@@ -280,13 +280,12 @@ void BasePass::prepare()
 
 	graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), pipelineLayout, &state, baseModules);
 
-	auto models = scene->getUniforms();
-	uniformBuffer = gpuContext->createBuffer(sizeof(Mat4) * models.size(), vk::BufferUsageFlagBits::eUniformBuffer);
+	uniformBuffer = gpuContext->createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
 	
 	vk::DescriptorBufferInfo descriptorBufferInfo;
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
 	descriptorBufferInfo.offset = 0;
-	descriptorBufferInfo.range = sizeof(Mat4);
+	descriptorBufferInfo.range = sizeof(Uniform);
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
@@ -335,6 +334,13 @@ void BasePass::record(vk::CommandBuffer commandBuffer)
 
 void BasePass::update()
 {
+	uniforms.clear();
+
 	auto models = scene->getUniforms();
-	uniformBuffer->copyToGPU(static_cast<const void*>(models.data()), sizeof(Mat4) * models.size());
+	auto prevModels = scene->getPrevUniforms();
+	uniforms.reserve(scene->getMeshCount());
+	for (int i = 0; i < scene->getMeshCount(); i++) {
+		uniforms.push_back(Uniform(prevModels[i], models[i]));
+	}
+	uniformBuffer->copyToGPU(static_cast<const void*>(uniforms.data()), sizeof(Uniform) * uniforms.size());
 }
