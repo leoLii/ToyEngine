@@ -58,12 +58,9 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	renderCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 	transferCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 
-	vk::CommandBufferBeginInfo beginInfo;
-	beginInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
-	renderCommandBuffer.begin(beginInfo);
-	basePass->prepare(renderCommandBuffer);
-	basePass->record(renderCommandBuffer);
-	renderCommandBuffer.end();
+	
+	basePass->prepare();
+	
 }
 
 void Application::run()
@@ -86,7 +83,22 @@ void Application::run()
 		auto acquieResult = gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
 		uint32_t swapChainIndex = std::get<1>(acquieResult);
 
-		gpuContext->submit(CommandType::Graphics, {}, {}, { renderCommandBuffer }, { renderFinishedSemaphore }, VK_NULL_HANDLE);
+		{
+			vk::CommandBufferBeginInfo beginInfo;
+			beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+			renderCommandBuffer.begin(beginInfo);
+			basePass->record(renderCommandBuffer);
+			renderCommandBuffer.end();
+			gpuContext->submit(
+				CommandType::Graphics,
+				{},
+				{},
+				{ renderCommandBuffer },
+				{ renderFinishedSemaphore },
+				VK_NULL_HANDLE);
+		}
+		
+		
 		vk::CommandBufferBeginInfo beginInfo;
 		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 		transferCommandBuffer.begin(beginInfo);
@@ -122,24 +134,6 @@ void Application::run()
 			basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
 			gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 			{ blit }, vk::Filter::eLinear);
-
-		//vk::ImageCopy copyRegion;
-		//copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-		//copyRegion.srcSubresource.mipLevel = 0;
-		//copyRegion.srcSubresource.layerCount = 1;
-		//copyRegion.srcOffset = vk::Offset3D{ 0, 0, 0 };
-		//copyRegion.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-		//copyRegion.dstSubresource.mipLevel = 0;
-		//copyRegion.dstSubresource.layerCount = 1;
-		//copyRegion.dstOffset = vk::Offset3D{ 0, 0, 0 };
-		//copyRegion.extent.width = gpuContext->getSwapchainExtent().width;
-		//copyRegion.extent.height = gpuContext->getSwapchainExtent().height;
-		//copyRegion.extent.depth = 1;
-
-		//transferCommandBuffer.copyImage(
-		//	basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
-		//	gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
-		//	{ copyRegion });
 
 		gpuContext->transferImage(
 			transferCommandBuffer,

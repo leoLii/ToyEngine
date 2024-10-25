@@ -37,11 +37,11 @@ public:
         return this->graphicsQueue;
     }
     
-    vk::Queue getComputeQueue(){
+    vk::Queue getComputeQueue() const {
         return this->computeQueue;
     }
     
-    vk::Queue getTransferQueue(){
+    vk::Queue getTransferQueue() const {
         return this->transferQueue;
     }
     

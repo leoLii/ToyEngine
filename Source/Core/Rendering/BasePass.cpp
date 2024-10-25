@@ -178,7 +178,7 @@ void BasePass::initAttachments()
 	}
 }
 
-void BasePass::prepare(vk::CommandBuffer commandBuffer)
+void BasePass::prepare()
 {
 	initAttachments();
 
@@ -188,6 +188,11 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 	renderingInfo.colorAttachmentCount = renderingAttachments.size();
 	renderingInfo.pColorAttachments = renderingAttachments.data();
 	renderingInfo.pDepthAttachment = &depthAttachment->attachmentInfo;
+
+	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
+	vk::CommandBufferBeginInfo beginInfo;
+	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	commandBuffer.begin(beginInfo);
 
 	gpuContext->transferImage(
 		commandBuffer,
@@ -224,6 +229,11 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
 		depthAttachment->image, vk::DependencyFlagBits::eByRegion,
 		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
+
+	commandBuffer.end();
+
+	gpuContext->submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext->getDevice()->getTransferQueue().waitIdle();
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -294,7 +304,7 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 void BasePass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
-	auto matrix = camera->getProjectionMatrix() * camera->getViewMatrix();
+	auto matrix = camera->getPVJittered();
 	commandBuffer.beginRendering(&renderingInfo);
 
 	commandBuffer.pushConstants<Mat4>(pipelineLayout->getHandle(), vk::ShaderStageFlagBits::eVertex, 0, { matrix });

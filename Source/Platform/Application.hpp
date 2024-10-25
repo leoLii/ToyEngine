@@ -66,8 +66,8 @@ protected:
 	BasePass* basePass = nullptr;
 	Scene* scene;
 
-	vk::Semaphore imageAvailableSemaphore;
 
+	vk::Semaphore imageAvailableSemaphore;
 	vk::Semaphore renderFinishedSemaphore;
 	vk::Semaphore transferFinishedSemaphore;
 
