@@ -164,12 +164,11 @@ DescriptorSet* GPUContext::requireDescriptorSet(
 
 ImageView* GPUContext::createImageView(
     Image* image, 
-    vk::ImageViewType type, 
-    vk::Format format, 
+    vk::ImageViewType type,
     vk::ComponentMapping component, 
     vk::ImageSubresourceRange range) const
 {
-    return new ImageView(*device, image, type, format, component, range);
+    return new ImageView(*device, image, type, image->getImageInfo().format, component, range);
 }
 
 void GPUContext::destroyImageView(ImageView* imageView) const

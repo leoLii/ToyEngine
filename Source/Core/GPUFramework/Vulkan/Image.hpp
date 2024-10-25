@@ -3,6 +3,7 @@
 #include "VkCommon.hpp"
 
 class Device;
+class ImageView;
 
 struct ImageInfo {
 	vk::Format format;
@@ -30,6 +31,10 @@ public:
 	vk::Image getHandle() const;
 
 	VmaAllocation getAllocation();
+
+	ImageInfo getImageInfo() {
+		return imageInfo;
+	}
 
 protected:
 	const Device& device;

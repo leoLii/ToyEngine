@@ -5,6 +5,9 @@ BasePass::BasePass(const GPUContext* context, const Scene* scene)
 	, scene{ scene }
 {
 	colorAttachment = new Attachment{};
+	normalAttachment = new Attachment{};
+	armAttachment = new Attachment{};
+	motionAttachment = new Attachment{};
 	depthAttachment = new Attachment{};
 }
 
@@ -15,9 +18,15 @@ BasePass::~BasePass()
 	gpuContext->destroyBuffer(vertexBuffer);
 	//gpuContext->destroyBuffer(indirectDrawBuffer);
 	gpuContext->destroyImage(colorAttachment->image);
-	//gpuContext->destroyImage(depthAttachment->image);
+	gpuContext->destroyImage(normalAttachment->image);
+	gpuContext->destroyImage(armAttachment->image);
+	gpuContext->destroyImage(motionAttachment->image);
+	gpuContext->destroyImage(depthAttachment->image);
 	gpuContext->destroyImageView(colorAttachment->view);
-	//gpuContext->destroyImageView(depthAttachment->view);
+	gpuContext->destroyImageView(normalAttachment->view);
+	gpuContext->destroyImageView(armAttachment->view);
+	gpuContext->destroyImageView(motionAttachment->view);
+	gpuContext->destroyImageView(depthAttachment->view);
 	delete graphicsPipeline;
 	delete pipelineLayout;
 	delete descriptorSetLayout;
@@ -25,17 +34,17 @@ BasePass::~BasePass()
 	//delete pipelineState;
 }
 
-void BasePass::prepare(vk::CommandBuffer commandBuffer)
+void BasePass::initAttachments()
 {
 	{
 		ImageInfo imageInfo{};
-		imageInfo.format = vk::Format::eB8G8R8A8Srgb;
+		imageInfo.format = vk::Format::eR8G8B8A8Unorm;
 		imageInfo.type = vk::ImageType::e2D;
-		imageInfo.extent = vk::Extent3D{ 1920, 1080, 1 };
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eTransferSrc |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eTransferSrc;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -51,13 +60,134 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 		colorAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		colorAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 		colorAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
-
-		renderingInfo.layerCount = 1;
-		renderingInfo.renderArea.offset = vk::Offset2D{};
-		renderingInfo.renderArea.extent = gpuContext->getSwapchainExtent();
-		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachments = &colorAttachment->attachmentInfo;
+	
+		renderingAttachments.push_back(colorAttachment->attachmentInfo);
+		attachmentFormats.push_back(imageInfo.format);
 	}
+
+	{
+		ImageInfo imageInfo{};
+		imageInfo.format = vk::Format::eR8G8B8A8Snorm;
+		imageInfo.type = vk::ImageType::e2D;
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.arrayLayers = 1;
+		imageInfo.mipmapLevel = 1;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		normalAttachment->image = gpuContext->createImage(imageInfo);
+		normalAttachment->view = gpuContext->createImageView(normalAttachment->image);
+		normalAttachment->format = imageInfo.format;
+		normalAttachment->attachmentInfo.imageView = normalAttachment->view->getHandle();
+		normalAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		normalAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		normalAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		normalAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		normalAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	
+		renderingAttachments.push_back(normalAttachment->attachmentInfo);
+		attachmentFormats.push_back(imageInfo.format);
+	}
+	
+	{
+		ImageInfo imageInfo{};
+		imageInfo.format = vk::Format::eR8G8B8A8Unorm;
+		imageInfo.type = vk::ImageType::e2D;
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.arrayLayers = 1;
+		imageInfo.mipmapLevel = 1;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		armAttachment->image = gpuContext->createImage(imageInfo);
+		armAttachment->view = gpuContext->createImageView(armAttachment->image);
+		armAttachment->format = imageInfo.format;
+		armAttachment->attachmentInfo.imageView = armAttachment->view->getHandle();
+		armAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		armAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		armAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		armAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		armAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	
+		renderingAttachments.push_back(armAttachment->attachmentInfo);
+		attachmentFormats.push_back(imageInfo.format);
+	}
+
+	{
+		ImageInfo imageInfo{};
+		imageInfo.format = vk::Format::eR16G16Sfloat;
+		imageInfo.type = vk::ImageType::e2D;
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.arrayLayers = 1;
+		imageInfo.mipmapLevel = 1;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		motionAttachment->image = gpuContext->createImage(imageInfo);
+		motionAttachment->view = gpuContext->createImageView(motionAttachment->image);
+		motionAttachment->format = imageInfo.format;
+		motionAttachment->attachmentInfo.imageView = motionAttachment->view->getHandle();
+		motionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		motionAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		motionAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		motionAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		motionAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	
+		renderingAttachments.push_back(motionAttachment->attachmentInfo);
+		attachmentFormats.push_back(imageInfo.format);
+	}
+	
+	{
+		ImageInfo imageInfo{};
+		imageInfo.format = vk::Format::eD32Sfloat;
+		imageInfo.type = vk::ImageType::e2D;
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eDepthStencilAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.arrayLayers = 1;
+		imageInfo.mipmapLevel = 1;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		depthAttachment->image = gpuContext->createImage(imageInfo);
+		depthAttachment->view = gpuContext->createImageView(
+			depthAttachment->image, vk::ImageViewType::e2D,
+			vk::ComponentMapping{}, 
+			vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1});
+		depthAttachment->format = imageInfo.format;
+		depthAttachment->attachmentInfo.imageView = depthAttachment->view->getHandle();
+		depthAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+		depthAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		depthAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		depthAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		depthAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	}
+}
+
+void BasePass::prepare(vk::CommandBuffer commandBuffer)
+{
+	initAttachments();
+
+	renderingInfo.layerCount = 1;
+	renderingInfo.renderArea.offset = vk::Offset2D{};
+	renderingInfo.renderArea.extent = vk::Extent2D{ 960, 540 };
+	renderingInfo.colorAttachmentCount = renderingAttachments.size();
+	renderingInfo.pColorAttachments = renderingAttachments.data();
+	renderingInfo.pDepthAttachment = &depthAttachment->attachmentInfo;
 
 	gpuContext->transferImage(
 		commandBuffer,
@@ -66,10 +196,39 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
 		colorAttachment->image);
 
+	gpuContext->transferImage(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		normalAttachment->image);
+
+	gpuContext->transferImage(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		armAttachment->image);
+
+	gpuContext->transferImage(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		motionAttachment->image);
+
+	gpuContext->transferImage(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eAllGraphics,
+		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+		depthAttachment->image, vk::DependencyFlagBits::eByRegion,
+		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
+
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = gpuContext->getSwapchainExtent().width;
-	viewport.height = gpuContext->getSwapchainExtent().height;
+	viewport.width = gpuContext->getSwapchainExtent().width / 2;
+	viewport.height = gpuContext->getSwapchainExtent().height / 2;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
@@ -106,7 +265,7 @@ void BasePass::prepare(vk::CommandBuffer commandBuffer)
 	state.vertexInputState.attributes = vertexAttributes;
 	state.dynamicStates.push_back(vk::DynamicState::eViewport);
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
-	state.renderingInfo.colorAttachmentFormats.push_back(colorAttachment->format);
+	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
 	graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), pipelineLayout, &state, baseModules);
 

@@ -5,6 +5,15 @@
 #include <vector>
 
 class Device;
+class Image;
+class ImageView;
+
+struct Attachment {
+	Image* image;
+	ImageView* view;
+	vk::Format format;
+	vk::RenderingAttachmentInfo attachmentInfo;
+};
 
 class RenderPass {
 public:

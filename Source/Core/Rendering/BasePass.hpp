@@ -3,16 +3,10 @@
 #include "Common/Math.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
+#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
 #include "Scene/Scene.hpp"
 
 #include <vector>
-
-struct Attachment {
-	Image* image;
-	ImageView* view;
-	vk::Format format;
-	vk::RenderingAttachmentInfo attachmentInfo;
-};
 
 class BasePass {
 public:
@@ -34,6 +28,9 @@ protected:
 	const Scene* scene;
 
 	Attachment* colorAttachment;
+	Attachment* normalAttachment;
+	Attachment* armAttachment;
+	Attachment* motionAttachment;
 	Attachment* depthAttachment;
 
 	vk::PushConstantRange constants;
@@ -50,4 +47,13 @@ protected:
 	Buffer* vertexBuffer;
 	Buffer* indexBuffer;
 	Buffer* indirectDrawBuffer;
+
+	uint32_t width = 960;
+	uint32_t height = 540;
+
+	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
+	std::vector<vk::Format> attachmentFormats;
+
+private:
+	void initAttachments();
 };

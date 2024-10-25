@@ -14,39 +14,6 @@ GraphicsPipeline::GraphicsPipeline(
     :device{ device }
     , state{ state }
 {
-    /*for (auto setLayout : layout.setLayouts) {
-        std::vector<vk::DescriptorSetLayoutBinding> bindings;
-        for (auto binding : setLayout.bindings) {
-            vk::DescriptorSetLayoutBinding bindingInfo;
-            bindingInfo.binding = binding.binding;
-            bindingInfo.descriptorType = binding.descriptorType;
-            bindingInfo.descriptorCount = binding.descriptorCount;
-            bindingInfo.stageFlags = binding.shaderStage;
-            bindingInfo.pImmutableSamplers = binding.immutableSamplers.data();
-        }
-
-        vk::DescriptorSetLayoutCreateInfo descriptorSetLayout;
-        descriptorSetLayout.bindingCount = bindings.size();
-        descriptorSetLayout.pBindings = bindings.data();
-
-        vk::DescriptorPoolCreateInfo info;
-        info.
-
-        device.getHandle().createDescriptorPool
-    }
-
-    for (auto constance : layout.constanceRanges) {
-        vk::PushConstantRange range
-    }
-
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pSetLayouts = nullptr;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;*/
-
-    //layout = device.getHandle().createPipelineLayout(pipelineLayoutInfo);
-
     vk::PipelineShaderStageCreateInfo vertShaderStageInfo;
     vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
     vertShaderStageInfo.module = shaderModules[0]->getHandle();
@@ -89,6 +56,7 @@ GraphicsPipeline::GraphicsPipeline(
     multisampling.alphaToOneEnable = state->multisampleState.alpha_to_one_enable;
     multisampling.minSampleShading = state->multisampleState.min_sample_shading;
 
+    auto attachmentCount = state->renderingInfo.colorAttachmentFormats.size();
     vk::PipelineColorBlendAttachmentState colorBlendAttachment;
     colorBlendAttachment.colorWriteMask = state->colorBlendAttachmentState.color_write_mask;
     colorBlendAttachment.blendEnable = state->colorBlendAttachmentState.blend_enable;
@@ -98,12 +66,13 @@ GraphicsPipeline::GraphicsPipeline(
     colorBlendAttachment.alphaBlendOp = state->colorBlendAttachmentState.alpha_blend_op;
     colorBlendAttachment.srcAlphaBlendFactor = state->colorBlendAttachmentState.src_alpha_blend_factor;
     colorBlendAttachment.dstAlphaBlendFactor = state->colorBlendAttachmentState.dst_alpha_blend_factor;
+    std::vector<vk::PipelineColorBlendAttachmentState>blendStates(attachmentCount, colorBlendAttachment);
 
     vk::PipelineColorBlendStateCreateInfo colorBlendingState;
     colorBlendingState.logicOpEnable = state->colorBlendState.logic_op_enable;
     colorBlendingState.logicOp = state->colorBlendState.logic_op;
-    colorBlendingState.attachmentCount = 1;
-    colorBlendingState.pAttachments = &colorBlendAttachment;
+    colorBlendingState.attachmentCount = attachmentCount;
+    colorBlendingState.pAttachments = blendStates.data();
     colorBlendingState.blendConstants[0] = 0.0f;
     colorBlendingState.blendConstants[1] = 0.0f;
     colorBlendingState.blendConstants[2] = 0.0f;
@@ -113,10 +82,19 @@ GraphicsPipeline::GraphicsPipeline(
     dynamicState.dynamicStateCount = state->dynamicStates.size();
     dynamicState.pDynamicStates = state->dynamicStates.data();
 
+    vk::PipelineDepthStencilStateCreateInfo depthStencilState;
+    depthStencilState.depthWriteEnable = state->depthStencilState.depth_write_enable;
+    depthStencilState.depthTestEnable = state->depthStencilState.depth_test_enable;
+    depthStencilState.stencilTestEnable = state->depthStencilState.stencil_test_enable;
+    depthStencilState.depthCompareOp = state->depthStencilState.depth_compare_op;
+    depthStencilState.depthBoundsTestEnable = state->depthStencilState.depth_bounds_test_enable;
+    depthStencilState.maxDepthBounds = state->depthStencilState.max_depth_bounds;
+
     vk::PipelineRenderingCreateInfo renderingInfo;
     renderingInfo.colorAttachmentCount = state->renderingInfo.colorAttachmentFormats.size();
     renderingInfo.pColorAttachmentFormats = state->renderingInfo.colorAttachmentFormats.data();
-
+    renderingInfo.depthAttachmentFormat = state->renderingInfo.depthStencilAttachmentFormat;
+    
     vk::GraphicsPipelineCreateInfo pipelineInfo;
     pipelineInfo.stageCount = shaderModules.size();
     pipelineInfo.pStages = stages;
@@ -127,6 +105,7 @@ GraphicsPipeline::GraphicsPipeline(
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlendingState;
     pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.pDepthStencilState = &depthStencilState;
     pipelineInfo.pNext = &renderingInfo;
     pipelineInfo.layout = layout->getHandle();
     //pipelineInfo.renderPass = renderPass.getHandle();

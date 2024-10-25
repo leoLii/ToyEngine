@@ -21,6 +21,34 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	fence = gpuContext->requestFence();
 
 	this->scene = scene;
+
+	//{
+	//	ImageInfo imageInfo{};
+	//	imageInfo.format = vk::Format::eB8G8R8A8Srgb;
+	//	imageInfo.type = vk::ImageType::e2D;
+	//	imageInfo.extent = vk::Extent3D{ 960, 540, 1 };
+	//	imageInfo.usage =
+	//		vk::ImageUsageFlagBits::eColorAttachment |
+	//		vk::ImageUsageFlagBits::eTransferSrc |
+	//		vk::ImageUsageFlagBits::eSampled;
+	//	imageInfo.sharingMode = vk::SharingMode::eExclusive;
+	//	imageInfo.arrayLayers = 1;
+	//	imageInfo.mipmapLevel = 1;
+	//	imageInfo.queueFamilyCount = 1;
+	//	imageInfo.pQueueFamilyIndices = { 0 };
+
+	//	colorAttachment->image = gpuContext->createImage(imageInfo);
+	//	colorAttachment->view = gpuContext->createImageView(colorAttachment->image);
+	//	colorAttachment->format = imageInfo.format;
+	//	colorAttachment->attachmentInfo.imageView = colorAttachment->view->getHandle();
+	//	colorAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+	//	colorAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+	//	colorAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+	//	colorAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+	//	colorAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	//}
+
+
 	basePass = new BasePass{ gpuContext.get(), scene };
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
@@ -41,7 +69,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 void Application::run()
 {
 	while (!window->shouldClose()) {
-		
+
 		++frameIndex;
 
 		scene->update(frameIndex);
@@ -78,23 +106,40 @@ void Application::run()
 			basePass->getImage());
 
 
-		vk::ImageCopy copyRegion;
-		copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-		copyRegion.srcSubresource.mipLevel = 0;
-		copyRegion.srcSubresource.layerCount = 1;
-		copyRegion.srcOffset = vk::Offset3D{ 0, 0, 0 };
-		copyRegion.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-		copyRegion.dstSubresource.mipLevel = 0;
-		copyRegion.dstSubresource.layerCount = 1;
-		copyRegion.dstOffset = vk::Offset3D{ 0, 0, 0 };
-		copyRegion.extent.width = gpuContext->getSwapchainExtent().width;
-		copyRegion.extent.height = gpuContext->getSwapchainExtent().height;
-		copyRegion.extent.depth = 1;
+		vk::ImageBlit blit;
+		blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.srcOffsets[1] = vk::Offset3D{ 960, 540, 1 };
+		blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		blit.srcSubresource.mipLevel = 0;
+		blit.srcSubresource.layerCount = 1;
+		blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.dstOffsets[1] = vk::Offset3D{ 1920, 1080, 1 };
+		blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		blit.dstSubresource.mipLevel = 0;
+		blit.dstSubresource.layerCount = 1;
 
-		transferCommandBuffer.copyImage(
+		transferCommandBuffer.blitImage(
 			basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
 			gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
-			{ copyRegion });
+			{ blit }, vk::Filter::eLinear);
+
+		//vk::ImageCopy copyRegion;
+		//copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		//copyRegion.srcSubresource.mipLevel = 0;
+		//copyRegion.srcSubresource.layerCount = 1;
+		//copyRegion.srcOffset = vk::Offset3D{ 0, 0, 0 };
+		//copyRegion.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		//copyRegion.dstSubresource.mipLevel = 0;
+		//copyRegion.dstSubresource.layerCount = 1;
+		//copyRegion.dstOffset = vk::Offset3D{ 0, 0, 0 };
+		//copyRegion.extent.width = gpuContext->getSwapchainExtent().width;
+		//copyRegion.extent.height = gpuContext->getSwapchainExtent().height;
+		//copyRegion.extent.depth = 1;
+
+		//transferCommandBuffer.copyImage(
+		//	basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
+		//	gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
+		//	{ copyRegion });
 
 		gpuContext->transferImage(
 			transferCommandBuffer,

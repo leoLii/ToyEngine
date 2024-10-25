@@ -110,7 +110,6 @@ public:
 	ImageView* createImageView(
 		Image*, 
 		vk::ImageViewType = vk::ImageViewType::e2D,
-		vk::Format = vk::Format::eB8G8R8A8Srgb,
 		vk::ComponentMapping = vk::ComponentMapping{},
 		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }) const;
 	void destroyImageView(ImageView*) const;

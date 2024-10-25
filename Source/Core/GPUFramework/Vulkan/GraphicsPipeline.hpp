@@ -89,6 +89,8 @@ struct DepthStencilState
 	StencilOpState front{};
 
 	StencilOpState back{};
+
+	float max_depth_bounds = 0.0;
 };
 
 struct ColorBlendAttachmentState
