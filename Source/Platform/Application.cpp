@@ -114,7 +114,7 @@ void Application::run()
 			transferCommandBuffer,
 			vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eTransfer,
 			vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eTransferRead,
-			vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal,
+			vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal,
 			basePass->getImage());
 
 
@@ -146,7 +146,7 @@ void Application::run()
 			transferCommandBuffer,
 			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
 			vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eNone,
-			vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eColorAttachmentOptimal,
+			vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral,
 			basePass->getImage());
 
 		transferCommandBuffer.end();

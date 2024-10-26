@@ -55,7 +55,7 @@ void BasePass::initAttachments()
 		colorAttachment->view = gpuContext->createImageView(colorAttachment->image);
 		colorAttachment->format = imageInfo.format;
 		colorAttachment->attachmentInfo.imageView = colorAttachment->view->getHandle();
-		colorAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		colorAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		colorAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		colorAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		colorAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -83,7 +83,7 @@ void BasePass::initAttachments()
 		normalAttachment->view = gpuContext->createImageView(normalAttachment->image);
 		normalAttachment->format = imageInfo.format;
 		normalAttachment->attachmentInfo.imageView = normalAttachment->view->getHandle();
-		normalAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		normalAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		normalAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		normalAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		normalAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -111,7 +111,7 @@ void BasePass::initAttachments()
 		armAttachment->view = gpuContext->createImageView(armAttachment->image);
 		armAttachment->format = imageInfo.format;
 		armAttachment->attachmentInfo.imageView = armAttachment->view->getHandle();
-		armAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		armAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		armAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		armAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		armAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -139,7 +139,7 @@ void BasePass::initAttachments()
 		motionAttachment->view = gpuContext->createImageView(motionAttachment->image);
 		motionAttachment->format = imageInfo.format;
 		motionAttachment->attachmentInfo.imageView = motionAttachment->view->getHandle();
-		motionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		motionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		motionAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		motionAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		motionAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -170,7 +170,7 @@ void BasePass::initAttachments()
 			vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1});
 		depthAttachment->format = imageInfo.format;
 		depthAttachment->attachmentInfo.imageView = depthAttachment->view->getHandle();
-		depthAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+		depthAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		depthAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		depthAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		depthAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -186,35 +186,35 @@ void BasePass::initAttachments()
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		colorAttachment->image);
 
 	gpuContext->transferImage(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
 	gpuContext->transferImage(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
 	gpuContext->transferImage(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		motionAttachment->image);
 
 	gpuContext->transferImage(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eAllGraphics,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		depthAttachment->image, vk::DependencyFlagBits::eByRegion,
 		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
 
