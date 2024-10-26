@@ -1,28 +1,31 @@
-#include "BasePass.hpp"
+#include "GBuffer.hpp"
 
-BasePass::BasePass(const GPUContext* context, const Scene* scene)
+GBufferPass::GBufferPass(const GPUContext* context, const Scene* scene)
 	:gpuContext{ context }
 	, scene{ scene }
 {
-	colorAttachment = new Attachment{};
+	positionAttachment = new Attachment{};
+	albedoAttachment = new Attachment{};
 	normalAttachment = new Attachment{};
 	armAttachment = new Attachment{};
 	motionAttachment = new Attachment{};
 	depthAttachment = new Attachment{};
 }
 
-BasePass::~BasePass()
+GBufferPass::~GBufferPass()
 {
 	gpuContext->destroyBuffer(uniformBuffer);
 	gpuContext->destroyBuffer(indexBuffer);
 	gpuContext->destroyBuffer(vertexBuffer);
 	//gpuContext->destroyBuffer(indirectDrawBuffer);
-	gpuContext->destroyImage(colorAttachment->image);
+	gpuContext->destroyImage(positionAttachment->image);
+	gpuContext->destroyImage(albedoAttachment->image);
 	gpuContext->destroyImage(normalAttachment->image);
 	gpuContext->destroyImage(armAttachment->image);
 	gpuContext->destroyImage(motionAttachment->image);
 	gpuContext->destroyImage(depthAttachment->image);
-	gpuContext->destroyImageView(colorAttachment->view);
+	gpuContext->destroyImageView(positionAttachment->view);
+	gpuContext->destroyImageView(albedoAttachment->view);
 	gpuContext->destroyImageView(normalAttachment->view);
 	gpuContext->destroyImageView(armAttachment->view);
 	gpuContext->destroyImageView(motionAttachment->view);
@@ -34,8 +37,36 @@ BasePass::~BasePass()
 	//delete pipelineState;
 }
 
-void BasePass::initAttachments()
+void GBufferPass::initAttachments()
 {
+	{
+		ImageInfo imageInfo{};
+		imageInfo.format = vk::Format::eR16G16B16A16Sfloat;
+		imageInfo.type = vk::ImageType::e2D;
+		imageInfo.extent = vk::Extent3D{ width, height, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.arrayLayers = 1;
+		imageInfo.mipmapLevel = 1;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		positionAttachment->image = gpuContext->createImage(imageInfo);
+		positionAttachment->view = gpuContext->createImageView(positionAttachment->image);
+		positionAttachment->format = imageInfo.format;
+		positionAttachment->attachmentInfo.imageView = positionAttachment->view->getHandle();
+		positionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
+		positionAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		positionAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		positionAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		positionAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+
+		renderingAttachments.push_back(positionAttachment->attachmentInfo);
+		attachmentFormats.push_back(imageInfo.format);
+	}
+
 	{
 		ImageInfo imageInfo{};
 		imageInfo.format = vk::Format::eR8G8B8A8Unorm;
@@ -51,17 +82,17 @@ void BasePass::initAttachments()
 		imageInfo.queueFamilyCount = 1;
 		imageInfo.pQueueFamilyIndices = { 0 };
 
-		colorAttachment->image = gpuContext->createImage(imageInfo);
-		colorAttachment->view = gpuContext->createImageView(colorAttachment->image);
-		colorAttachment->format = imageInfo.format;
-		colorAttachment->attachmentInfo.imageView = colorAttachment->view->getHandle();
-		colorAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
-		colorAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-		colorAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		colorAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		colorAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		albedoAttachment->image = gpuContext->createImage(imageInfo);
+		albedoAttachment->view = gpuContext->createImageView(albedoAttachment->image);
+		albedoAttachment->format = imageInfo.format;
+		albedoAttachment->attachmentInfo.imageView = albedoAttachment->view->getHandle();
+		albedoAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
+		albedoAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		albedoAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		albedoAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+		albedoAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
 	
-		renderingAttachments.push_back(colorAttachment->attachmentInfo);
+		renderingAttachments.push_back(albedoAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
 	}
 
@@ -187,7 +218,14 @@ void BasePass::initAttachments()
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		colorAttachment->image);
+		positionAttachment->image);
+
+	gpuContext->transferImage(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		albedoAttachment->image);
 
 	gpuContext->transferImage(
 		commandBuffer,
@@ -225,7 +263,7 @@ void BasePass::initAttachments()
 	gpuContext->getDevice()->getTransferQueue().waitIdle();
 }
 
-void BasePass::prepare()
+void GBufferPass::prepare()
 {
 	initAttachments();
 
@@ -246,7 +284,7 @@ void BasePass::prepare()
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = gpuContext->getSwapchainExtent();
 
-	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("base.vert"), gpuContext->findShader("base.frag") };
+	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("gbuffer.vert"), gpuContext->findShader("gbuffer.frag") };
 	vk::DescriptorSetLayoutBinding binding = vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };
 	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, { binding });
 
@@ -270,6 +308,9 @@ void BasePass::prepare()
 	// Normal
 	vertexAttributes.push_back(
 		vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal)));
+	// Tangent
+	vertexAttributes.push_back(
+		vk::VertexInputAttributeDescription(3, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, tangent)));
 
 	GraphicsPipelineState state;
 	state.vertexInputState.bindings = vertexBindings;
@@ -301,7 +342,7 @@ void BasePass::prepare()
 	indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 }
 
-void BasePass::record(vk::CommandBuffer commandBuffer)
+void GBufferPass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
 
@@ -332,7 +373,7 @@ void BasePass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.endRendering();
 }
 
-void BasePass::update()
+void GBufferPass::update()
 {
 	uniforms.clear();
 

@@ -8,20 +8,16 @@
 
 #include <vector>
 
-class BasePass {
+class GBufferPass {
 public:
-	BasePass(const GPUContext*, const Scene*);
-	~BasePass();
+	GBufferPass(const GPUContext*, const Scene*);
+	~GBufferPass();
 
 	void prepare();
 
 	void record(vk::CommandBuffer);
 
 	void update();
-
-	const Image* getImage() const {
-		return colorAttachment->image;
-	}
 
 protected:
 	struct Constant {
@@ -37,7 +33,8 @@ protected:
 	const GPUContext* gpuContext;
 	const Scene* scene;
 
-	Attachment* colorAttachment;
+	Attachment* positionAttachment;
+	Attachment* albedoAttachment;
 	Attachment* normalAttachment;
 	Attachment* armAttachment;
 	Attachment* motionAttachment;
