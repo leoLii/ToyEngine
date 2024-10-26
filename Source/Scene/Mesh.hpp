@@ -10,7 +10,7 @@ struct Vertex {
 	Vec3 position;
 	Vec2 texcoord;
 	Vec3 normal;
-	//Vec3 tangent;
+	Vec3 tangent;
 	//Vec3 bitangent;
 };
 
@@ -59,7 +59,7 @@ public:
 
 	std::vector<Vertex> assembleVertexData() const {
 		assert(vertices.size() == normals.size());  // 确保顶点数据和法线数据的大小一致
-		//assert(vertices.size() == tangents.size()); // 确保切线数据和顶点数据的大小一致
+		assert(vertices.size() == tangents.size()); // 确保切线数据和顶点数据的大小一致
 		//assert(vertices.size() == bitangents.size()); // 确保位切线和顶点数据大小一致
 		assert(vertices.size() == texcoords.size());  // 确保纹理坐标和顶点数据大小一致
 
@@ -71,7 +71,7 @@ public:
 			vertex.position = vertices[i];
 			vertex.normal = normals[i];
 			vertex.texcoord = texcoords[i];
-			//vertex.tangent = tangents[i];
+			vertex.tangent = tangents[i];
 			//vertex.bitangent = bitangents[i];
 
 			vertexData.push_back(vertex);  // 将每个顶点数据加入到数组中
