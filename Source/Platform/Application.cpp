@@ -3,7 +3,7 @@
 #include "Scene/Scene.hpp"
 #include "Scene/Components/Camera.hpp"
 
-#include "Core/Rendering/BasePass.hpp"
+#include "Core/Passes/BasePass.hpp"
 
 #include <cstddef>
 #include <functional>
