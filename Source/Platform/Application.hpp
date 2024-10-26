@@ -10,7 +10,7 @@
 #include <vector>
 #include <thread>
 
-class BasePass;
+class GBufferPass;
 
 struct ApplicationConfig
 {
@@ -63,7 +63,7 @@ protected:
 	vk::CommandBuffer renderCommandBuffer;
 	vk::CommandBuffer transferCommandBuffer;
 
-	BasePass* basePass = nullptr;
+	GBufferPass* gBufferPass = nullptr;
 	Scene* scene;
 
 
