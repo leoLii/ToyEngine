@@ -120,6 +120,13 @@ public:
 	Image* createImage(ImageInfo) const;
 	void destroyImage(Image*) const;
 
+	vk::Sampler createSampler(
+		vk::Filter = vk::Filter::eLinear, vk::Filter = vk::Filter::eLinear,
+		vk::SamplerAddressMode = vk::SamplerAddressMode::eClampToEdge,
+		bool = false, float = 0.0,
+		vk::BorderColor = vk::BorderColor::eIntOpaqueBlack) const;
+	void destroySampler(vk::Sampler) const;
+
 	// Commands
 	void submit(
 		CommandType,

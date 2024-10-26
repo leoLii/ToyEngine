@@ -196,6 +196,36 @@ void GPUContext::destroyImage(Image* image) const
     delete image;
 }
 
+vk::Sampler GPUContext::createSampler(
+    vk::Filter magFilter, vk::Filter minFilter,
+    vk::SamplerAddressMode addressMode,
+    bool enableAnisotropy, float maxAnisotropy,
+    vk::BorderColor borderColor) const
+{
+    vk::SamplerCreateInfo samplerInfo{};
+    samplerInfo.magFilter = magFilter;  
+    samplerInfo.minFilter = minFilter; 
+    samplerInfo.addressModeU = addressMode; 
+    samplerInfo.addressModeV = addressMode;
+    samplerInfo.addressModeW = addressMode;
+    samplerInfo.borderColor = borderColor;
+
+    samplerInfo.anisotropyEnable = enableAnisotropy;
+    samplerInfo.maxAnisotropy = enableAnisotropy ? maxAnisotropy : 1.0f;
+
+    samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    samplerInfo.mipLodBias = 0.0f; 
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
+
+    return device->getHandle().createSampler(samplerInfo);
+}
+
+void GPUContext::destroySampler(vk::Sampler sampler) const
+{
+    device->getHandle().destroySampler(sampler);
+}
+
 void GPUContext::submit(
     CommandType type,
     std::vector<vk::Semaphore> waitSemaphores,

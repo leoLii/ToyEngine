@@ -7,6 +7,7 @@ class PipelineLayout;
 class ShaderModule;
 
 class ComputePipeline {
+public:
 	ComputePipeline() = delete;
 	ComputePipeline(
 		const Device&, 
