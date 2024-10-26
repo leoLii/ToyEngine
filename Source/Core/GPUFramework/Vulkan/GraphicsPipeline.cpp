@@ -113,7 +113,7 @@ GraphicsPipeline::GraphicsPipeline(
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     vk::Result result;
-    std::tie(result, handle) = device.getHandle().createGraphicsPipeline(nullptr, pipelineInfo);
+    std::tie(result, handle) = device.getHandle().createGraphicsPipeline(VK_NULL_HANDLE, pipelineInfo);
 
     switch (result)
     {
