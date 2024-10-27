@@ -11,6 +11,7 @@
 #include <thread>
 
 class GBufferPass;
+class LightingPass;
 
 struct ApplicationConfig
 {
@@ -64,6 +65,7 @@ protected:
 	vk::CommandBuffer transferCommandBuffer;
 
 	GBufferPass* gBufferPass = nullptr;
+	LightingPass* lightingPass = nullptr;
 	Scene* scene;
 
 

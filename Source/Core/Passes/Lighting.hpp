@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma once
+
 #include "Common/Math.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
@@ -8,10 +10,10 @@
 
 #include <vector>
 
-class GBufferPass {
+class LightingPass {
 public:
-	GBufferPass(const GPUContext*, const Scene*);
-	~GBufferPass();
+	LightingPass(const GPUContext*, const Scene*);
+	~LightingPass();
 
 	void prepare();
 
@@ -19,17 +21,18 @@ public:
 
 	void update(uint32_t);
 
-	Attachment* getAttachment(uint32_t) const;
+	void setAttachment(uint32_t, Attachment*);
+
+	Attachment* getAttachment();
 
 protected:
 	struct Constant {
-		Mat4 prevPV;
-		Mat4 jitteredPV;
+		Vec3 cameraPosition;
 	};
 
 	struct Uniform {
-		Mat4 prevModel;
-		Mat4 currModel;
+		alignas(16) Vec3 lightColor;
+		alignas(16) Vec3 lightDirection;
 	};
 
 	const GPUContext* gpuContext;
@@ -39,8 +42,8 @@ protected:
 	Attachment* albedoAttachment;
 	Attachment* normalAttachment;
 	Attachment* armAttachment;
-	Attachment* motionAttachment;
-	Attachment* depthAttachment;
+
+	Attachment* lightingAttachment;
 
 	vk::PushConstantRange constants;
 	GraphicsPipelineState* pipelineState;
@@ -55,7 +58,6 @@ protected:
 	Buffer* uniformBuffer;
 	Buffer* vertexBuffer;
 	Buffer* indexBuffer;
-	Buffer* indirectDrawBuffer;
 
 	uint32_t width = 960;
 	uint32_t height = 540;
@@ -63,7 +65,12 @@ protected:
 	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
 	std::vector<vk::Format> attachmentFormats;
 
-	std::vector<Uniform> uniforms;
+	Uniform uniform;
+
+	vk::Sampler sampler;
+
+	std::vector<uint32_t> indices;
+	std::vector<float> vertices;
 
 private:
 	void initAttachments();

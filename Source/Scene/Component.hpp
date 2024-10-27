@@ -3,6 +3,8 @@
 #include <string>
 #include <typeindex>
 
+class Node;
+
 class Component {
 public:
 	Component() = default;
@@ -15,6 +17,12 @@ public:
 
 	virtual void update(float deltaTime, uint32_t frameIndex) = 0;
 
+	virtual Node* getAttachNode() const;
+
+	virtual void setAttachNode(Node*);
+
 protected:
 	std::string name;
+
+	Node* attachNode;
 };

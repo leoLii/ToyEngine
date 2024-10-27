@@ -13,11 +13,9 @@ public:
 		const Device&,
 		DescriptorSetLayout*,
 		vk::DescriptorPool,
-		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>&,
-		std::unordered_map<uint32_t, vk::DescriptorImageInfo>&);
+		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>,
+		std::unordered_map<uint32_t, vk::DescriptorImageInfo>);
 	~DescriptorSet() = default;
-
-	void updateDescriptorSet(uint32_t);
 
 	vk::DescriptorSet getHandle() {
 		return handle;

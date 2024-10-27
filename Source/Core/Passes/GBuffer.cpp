@@ -74,8 +74,7 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled |
-			vk::ImageUsageFlagBits::eTransferSrc;
+			vk::ImageUsageFlagBits::eSampled;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -331,7 +330,6 @@ void GBufferPass::prepare()
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
 	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
-	descriptorSet->updateDescriptorSet(0);
 
 	auto vertices = scene->getVertices();
 	vertexBuffer = gpuContext->createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);
@@ -373,10 +371,9 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.endRendering();
 }
 
-void GBufferPass::update()
+void GBufferPass::update(uint32_t frameIndex)
 {
 	uniforms.clear();
-
 	auto models = scene->getUniforms();
 	auto prevModels = scene->getPrevUniforms();
 	uniforms.reserve(scene->getMeshCount());
@@ -384,4 +381,25 @@ void GBufferPass::update()
 		uniforms.push_back(Uniform(prevModels[i], models[i]));
 	}
 	uniformBuffer->copyToGPU(static_cast<const void*>(uniforms.data()), sizeof(Uniform) * uniforms.size());
+}
+
+Attachment* GBufferPass::getAttachment(uint32_t index) const
+{
+	switch (index)
+	{
+	case 0:
+		return positionAttachment;
+	case 1:
+		return albedoAttachment;
+	case 2:
+		return normalAttachment;
+	case 3:
+		return armAttachment;
+	case 4:
+		return motionAttachment;
+	case 5:
+		return depthAttachment;
+	default:
+		return nullptr;
+	}
 }

@@ -104,5 +104,6 @@ Mat4 Node::getTransform()
 void Node::addComponent(Component* component)
 {
 	this->components[typeid(component)] = component;
+	component->setAttachNode(this);
 }
 

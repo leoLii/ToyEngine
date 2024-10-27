@@ -4,6 +4,7 @@
 #include "Scene/Components/Camera.hpp"
 
 #include "Core/Passes/GBuffer.hpp"
+#include "Core/Passes/Lighting.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -50,6 +51,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 
 
 	gBufferPass = new GBufferPass{ gpuContext.get(), scene };
+	lightingPass = new LightingPass{ gpuContext.get(), scene };
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
 	renderFinishedSemaphore = gpuContext->requestSemaphore();
@@ -58,9 +60,12 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	renderCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 	transferCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 
-	
 	gBufferPass->prepare();
-	
+	lightingPass->setAttachment(0, gBufferPass->getAttachment(0));
+	lightingPass->setAttachment(1, gBufferPass->getAttachment(1));
+	lightingPass->setAttachment(2, gBufferPass->getAttachment(2));
+	lightingPass->setAttachment(3, gBufferPass->getAttachment(3));
+	lightingPass->prepare();
 }
 
 void Application::run()
@@ -70,7 +75,8 @@ void Application::run()
 		++frameIndex;
 
 		scene->update(frameIndex);
-		gBufferPass->update();
+		gBufferPass->update(frameIndex);
+		lightingPass->update(frameIndex);
 
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 		deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;
@@ -88,6 +94,7 @@ void Application::run()
 			beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 			renderCommandBuffer.begin(beginInfo);
 			gBufferPass->record(renderCommandBuffer);
+			lightingPass->record(renderCommandBuffer);
 			renderCommandBuffer.end();
 			gpuContext->submit(
 				CommandType::Graphics,
@@ -106,8 +113,8 @@ void Application::run()
 		gpuContext->transferImage(
 			transferCommandBuffer,
 			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eAllGraphics,
-			vk::AccessFlagBits::eNone, vk::AccessFlagBits::eNone,
-			vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR,
+			vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+			vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 			gpuContext->getSwapchainImages()[swapChainIndex]);
 
 		//gpuContext->transferImage(
@@ -117,8 +124,7 @@ void Application::run()
 		//	vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal,
 		//	basePass->getImage());
 
-
-		/*vk::ImageBlit blit;
+		vk::ImageBlit blit;
 		blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
 		blit.srcOffsets[1] = vk::Offset3D{ 960, 540, 1 };
 		blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -131,7 +137,7 @@ void Application::run()
 		blit.dstSubresource.layerCount = 1;
 
 		transferCommandBuffer.blitImage(
-			basePass->getImage()->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
+			lightingPass->getAttachment()->image->getHandle(), vk::ImageLayout::eGeneral,
 			gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 			{ blit }, vk::Filter::eLinear);
 
@@ -141,13 +147,6 @@ void Application::run()
 			vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eNone,
 			vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
 			gpuContext->getSwapchainImages()[swapChainIndex]);
-
-		gpuContext->transferImage(
-			transferCommandBuffer,
-			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
-			vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eNone,
-			vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral,
-			basePass->getImage());*/
 
 		transferCommandBuffer.end();
 
@@ -174,4 +173,5 @@ void Application::close()
 	gpuContext->returnFence(fence);
 
 	delete gBufferPass;
+	delete lightingPass;
 }

@@ -8,8 +8,8 @@ DescriptorSet::DescriptorSet(
 	const Device& device,
 	DescriptorSetLayout* layout,
 	vk::DescriptorPool pool,
-	std::unordered_map<uint32_t, vk::DescriptorBufferInfo>& bufferInfos,
-	std::unordered_map<uint32_t, vk::DescriptorImageInfo>& imageInfos)
+	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos,
+	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos)
 	:device{ device }
 	, layout{ layout }
 	, pool{ pool }
@@ -66,11 +66,3 @@ DescriptorSet::DescriptorSet(
 
 	device.getHandle().updateDescriptorSets(writeDescriptorSets, nullptr);
 }
-
-void DescriptorSet::updateDescriptorSet(uint32_t)
-{
-	
-}
-
-
-
