@@ -4,10 +4,6 @@ LightingPass::LightingPass(const GPUContext* context, const Scene* scene)
 	:gpuContext{ context }
 	, scene{ scene }
 {
-	positionAttachment = new Attachment{};
-	albedoAttachment = new Attachment{};
-	normalAttachment = new Attachment{};
-	armAttachment = new Attachment{};
 	lightingAttachment = new Attachment{};
 }
 
@@ -34,7 +30,7 @@ void LightingPass::initAttachments()
 	imageInfo.usage =
 		vk::ImageUsageFlagBits::eColorAttachment |
 		vk::ImageUsageFlagBits::eSampled |
-		vk::ImageUsageFlagBits::eTransferSrc;
+		vk::ImageUsageFlagBits::eStorage;
 	imageInfo.sharingMode = vk::SharingMode::eExclusive;
 	imageInfo.arrayLayers = 1;
 	imageInfo.mipmapLevel = 1;

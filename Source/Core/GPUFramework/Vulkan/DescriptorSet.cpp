@@ -33,11 +33,11 @@ DescriptorSet::DescriptorSet(
 	{
 		auto  bindingIndex = bindingInfo.first;
 		auto& bufferInfo = bindingInfo.second;
-		auto bindingInfo = layout->getBindingInfo(bindingIndex);
+		auto layoutBinding = layout->getBindingInfo(bindingIndex);
 
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstBinding = bindingIndex;
-		writeDescriptorSet.descriptorType = bindingInfo.descriptorType;
+		writeDescriptorSet.descriptorType = layoutBinding.descriptorType;
 		writeDescriptorSet.pBufferInfo = &bufferInfo;
 		writeDescriptorSet.dstSet = handle;
 		writeDescriptorSet.dstArrayElement = 0;
@@ -51,11 +51,11 @@ DescriptorSet::DescriptorSet(
 	{
 		auto  bindingIndex = bindingInfo.first;
 		auto& imageInfo = bindingInfo.second;
-		auto bindingInfo = layout->getBindingInfo(bindingIndex);
+		auto layoutBinding = layout->getBindingInfo(bindingIndex);
 
 		vk::WriteDescriptorSet writeDescriptorSet;
 		writeDescriptorSet.dstBinding = bindingIndex;
-		writeDescriptorSet.descriptorType = bindingInfo.descriptorType;
+		writeDescriptorSet.descriptorType = layoutBinding.descriptorType;
 		writeDescriptorSet.pImageInfo = &imageInfo;
 		writeDescriptorSet.dstSet = handle;
 		writeDescriptorSet.dstArrayElement = 0;

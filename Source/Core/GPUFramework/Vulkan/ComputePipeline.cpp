@@ -13,6 +13,7 @@ ComputePipeline::ComputePipeline(
 	vk::PipelineShaderStageCreateInfo stageInfo;
 	stageInfo.stage = vk::ShaderStageFlagBits::eCompute;
 	stageInfo.module = shaderModule->getHandle();
+	stageInfo.pName = "main";
 
 	vk::ComputePipelineCreateInfo pipelineInfo;
 	pipelineInfo.layout = layout->getHandle();

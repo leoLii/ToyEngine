@@ -103,8 +103,8 @@ public:
 
 	DescriptorSet* requireDescriptorSet(
 		DescriptorSetLayout*,
-		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>&,
-		std::unordered_map<uint32_t, vk::DescriptorImageInfo>&) const;
+		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>,
+		std::unordered_map<uint32_t, vk::DescriptorImageInfo>) const;
 
 	// Image & Buffer
 	ImageView* createImageView(

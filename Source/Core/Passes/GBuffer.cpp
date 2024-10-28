@@ -76,7 +76,8 @@ void GBufferPass::initAttachments()
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
 			vk::ImageUsageFlagBits::eSampled |
-			vk::ImageUsageFlagBits::eInputAttachment;
+			vk::ImageUsageFlagBits::eInputAttachment |
+			vk::ImageUsageFlagBits::eStorage;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -163,7 +164,8 @@ void GBufferPass::initAttachments()
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
 			vk::ImageUsageFlagBits::eSampled |
-			vk::ImageUsageFlagBits::eInputAttachment;
+			vk::ImageUsageFlagBits::eInputAttachment |
+			vk::ImageUsageFlagBits::eStorage;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -192,7 +194,8 @@ void GBufferPass::initAttachments()
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eDepthStencilAttachment |
 			vk::ImageUsageFlagBits::eSampled |
-			vk::ImageUsageFlagBits::eInputAttachment;
+			vk::ImageUsageFlagBits::eInputAttachment |
+			vk::ImageUsageFlagBits::eStorage;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;

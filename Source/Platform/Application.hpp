@@ -12,6 +12,7 @@
 
 class GBufferPass;
 class LightingPass;
+class TaaPass;
 
 struct ApplicationConfig
 {
@@ -64,10 +65,11 @@ protected:
 	vk::CommandBuffer renderCommandBuffer;
 	vk::CommandBuffer transferCommandBuffer;
 
-	GBufferPass* gBufferPass = nullptr;
-	LightingPass* lightingPass = nullptr;
 	Scene* scene;
 
+	GBufferPass* gBufferPass = nullptr;
+	LightingPass* lightingPass = nullptr;
+	TaaPass* taaPass = nullptr;
 
 	vk::Semaphore imageAvailableSemaphore;
 	vk::Semaphore renderFinishedSemaphore;

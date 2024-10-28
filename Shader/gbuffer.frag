@@ -25,7 +25,7 @@ void main()
     // mat3 TBN = mat3(T, B, N);               // 构建TBN矩阵
     // vec3 worldNormal = normalize(TBN * normal);  // 转换法线到世界空间
 	gPosition = vec4(fragPosition, 1.0);
-	gAlbedo = vec4(1.0, 0.0, 1.0, 1.0);
+	gAlbedo = vec4(1.0, 0.0, 0.0, 1.0);
 	gNormal = vec4(fragNormal, 1.0);
 	gARM = vec4(0.0, 0.5, 0.7, 1.0);
 	gMotion = vec2(fragMotionVector);
