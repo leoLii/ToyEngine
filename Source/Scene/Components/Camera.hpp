@@ -36,11 +36,16 @@ public:
 	const Mat4 getPVJittered() const;
 	const Mat4 getPVPrev() const;
 
+	Vec2 getPrevJitter() const;
+	Vec2 getCurrJitter() const;
+
 	virtual void update(float deltaTime, uint32_t frameIndex) override;
 
 protected:
 	CameraType type;
 	Frustum frustum;
+	Vec2 prevJitter;
+	Vec2 currJitter;
 	Mat4 view{ 1.0 };
 	Mat4 projection{ 1.0 };
 	Mat4 prevView{ 1.0 };

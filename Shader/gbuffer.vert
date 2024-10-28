@@ -7,7 +7,9 @@ layout(location = 3) in vec3 inTangent;
 
 layout(push_constant) uniform PushConstants {
     mat4 prevPV; 
-    mat4 jitteredPV; 
+    mat4 jitteredPV;
+    vec2 prevJitter;
+    vec2 currJitter;
 } constant;
 
 layout(set = 0, binding = 0) uniform Uniforms
@@ -35,7 +37,8 @@ void main()
     vec2 currentNDC = currentClipPos.xy / currentClipPos.w;
     vec4 previousClipPos = constant.prevPV * ubo.prevModel * vec4(inPosition, 1.0);
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
-    fragMotionVector = currentNDC - previousNDC;
-
+    vec2 cancelJitter = constant.prevJitter - constant.currJitter;
+    // Transform motion vectors from NDC space to UV space (+Y is top-down).
+    fragMotionVector = ((currentNDC - previousNDC) + cancelJitter) * vec2(0.5, -0.5);
     gl_Position = constant.jitteredPV * worldPosition;
 }

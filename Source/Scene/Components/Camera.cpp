@@ -66,10 +66,21 @@ const Mat4 Camera::getPVPrev() const
 	return projection * prevView;
 }
 
+Vec2 Camera::getPrevJitter() const
+{
+	return prevJitter;
+}
+
+Vec2 Camera::getCurrJitter() const
+{
+	return currJitter;
+}
+
 void Camera::update(float deltaTime, uint32_t frameIndex)
 {
 	prevView = view;
 	projectionJittered = projection;
+	prevJitter = currJitter;
 
 	//updateview
 	projectionJitter(frameIndex);
@@ -98,7 +109,7 @@ void Camera::projectionJitter(uint32_t frameIndex)
 {
 	uint32_t width = 960;
 	uint32_t height = 540;
-	Vec2 jitter = jitterSamples[frameIndex % 16];
-	projectionJittered[2][0] += (jitter.x / width);// 对x方向应用抖动
-	projectionJittered[2][1] += (jitter.y / height);  // 对y方向应用抖动
+	currJitter = jitterSamples[frameIndex % 16] / Vec2(width, height);
+	projectionJittered[2][0] += currJitter.x;// 对x方向应用抖动
+	projectionJittered[2][1] += currJitter.y;  // 对y方向应用抖动
 }

@@ -353,9 +353,12 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.beginRendering(&renderingInfo);
 
 	commandBuffer.pushConstants<Constant>(
-		pipelineLayout->getHandle(), 
+		pipelineLayout->getHandle(),
 		vk::ShaderStageFlagBits::eVertex, 0,
-		{ Constant(camera->getPVPrev(), camera->getPVJittered()) });
+		{ Constant{
+			camera->getPVPrev(), 
+			camera->getPVJittered(), 
+			camera->getPrevJitter(), camera->getCurrJitter()} });
 	
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
 

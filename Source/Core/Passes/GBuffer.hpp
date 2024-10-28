@@ -22,12 +22,14 @@ public:
 	Attachment* getAttachment(uint32_t) const;
 
 protected:
-	struct Constant {
+	struct alignas(16) Constant {
 		Mat4 prevPV;
 		Mat4 jitteredPV;
+		Vec2 prevJitter;
+		Vec2 currJitter;
 	};
 
-	struct Uniform {
+	struct alignas(16) Uniform {
 		Mat4 prevModel;
 		Mat4 currModel;
 	};
