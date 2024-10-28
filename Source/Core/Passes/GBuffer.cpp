@@ -46,7 +46,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -74,7 +75,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -102,7 +104,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -130,7 +133,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -158,7 +162,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eColorAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -186,7 +191,8 @@ void GBufferPass::initAttachments()
 		imageInfo.extent = vk::Extent3D{ width, height, 1 };
 		imageInfo.usage =
 			vk::ImageUsageFlagBits::eDepthStencilAttachment |
-			vk::ImageUsageFlagBits::eSampled;
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 		imageInfo.arrayLayers = 1;
 		imageInfo.mipmapLevel = 1;
@@ -281,7 +287,7 @@ void GBufferPass::prepare()
 	viewport.maxDepth = 1.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = gpuContext->getSwapchainExtent();
+	scissor.extent = vk::Extent2D{ 960, 540 };
 
 	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("gbuffer.vert"), gpuContext->findShader("gbuffer.frag") };
 	vk::DescriptorSetLayoutBinding binding = vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };

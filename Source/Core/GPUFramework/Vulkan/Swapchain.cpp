@@ -18,11 +18,11 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 
 	imageCount = surfaceCapabilities.minImageCount + 1;
 
-	imageInfo.format = vk::Format::eB8G8R8A8Srgb;
+	imageInfo.format = vk::Format::eR8G8B8A8Srgb;
 	imageInfo.extent = vk::Extent3D(surfaceCapabilities.currentExtent, 1);
 	imageInfo.type = vk::ImageType::e2D;
 	imageInfo.mipmapLevel = 1;
-	imageInfo.tiling = vk::ImageTiling::eLinear;
+	imageInfo.tiling = vk::ImageTiling::eOptimal;
 	imageInfo.arrayLayers = 1;
 	imageInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
 	imageInfo.sharingMode = vk::SharingMode::eConcurrent;

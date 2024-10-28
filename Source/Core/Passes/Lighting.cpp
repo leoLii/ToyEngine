@@ -48,9 +48,8 @@ void LightingPass::initAttachments()
 	lightingAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 	lightingAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 	lightingAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-	lightingAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
+	lightingAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
 	lightingAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
-
 
 	renderingAttachments.push_back(lightingAttachment->attachmentInfo);
 	attachmentFormats.push_back(lightingAttachment->format);
@@ -91,7 +90,7 @@ void LightingPass::prepare()
 	viewport.maxDepth = 1.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = gpuContext->getSwapchainExtent();
+	scissor.extent = vk::Extent2D{ 960, 540 };
 
 	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("deferredlighting.vert"), gpuContext->findShader("deferredlighting.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
@@ -110,15 +109,15 @@ void LightingPass::prepare()
 
 	vertices = {
 		// 顶点坐标       // 纹理坐标
-		-1.0f, -1.0f,     0.0f, 0.0f,  // 左下角
-		 1.0f, -1.0f,     1.0f, 0.0f,  // 右下角
-		-1.0f,  1.0f,     0.0f, 1.0f,  // 左上角
-		 1.0f,  1.0f,     1.0f, 1.0f   // 右上角
+		-1.0f, -1.0f,     0.0f, 1.0f,  // 左下角
+		 1.0f, -1.0f,     1.0f, 1.0f,  // 右下角
+		-1.0f,  1.0f,     0.0f, 0.0f,  // 左上角
+		 1.0f,  1.0f,     1.0f, 0.0f   // 右上角
 	};
 
 	indices = {
 		0, 1, 2,
-		1, 2, 3
+		1, 3, 2
 	};
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
