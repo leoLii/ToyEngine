@@ -75,10 +75,12 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 
 	gpuContext->pipelineBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eComputeShader,
+		vk::PipelineStageFlagBits::eEarlyFragmentTests, vk::PipelineStageFlagBits::eComputeShader,
 		vk::AccessFlagBits::eDepthStencilAttachmentWrite, vk::AccessFlagBits::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
-		depthAttachment->image);
+		depthAttachment->image,
+		vk::DependencyFlagBits::eByRegion,
+		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
 
 	gpuContext->pipelineBarrier(
 		commandBuffer,
@@ -141,7 +143,7 @@ void TaaPass::initAttachment()
 		taaOutput->format = imageInfo.format;
 		taaOutput->attachmentInfo.imageView = taaOutput->view->getHandle();
 		taaOutput->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
-		taaOutput->attachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+		taaOutput->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		taaOutput->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
 		taaOutput->attachmentInfo.clearValue.color = vk::ClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
 		taaOutput->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
