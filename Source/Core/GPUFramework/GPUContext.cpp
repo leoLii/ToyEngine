@@ -277,7 +277,7 @@ void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphor
     }
 }
 
-void GPUContext::transferImage(
+void GPUContext::pipelineBarrier(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags srcStage, vk::PipelineStageFlags dstStage,
     vk::AccessFlags srcAccess, vk::AccessFlags dstAccess, 

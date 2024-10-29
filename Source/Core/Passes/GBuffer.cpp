@@ -1,6 +1,6 @@
 #include "GBuffer.hpp"
 
-GBufferPass::GBufferPass(const GPUContext* context, const Scene* scene)
+GBufferPass::GBufferPass(const GPUContext* context, const Scene* scene, Vec2 size)
 	:gpuContext{ context }
 	, scene{ scene }
 {
@@ -10,6 +10,8 @@ GBufferPass::GBufferPass(const GPUContext* context, const Scene* scene)
 	armAttachment = new Attachment{};
 	motionAttachment = new Attachment{};
 	depthAttachment = new Attachment{};
+	width = size.x;
+	height = size.y;
 }
 
 GBufferPass::~GBufferPass()
@@ -221,42 +223,42 @@ void GBufferPass::initAttachments()
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		motionAttachment->image);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eAllGraphics,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eDepthStencilAttachmentWrite,
@@ -277,20 +279,20 @@ void GBufferPass::prepare()
 
 	renderingInfo.layerCount = 1;
 	renderingInfo.renderArea.offset = vk::Offset2D{};
-	renderingInfo.renderArea.extent = vk::Extent2D{ 960, 540 };
+	renderingInfo.renderArea.extent = vk::Extent2D{ width, height };
 	renderingInfo.colorAttachmentCount = renderingAttachments.size();
 	renderingInfo.pColorAttachments = renderingAttachments.data();
 	renderingInfo.pDepthAttachment = &depthAttachment->attachmentInfo;
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = gpuContext->getSwapchainExtent().width / 2;
-	viewport.height = gpuContext->getSwapchainExtent().height / 2;
+	viewport.width = width;
+	viewport.height = height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = vk::Extent2D{ 960, 540 };
+	scissor.extent = vk::Extent2D{ width, height };
 
 	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("gbuffer.vert"), gpuContext->findShader("gbuffer.frag") };
 	vk::DescriptorSetLayoutBinding binding = vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };

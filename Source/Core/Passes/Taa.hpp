@@ -14,7 +14,7 @@ class DescriptorSetLayout;
 
 class TaaPass {
 public:
-	TaaPass(const GPUContext*, const Scene*);
+	TaaPass(const GPUContext*, const Scene*, Vec2);
 	~TaaPass();
 
 	void prepare();
@@ -35,8 +35,10 @@ protected:
 	const GPUContext* gpuContext;
 	const Scene* scene;
 
-	Attachment* lightingResult;
+	Attachment* taaOutput;
 	Attachment* historyAttachment;
+
+	Attachment* lightingResult;
 	Attachment* depthAttachment;
 	Attachment* motionAttachment;
 
@@ -45,9 +47,9 @@ protected:
 	DescriptorSetLayout* descriptorSetLayout;
 	PipelineLayout* pipelineLayout;
 	ComputePipeline* computePipeline;
-
-	uint32_t width = 960;
-	uint32_t height = 540;
+	vk::Sampler sampler;
+	uint32_t width;
+	uint32_t height;
 
 private:
 	void initAttachment();

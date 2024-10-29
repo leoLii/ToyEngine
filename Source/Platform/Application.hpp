@@ -37,6 +37,8 @@ public:
 
 	void close();
 
+	void loadImage();
+
 protected:
 	ApplicationConfig config;
 

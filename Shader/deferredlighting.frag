@@ -59,11 +59,12 @@ float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 void main()
 {
     // 从 G-Buffer 中获取数据
-    vec3 fragPos = texture(gPosition, gl_FragCoord.xy / vec2(textureSize(gPosition, 0))).rgb;
-    vec3 normal = texture(gNormal, gl_FragCoord.xy / vec2(textureSize(gNormal, 0))).rgb;
-    vec3 albedo = texture(gAlbedo, gl_FragCoord.xy / vec2(textureSize(gAlbedo, 0))).rgb;
-    float metallic = texture(gARM, gl_FragCoord.xy / vec2(textureSize(gARM, 0))).g;
-    float roughness = texture(gARM, gl_FragCoord.xy / vec2(textureSize(gARM, 0))).b;
+    vec3 fragPos = texture(gPosition, fragTexcoord).rgb;
+    vec3 normal = texture(gNormal, fragTexcoord).rgb;
+    vec3 albedo = texture(gAlbedo, fragTexcoord).rgb;
+    vec2 rm = texture(gARM, fragTexcoord).gb;
+    float roughness = rm.x;
+    float metallic = rm.y;
     vec3 cameraPos = constants.cameraPosition;
     // 计算视角方向和光照方向
     vec3 V = normalize(cameraPos - fragPos);
@@ -95,6 +96,6 @@ void main()
 
     // 计算光照并输出
     float NdotL = max(dot(normal, L), 0.0);
-    vec3 color = (diffuse + specular) * radiance * NdotL;
-    fragColor = vec4(albedo, 1.0);
+    vec3 color = (diffuse + specular) * radiance * NdotL ;
+    fragColor = vec4(color*10.0, 1.0);
 }

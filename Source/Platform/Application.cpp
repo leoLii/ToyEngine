@@ -7,10 +7,14 @@
 #include "Core/Passes/Lighting.hpp"
 #include "Core/Passes/Taa.hpp"
 
+#include "../ThirdParty/stb_image.h"
+
 #include <cstddef>
 #include <functional>
 #include <thread>
 #include <future>
+
+Vec2 size = Vec2(1920, 1080);
 
 void Application::init(ApplicationConfig& config, Scene* scene)
 {
@@ -24,9 +28,9 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 
 	this->scene = scene;
 
-	gBufferPass = new GBufferPass{ gpuContext.get(), scene };
-	lightingPass = new LightingPass{ gpuContext.get(), scene };
-	taaPass = new TaaPass{ gpuContext.get(), scene };
+	gBufferPass = new GBufferPass{ gpuContext.get(), scene, size / Vec2(2.0) };
+	lightingPass = new LightingPass{ gpuContext.get(), scene, size / Vec2(2.0) };
+	taaPass = new TaaPass{ gpuContext.get(), scene, size };
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
 	renderFinishedSemaphore = gpuContext->requestSemaphore();
@@ -74,18 +78,20 @@ void Application::run()
 				beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 				renderCommandBuffer.begin(beginInfo);
 
-				gpuContext->transferImage(
+				gpuContext->pipelineBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer,
 					vk::AccessFlagBits::eNone, vk::AccessFlagBits::eTransferWrite,
-					vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR,
+					vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 					gpuContext->getSwapchainImages()[swapChainIndex]);
 
 				gBufferPass->record(renderCommandBuffer);
+
 				lightingPass->record(renderCommandBuffer);
+
 				taaPass->record(renderCommandBuffer);
 
-				/*vk::ImageBlit blit;
+				vk::ImageBlit blit;
 				blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
 				blit.srcOffsets[1] = vk::Offset3D{ 960, 540, 1 };
 				blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -98,16 +104,16 @@ void Application::run()
 				blit.dstSubresource.layerCount = 1;
 
 				renderCommandBuffer.blitImage(
-					lightingPass->getAttachment()->image->getHandle(), vk::ImageLayout::eGeneral,
+					lightingPass->getAttachment()->image->getHandle(), vk::ImageLayout::eTransferSrcOptimal,
 					gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 					{ blit }, vk::Filter::eLinear);
 
-				gpuContext->transferImage(
+				gpuContext->pipelineBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
 					vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eNone,
 					vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
-					gpuContext->getSwapchainImages()[swapChainIndex]);*/
+					gpuContext->getSwapchainImages()[swapChainIndex]);
 
 				renderCommandBuffer.end();
 				gpuContext->submit(

@@ -8,5 +8,5 @@ layout(location = 0) out vec2 fragTexcoord;
 void main()
 {
     gl_Position = vec4(inVertex.xy, 0.0, 1.0);
-    fragTexcoord = inTexcoord;
+    fragTexcoord = vec2(inTexcoord.x, 1.0 - inTexcoord.y);
 }

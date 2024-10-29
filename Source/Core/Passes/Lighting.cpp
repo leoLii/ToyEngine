@@ -1,10 +1,12 @@
 #include "Lighting.hpp"
 
-LightingPass::LightingPass(const GPUContext* context, const Scene* scene)
+LightingPass::LightingPass(const GPUContext* context, const Scene* scene, Vec2 size)
 	:gpuContext{ context }
 	, scene{ scene }
 {
 	lightingAttachment = new Attachment{};
+	width = size.x;
+	height = size.y;
 }
 
 LightingPass::~LightingPass()
@@ -24,7 +26,7 @@ LightingPass::~LightingPass()
 void LightingPass::initAttachments()
 {
 	ImageInfo imageInfo{};
-	imageInfo.format = vk::Format::eR8G8B8A8Unorm;
+	imageInfo.format = vk::Format::eR16G16B16A16Snorm;
 	imageInfo.type = vk::ImageType::e2D;
 	imageInfo.extent = vk::Extent3D{ width, height, 1 };
 	imageInfo.usage =
@@ -44,7 +46,7 @@ void LightingPass::initAttachments()
 	lightingAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 	lightingAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 	lightingAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-	lightingAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
+	lightingAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
 	lightingAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
 
 	renderingAttachments.push_back(lightingAttachment->attachmentInfo);
@@ -55,7 +57,7 @@ void LightingPass::initAttachments()
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->transferImage(
+	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
@@ -74,19 +76,19 @@ void LightingPass::prepare()
 
 	renderingInfo.layerCount = 1;
 	renderingInfo.renderArea.offset = vk::Offset2D{};
-	renderingInfo.renderArea.extent = vk::Extent2D{ 960, 540 };
+	renderingInfo.renderArea.extent = vk::Extent2D{ width, height };
 	renderingInfo.colorAttachmentCount = renderingAttachments.size();
 	renderingInfo.pColorAttachments = renderingAttachments.data();
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = gpuContext->getSwapchainExtent().width / 2;
-	viewport.height = gpuContext->getSwapchainExtent().height / 2;
+	viewport.width = width;
+	viewport.height = height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
-	scissor.extent = vk::Extent2D{ 960, 540 };
+	scissor.extent = vk::Extent2D{ width, height };
 
 	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("deferredlighting.vert"), gpuContext->findShader("deferredlighting.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
@@ -113,7 +115,7 @@ void LightingPass::prepare()
 
 	indices = {
 		0, 1, 2,
-		1, 3, 2
+		3, 2, 1
 	};
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
@@ -131,7 +133,6 @@ void LightingPass::prepare()
 	GraphicsPipelineState state;
 	state.vertexInputState.bindings = vertexBindings;
 	state.vertexInputState.attributes = vertexAttributes;
-	state.inputAssemblyState.topology = vk::PrimitiveTopology::eTriangleStrip;
 	state.dynamicStates.push_back(vk::DynamicState::eViewport);
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
@@ -166,6 +167,34 @@ void LightingPass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
 
+	gpuContext->pipelineBarrier(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader,
+		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,
+		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+		positionAttachment->image);
+
+	gpuContext->pipelineBarrier(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader,
+		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,
+		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+		albedoAttachment->image);
+
+	gpuContext->pipelineBarrier(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader,
+		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,
+		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+		normalAttachment->image);
+
+	gpuContext->pipelineBarrier(
+		commandBuffer,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader,
+		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,
+		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+		armAttachment->image);
+
 	commandBuffer.beginRendering(&renderingInfo);
 
 	commandBuffer.pushConstants<Constant>(
@@ -196,7 +225,7 @@ void LightingPass::update(uint32_t frameIndex)
 	// 使用缓慢变化的角度，使光源方向平滑旋转
 	float angle = frameIndex * 0.005f; // 控制旋转速度
 	uniform.lightDirection = Vec3(
-		0.0, 1.0, -1.0
+		0.0, 0.0, 1.0
 	);
 
 	uniformBuffer->copyToGPU(static_cast<const void*>(&uniform), sizeof(Uniform));

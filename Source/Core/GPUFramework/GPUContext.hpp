@@ -140,7 +140,7 @@ public:
 		std::vector<vk::Semaphore>
 	);
 
-	void transferImage(
+	void pipelineBarrier(
 		vk::CommandBuffer,
 		vk::PipelineStageFlags, vk::PipelineStageFlags,
 		vk::AccessFlags, vk::AccessFlags,

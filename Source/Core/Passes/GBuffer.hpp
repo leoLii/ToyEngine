@@ -10,7 +10,7 @@
 
 class GBufferPass {
 public:
-	GBufferPass(const GPUContext*, const Scene*);
+	GBufferPass(const GPUContext*, const Scene*, Vec2);
 	~GBufferPass();
 
 	void prepare();
@@ -59,8 +59,8 @@ protected:
 	Buffer* indexBuffer;
 	Buffer* indirectDrawBuffer;
 
-	uint32_t width = 960;
-	uint32_t height = 540;
+	uint32_t width;
+	uint32_t height;
 
 	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
 	std::vector<vk::Format> attachmentFormats;

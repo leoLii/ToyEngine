@@ -12,7 +12,7 @@
 
 class LightingPass {
 public:
-	LightingPass(const GPUContext*, const Scene*);
+	LightingPass(const GPUContext*, const Scene*, Vec2);
 	~LightingPass();
 
 	void prepare();
@@ -59,9 +59,6 @@ protected:
 	Buffer* vertexBuffer;
 	Buffer* indexBuffer;
 
-	uint32_t width = 960;
-	uint32_t height = 540;
-
 	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
 	std::vector<vk::Format> attachmentFormats;
 
@@ -71,6 +68,9 @@ protected:
 
 	std::vector<uint32_t> indices;
 	std::vector<float> vertices;
+
+	uint32_t width;
+	uint32_t height;
 
 private:
 	void initAttachments();
