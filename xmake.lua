@@ -5,7 +5,7 @@ add_rules("mode.debug", "mode.release")
 set_languages("c++20")
 
 add_requires("glfw", "spdlog")
-add_includedirs("$(projectdir)/Source/", os.getenv("VK_SDK_PATH").."/Include/", os.getenv("ASSIMP_PATH").."/include/")
+add_includedirs("$(projectdir)/Source/", "$(projectdir)/ThirdParty/", os.getenv("VK_SDK_PATH").."/Include/", os.getenv("ASSIMP_PATH").."/include/")
 add_linkdirs(os.getenv("VK_SDK_PATH").."/Lib/", os.getenv("ASSIMP_PATH").."/lib/x64")
 add_rpathdirs(os.getenv("VK_SDK_PATH").."/Bin/", os.getenv("ASSIMP_PATH").."/bin/x64")
 add_links("vulkan-1", "shaderc_shared", "assimp-vc143-mt")
