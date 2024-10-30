@@ -80,7 +80,7 @@ struct DepthStencilState
 	vk::Bool32 depth_write_enable{ vk::True };
 
 	// Note: Using reversed depth-buffer for increased precision, so Greater depth values are kept
-	vk::CompareOp depth_compare_op{ vk::CompareOp::eGreater };
+	vk::CompareOp depth_compare_op{ vk::CompareOp::eLess };
 
 	vk::Bool32 depth_bounds_test_enable{ vk::False };
 
