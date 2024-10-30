@@ -63,8 +63,7 @@ void GBufferPass::initAttachments()
 		positionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		positionAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		positionAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		positionAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		positionAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		positionAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
 		renderingAttachments.push_back(positionAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
@@ -93,8 +92,7 @@ void GBufferPass::initAttachments()
 		albedoAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		albedoAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		albedoAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		albedoAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		albedoAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		albedoAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 	
 		renderingAttachments.push_back(albedoAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
@@ -122,8 +120,7 @@ void GBufferPass::initAttachments()
 		normalAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		normalAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		normalAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		normalAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		normalAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		normalAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 	
 		renderingAttachments.push_back(normalAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
@@ -151,8 +148,7 @@ void GBufferPass::initAttachments()
 		armAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		armAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		armAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		armAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		armAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		armAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 	
 		renderingAttachments.push_back(armAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
@@ -181,8 +177,7 @@ void GBufferPass::initAttachments()
 		motionAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		motionAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		motionAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		motionAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		motionAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		motionAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 	
 		renderingAttachments.push_back(motionAttachment->attachmentInfo);
 		attachmentFormats.push_back(imageInfo.format);
@@ -214,8 +209,7 @@ void GBufferPass::initAttachments()
 		depthAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		depthAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		depthAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		depthAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-		depthAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		depthAttachment->attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
 	}
 
 	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);

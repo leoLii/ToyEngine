@@ -145,8 +145,7 @@ void TaaPass::initAttachment()
 		taaOutput->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		taaOutput->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 		taaOutput->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		taaOutput->attachmentInfo.clearValue.color = vk::ClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
-		taaOutput->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		taaOutput->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 	}
 
 	{
@@ -170,8 +169,7 @@ void TaaPass::initAttachment()
 		historyAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 		historyAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
 		historyAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-		historyAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 1.0f, 0.0f, 0.0f, 0.0f };
-		historyAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+		historyAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
 	}
 	

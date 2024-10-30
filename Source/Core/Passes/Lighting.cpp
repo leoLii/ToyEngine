@@ -46,8 +46,7 @@ void LightingPass::initAttachments()
 	lightingAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
 	lightingAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
 	lightingAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-	lightingAttachment->attachmentInfo.clearValue.color = vk::ClearColorValue{ 0.0f, 0.0f, 0.0f, 0.0f };
-	lightingAttachment->attachmentInfo.clearValue.depthStencil = vk::ClearDepthStencilValue{ 0u, 0u };
+	lightingAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
 	renderingAttachments.push_back(lightingAttachment->attachmentInfo);
 	attachmentFormats.push_back(lightingAttachment->format);
