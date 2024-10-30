@@ -28,7 +28,7 @@ std::type_index Camera::getType()
 
 void Camera::lookAt(Vec3 eye, Vec3 center, Vec3 up)
 {
-	this->view = glm::lookAt(eye, center, up);
+	this->view = glm::lookAtRH(eye, center, up);
 }
 
 const Mat4 Camera::getViewMatrix() const
