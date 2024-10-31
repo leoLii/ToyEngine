@@ -29,8 +29,8 @@ void main()
     vec4 worldPosition = ubo.currModel * vec4(inPosition, 1.0);
     fragPosition = worldPosition.xyz;
     fragTexcoord = inTexcoord;
-    //fragNormal = mat3(ubo.currModel) * inNormal;
-    fragNormal = inNormal;
+    fragNormal = normalize(mat3(ubo.currModel) * inNormal);
+    //fragNormal = inNormal;
     fragTangent = mat3(ubo.currModel) * inTangent;
 
     vec4 currentClipPos = constant.jitteredPV * ubo.currModel * vec4(inPosition, 1.0);
@@ -39,6 +39,6 @@ void main()
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
     vec2 cancelJitter = constant.prevJitter - constant.currJitter;
     // Transform motion vectors from NDC space to UV space (+Y is top-down).
-    fragMotionVector = ((currentNDC - previousNDC) + cancelJitter) * vec2(0.5, -0.5);
+    fragMotionVector = (previousNDC - currentNDC) * vec2(0.5, -0.5) ;
     gl_Position = constant.jitteredPV * worldPosition;
 }
