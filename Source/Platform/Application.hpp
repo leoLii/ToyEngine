@@ -2,6 +2,7 @@
 
 #include "Window.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
+#include "Core/ResourceManager.hpp"
 #include "Scene/Mesh.hpp"
 
 #include <chrono>
@@ -45,6 +46,7 @@ protected:
 	std::unique_ptr<Window> window;
 
 	std::unique_ptr<GPUContext> gpuContext;
+	std::unique_ptr<ResourceManager> resourceManager;
 
 	bool headless = false;
 
@@ -78,4 +80,5 @@ protected:
 	vk::Semaphore transferFinishedSemaphore;
 
 private:
+	void createAttachments(uint32_t, uint32_t);
 };

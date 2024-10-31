@@ -5,16 +5,17 @@
 
 class Device;
 
+struct ImageViewInfo {
+	vk::ImageViewType type = vk::ImageViewType::e2D;
+	vk::Format format = vk::Format::eR8G8B8A8Unorm;
+	vk::ComponentMapping mapping = vk::ComponentMapping{};
+	vk::ImageSubresourceRange range = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+};
+
 class ImageView {
 public:
 	ImageView() = delete;
-	ImageView(
-		const Device&,
-		Image*,
-		vk::ImageViewType,
-		vk::Format,
-		vk::ComponentMapping,
-		vk::ImageSubresourceRange);
+	ImageView(const Device&, Image*, ImageViewInfo);
 	~ImageView();
 
 	vk::ImageView getHandle() const;
@@ -24,8 +25,5 @@ protected:
 
 	vk::ImageView handle;
 	Image* image;
-	vk::ImageViewType imageViewType;
-	vk::Format imageFormat;
-	vk::ComponentMapping componentMapping;
-	vk::ImageSubresourceRange imageSubresourceRange;
+	ImageViewInfo viewInfo;
 };

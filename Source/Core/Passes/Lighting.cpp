@@ -1,22 +1,17 @@
 #include "Lighting.hpp"
 
-LightingPass::LightingPass(const GPUContext* context, const Scene* scene, Vec2 size)
+LightingPass::LightingPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene, Vec2 size)
 	:gpuContext{ context }
+	, resourceManager{ resourceManager }
 	, scene{ scene }
 {
-	lightingAttachment = new Attachment{};
 	width = size.x;
 	height = size.y;
+	initAttachments();
 }
 
 LightingPass::~LightingPass()
 {
-	gpuContext->destroyBuffer(uniformBuffer);
-	gpuContext->destroyBuffer(vertexBuffer);
-	gpuContext->destroyBuffer(indexBuffer);
-	gpuContext->destroySampler(sampler);
-	gpuContext->destroyImage(lightingAttachment->image);
-	gpuContext->destroyImageView(lightingAttachment->view);
 	delete graphicsPipeline;
 	delete pipelineLayout;
 	delete descriptorSetLayout;
@@ -25,31 +20,22 @@ LightingPass::~LightingPass()
 
 void LightingPass::initAttachments()
 {
-	ImageInfo imageInfo{};
-	imageInfo.format = vk::Format::eR16G16B16A16Snorm;
-	imageInfo.type = vk::ImageType::e2D;
-	imageInfo.extent = vk::Extent3D{ width, height, 1 };
-	imageInfo.usage =
-		vk::ImageUsageFlagBits::eColorAttachment |
-		vk::ImageUsageFlagBits::eSampled |
-		vk::ImageUsageFlagBits::eStorage;
-	imageInfo.sharingMode = vk::SharingMode::eExclusive;
-	imageInfo.arrayLayers = 1;
-	imageInfo.mipmapLevel = 1;
-	imageInfo.queueFamilyCount = 1;
-	imageInfo.pQueueFamilyIndices = { 0 };
+	positionAttachment = resourceManager->getAttachment("gPosition");
+	albedoAttachment = resourceManager->getAttachment("gAlbedo");
+	normalAttachment = resourceManager->getAttachment("gNormal");
+	armAttachment = resourceManager->getAttachment("gARM");
 
-	lightingAttachment->image = gpuContext->createImage(imageInfo);
-	lightingAttachment->view = gpuContext->createImageView(lightingAttachment->image);
-	lightingAttachment->format = imageInfo.format;
-	lightingAttachment->attachmentInfo.imageView = lightingAttachment->view->getHandle();
-	lightingAttachment->attachmentInfo.imageLayout = vk::ImageLayout::eGeneral;
-	lightingAttachment->attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-	lightingAttachment->attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-	lightingAttachment->attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
-
-	renderingAttachments.push_back(lightingAttachment->attachmentInfo);
-	attachmentFormats.push_back(lightingAttachment->format);
+	{
+		lightingAttachment = resourceManager->getAttachment("ColorBuffer");
+		vk::RenderingAttachmentInfo attachmentInfo{};
+		attachmentInfo.imageView = lightingAttachment->view->getHandle();
+		attachmentInfo.imageLayout = lightingAttachment->attachmentInfo.layout;
+		attachmentInfo.loadOp = lightingAttachment->attachmentInfo.loadOp;
+		attachmentInfo.storeOp = lightingAttachment->attachmentInfo.storeOp;
+		attachmentInfo.clearValue = lightingAttachment->attachmentInfo.clearValue;
+		renderingAttachments.push_back(attachmentInfo);
+		attachmentFormats.push_back(lightingAttachment->attachmentInfo.format);
+	}
 
 	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;
@@ -71,8 +57,6 @@ void LightingPass::initAttachments()
 
 void LightingPass::prepare()
 {
-	initAttachments();
-
 	renderingInfo.layerCount = 1;
 	renderingInfo.renderArea.offset = vk::Offset2D{};
 	renderingInfo.renderArea.extent = vk::Extent2D{ width, height };
@@ -138,7 +122,7 @@ void LightingPass::prepare()
 
 	graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), pipelineLayout, &state, baseModules);
 
-	uniformBuffer = gpuContext->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
+	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
 	vk::DescriptorBufferInfo descriptorBufferInfo;
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
 	descriptorBufferInfo.offset = 0;
@@ -146,19 +130,19 @@ void LightingPass::prepare()
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {4, descriptorBufferInfo} };
 
-	sampler = gpuContext->createSampler();
+	sampler = resourceManager->createSampler();
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
-	imageInfos[0] = vk::DescriptorImageInfo{ sampler, positionAttachment->view->getHandle(), positionAttachment->attachmentInfo.imageLayout };
-	imageInfos[1] = vk::DescriptorImageInfo{ sampler, albedoAttachment->view->getHandle(), albedoAttachment->attachmentInfo.imageLayout };
-	imageInfos[2] = vk::DescriptorImageInfo{ sampler, normalAttachment->view->getHandle(), normalAttachment->attachmentInfo.imageLayout };
-	imageInfos[3] = vk::DescriptorImageInfo{ sampler, armAttachment->view->getHandle(), armAttachment->attachmentInfo.imageLayout };
+	imageInfos[0] = vk::DescriptorImageInfo{ sampler, positionAttachment->view->getHandle(), positionAttachment->attachmentInfo.layout };
+	imageInfos[1] = vk::DescriptorImageInfo{ sampler, albedoAttachment->view->getHandle(), albedoAttachment->attachmentInfo.layout };
+	imageInfos[2] = vk::DescriptorImageInfo{ sampler, normalAttachment->view->getHandle(), normalAttachment->attachmentInfo.layout };
+	imageInfos[3] = vk::DescriptorImageInfo{ sampler, armAttachment->view->getHandle(), armAttachment->attachmentInfo.layout };
 
 	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
-	vertexBuffer = gpuContext->createBuffer(vertices.size() * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer);
+	vertexBuffer = resourceManager->createBuffer(vertices.size() * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer);
 	vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(float));
 
-	indexBuffer = gpuContext->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
+	indexBuffer = resourceManager->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
 	indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 }
 
@@ -224,34 +208,8 @@ void LightingPass::update(uint32_t frameIndex)
 	// 使用缓慢变化的角度，使光源方向平滑旋转
 	float angle = frameIndex * 0.005f; // 控制旋转速度
 	uniform.lightDirection = Vec3(
-		0.0, 0.0, 1.0
+		-1.0, 0.0, -1.0
 	);
 
 	uniformBuffer->copyToGPU(static_cast<const void*>(&uniform), sizeof(Uniform));
-}
-
-void LightingPass::setAttachment(uint32_t index, Attachment* attachment)
-{
-	switch (index)
-	{
-	case 0:
-		positionAttachment = attachment;
-		break;
-	case 1:
-		albedoAttachment = attachment;
-		break;
-	case 2:
-		normalAttachment = attachment;
-		break;
-	case 3:
-		armAttachment = attachment;
-		break;
-	default:
-		break;
-	}
-}
-
-Attachment* LightingPass::getAttachment()
-{
-	return lightingAttachment;
 }

@@ -14,8 +14,6 @@
 #include <thread>
 #include <future>
 
-Vec2 size = Vec2(1920, 1080);
-
 void Application::init(ApplicationConfig& config, Scene* scene)
 {
 	window = std::make_unique<Window>(config.name, config.width, config.height);
@@ -23,14 +21,17 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	config.extensions.insert(config.extensions.end(), windowExtensions.begin(), windowExtensions.end());
 
 	gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
+	resourceManager = std::make_unique<ResourceManager>(*gpuContext);
+	createAttachments(1920, 1080);
 
 	fence = gpuContext->requestFence();
 
 	this->scene = scene;
 
-	gBufferPass = new GBufferPass{ gpuContext.get(), scene, size / Vec2(2.0) };
-	lightingPass = new LightingPass{ gpuContext.get(), scene, size / Vec2(2.0) };
-	taaPass = new TaaPass{ gpuContext.get(), scene, size };
+	Vec2 size(config.width, config.height);
+	gBufferPass = new GBufferPass{ gpuContext.get(), resourceManager.get(), scene, size};
+	lightingPass = new LightingPass{ gpuContext.get(), resourceManager.get(), scene, size};
+	taaPass = new TaaPass{ gpuContext.get(), resourceManager.get(), scene, size};
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
 	renderFinishedSemaphore = gpuContext->requestSemaphore();
@@ -40,14 +41,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	transferCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 
 	gBufferPass->prepare();
-	lightingPass->setAttachment(0, gBufferPass->getAttachment(0));
-	lightingPass->setAttachment(1, gBufferPass->getAttachment(1));
-	lightingPass->setAttachment(2, gBufferPass->getAttachment(2));
-	lightingPass->setAttachment(3, gBufferPass->getAttachment(3));
 	lightingPass->prepare();
-	taaPass->setAttachment(0, lightingPass->getAttachment());
-	taaPass->setAttachment(1, gBufferPass->getAttachment(4));
-	taaPass->setAttachment(2, gBufferPass->getAttachment(5));
 	taaPass->prepare();
 }
 
@@ -96,7 +90,7 @@ void Application::run()
 					vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
 					vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead,
 					vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
-					taaPass->getAttachment()->image);
+					resourceManager->getAttachment("taaOutput")->image);
 
 				vk::ImageBlit blit;
 				blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
@@ -111,7 +105,7 @@ void Application::run()
 				blit.dstSubresource.layerCount = 1;
 
 				renderCommandBuffer.blitImage(
-					taaPass->getAttachment()->image->getHandle(), vk::ImageLayout::eGeneral,
+					resourceManager->getAttachment("taaOutput")->image->getHandle(), vk::ImageLayout::eGeneral,
 					gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 					{ blit }, vk::Filter::eLinear);
 
@@ -149,4 +143,200 @@ void Application::close()
 	delete gBufferPass;
 	delete lightingPass;
 	delete taaPass;
+}
+
+void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
+{
+	{
+		vk::Format format = vk::Format::eR16G16B16A16Sfloat;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo;
+		attachmentInfo.format = format;
+
+		resourceManager->createAttachment("gPosition", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+
+		resourceManager->createAttachment("gAlbedo", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR16G16B16A16Sfloat;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+
+		resourceManager->createAttachment("gNormal", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+
+		resourceManager->createAttachment("gARM", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR16G16Sfloat;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+
+		resourceManager->createAttachment("gVelocity", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eD32Sfloat;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eDepthStencilAttachment |
+			vk::ImageUsageFlagBits::eSampled |
+			vk::ImageUsageFlagBits::eInputAttachment;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+		imageViewInfo.range = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 };
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
+
+		resourceManager->createAttachment("gDepth", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
+
+		resourceManager->createAttachment("ColorBuffer", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eStorage |
+			vk::ImageUsageFlagBits::eTransferSrc;
+		imageInfo.sharingMode = vk::SharingMode::eExclusive;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
+
+		resourceManager->createAttachment("taaOutput", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eInputAttachment |
+			vk::ImageUsageFlagBits::eTransferDst |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
+
+		resourceManager->createAttachment("taaHistory", imageInfo, imageViewInfo, attachmentInfo);
+	}
 }

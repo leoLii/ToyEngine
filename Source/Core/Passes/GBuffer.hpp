@@ -2,6 +2,7 @@
 
 #include "Common/Math.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
+#include "Core/ResourceManager.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
 #include "Core/GPUFramework/Vulkan/RenderPass.hpp"
 #include "Scene/Scene.hpp"
@@ -10,7 +11,7 @@
 
 class GBufferPass {
 public:
-	GBufferPass(const GPUContext*, const Scene*, Vec2);
+	GBufferPass(const GPUContext*, ResourceManager*, const Scene*, Vec2);
 	~GBufferPass();
 
 	void prepare();
@@ -18,8 +19,6 @@ public:
 	void record(vk::CommandBuffer);
 
 	void update(uint32_t);
-
-	Attachment* getAttachment(uint32_t) const;
 
 protected:
 	struct alignas(16) Constant {
@@ -35,13 +34,14 @@ protected:
 	};
 
 	const GPUContext* gpuContext;
+	ResourceManager* resourceManager;
 	const Scene* scene;
 
 	Attachment* positionAttachment;
 	Attachment* albedoAttachment;
 	Attachment* normalAttachment;
 	Attachment* armAttachment;
-	Attachment* motionAttachment;
+	Attachment* velocityAttachment;
 	Attachment* depthAttachment;
 
 	vk::PushConstantRange constants;
@@ -63,6 +63,7 @@ protected:
 	uint32_t height;
 
 	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
+	vk::RenderingAttachmentInfo depthAttachmentInfo;
 	std::vector<vk::Format> attachmentFormats;
 
 	std::vector<Uniform> uniforms;

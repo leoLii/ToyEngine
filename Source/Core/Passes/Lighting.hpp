@@ -4,6 +4,7 @@
 
 #include "Common/Math.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
+#include "Core/ResourceManager.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
 #include "Core/GPUFramework/Vulkan/RenderPass.hpp"
 #include "Scene/Scene.hpp"
@@ -12,7 +13,7 @@
 
 class LightingPass {
 public:
-	LightingPass(const GPUContext*, const Scene*, Vec2);
+	LightingPass(const GPUContext*, ResourceManager*, const Scene*, Vec2);
 	~LightingPass();
 
 	void prepare();
@@ -20,10 +21,6 @@ public:
 	void record(vk::CommandBuffer);
 
 	void update(uint32_t);
-
-	void setAttachment(uint32_t, Attachment*);
-
-	Attachment* getAttachment();
 
 protected:
 	struct Constant {
@@ -36,6 +33,7 @@ protected:
 	};
 
 	const GPUContext* gpuContext;
+	ResourceManager* resourceManager;
 	const Scene* scene;
 
 	Attachment* positionAttachment;

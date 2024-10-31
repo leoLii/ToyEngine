@@ -30,6 +30,11 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	uint32_t queueFamilyIndices[1] = { 0 };
 	imageInfo.pQueueFamilyIndices = queueFamilyIndices;
 
+	imageViewInfo.format = vk::Format::eR8G8B8A8Unorm;
+	imageViewInfo.type = vk::ImageViewType::e2D;
+	imageViewInfo.mapping = vk::ComponentMapping{};
+	imageViewInfo.range = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+
 	vk::SwapchainCreateInfoKHR createInfo;
 	createInfo.surface = surface;
 	createInfo.minImageCount = imageCount;
@@ -58,12 +63,8 @@ Swapchain::Swapchain(const Device& device, const vk::SurfaceKHR surface)
 	auto nativeImages = device.getHandle().getSwapchainImagesKHR(handle);
 	for (auto i : nativeImages) {
 		auto image = new Image(device, i, imageInfo);
-		auto imageView = new ImageView(
-			device, image,
-			vk::ImageViewType::e2D,
-			imageInfo.format,
-			vk::ComponentMapping{},
-			vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+		auto imageView = new ImageView(device, image, imageViewInfo
+			);
 		images.push_back(image);
 		imageViews.push_back(imageView);
 	}

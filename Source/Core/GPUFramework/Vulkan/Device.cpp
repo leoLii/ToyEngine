@@ -83,7 +83,7 @@ std::vector<vk::DeviceQueueCreateInfo> Device::createQueueInfos()
             if (graphicsQueueFamily == queueFamilyIndex)
             {
                 queue_priorities[queueFamilyIndex].reserve(queueFamilyProperty.queueCount);
-                queue_priorities[queueFamilyIndex].push_back(1.0f);
+                queue_priorities[queueFamilyIndex].push_back(0.9f);
                 for (uint32_t i = 1; i < queueFamilyProperty.queueCount; i++)
                 {
                     queue_priorities[queueFamilyIndex].push_back(0.5f);

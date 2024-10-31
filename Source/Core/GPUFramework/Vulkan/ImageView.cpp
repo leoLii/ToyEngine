@@ -2,20 +2,17 @@
 #include "Device.hpp"
 #include "Image.hpp"
 
-ImageView::ImageView(const Device& device, Image* image, vk::ImageViewType type, vk::Format format, vk::ComponentMapping components, vk::ImageSubresourceRange range):
-	device(device),
-	image(image),
-	imageViewType(type),
-	imageFormat(format),
-	componentMapping(components),
-	imageSubresourceRange(range)
+ImageView::ImageView(const Device& device, Image* image, ImageViewInfo viewInfo):
+	device{ device },
+	image{ image },
+	viewInfo{ viewInfo }
 {
 	vk::ImageViewCreateInfo createInfo;
 	createInfo.image = image->getHandle();
-	createInfo.viewType = type;
-	createInfo.format = format;
-	createInfo.components = components;
-	createInfo.subresourceRange = range;
+	createInfo.viewType = viewInfo.type;
+	createInfo.format = viewInfo.format;
+	createInfo.components = viewInfo.mapping;
+	createInfo.subresourceRange = viewInfo.range;
 	handle = device.getHandle().createImageView(createInfo);
 }
 

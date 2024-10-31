@@ -41,6 +41,7 @@ protected:
     vk::SwapchainKHR handle;
 
     ImageInfo imageInfo;
+    ImageViewInfo imageViewInfo;
 
     vk::SurfaceCapabilitiesKHR surfaceCapabilities;
     std::vector<vk::SurfaceFormatKHR> surfaceFormats;
