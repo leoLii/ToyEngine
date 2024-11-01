@@ -106,27 +106,6 @@ public:
 		std::unordered_map<uint32_t, vk::DescriptorBufferInfo>,
 		std::unordered_map<uint32_t, vk::DescriptorImageInfo>) const;
 
-	// Image & Buffer
-	ImageView* createImageView(
-		Image*, 
-		vk::ImageViewType = vk::ImageViewType::e2D,
-		vk::ComponentMapping = vk::ComponentMapping{},
-		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }) const;
-	void destroyImageView(ImageView*) const;
-
-	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags) const;
-	void destroyBuffer(Buffer*) const;
-
-	Image* createImage(ImageInfo) const;
-	void destroyImage(Image*) const;
-
-	vk::Sampler createSampler(
-		vk::Filter = vk::Filter::eLinear, vk::Filter = vk::Filter::eLinear,
-		vk::SamplerAddressMode = vk::SamplerAddressMode::eClampToEdge,
-		bool = false, float = 0.0,
-		vk::BorderColor = vk::BorderColor::eIntOpaqueBlack) const;
-	void destroySampler(vk::Sampler) const;
-
 	// Commands
 	void submit(
 		CommandType,
