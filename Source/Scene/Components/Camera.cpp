@@ -102,7 +102,7 @@ void Camera::generateTAAJitterSamples()
 		}
 		return result;
 		};
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < taaSamples; i++) {
 		float jitterX = HaltonSequence(i + 1, 2) - 0.5f;
 		float jitterY = HaltonSequence(i + 1, 3) - 0.5f;
 		jitterSamples.push_back(glm::vec2(jitterX, jitterY));
@@ -111,9 +111,9 @@ void Camera::generateTAAJitterSamples()
 
 void Camera::projectionJitter(uint32_t frameIndex)
 {
-	uint32_t width = 960;
-	uint32_t height = 540;
-	currJitter = jitterSamples[frameIndex % 16] / Vec2(width, height);
+	uint32_t width = frustum.width;
+	uint32_t height = frustum.height;
+	currJitter = jitterSamples[frameIndex % taaSamples] / Vec2(width, height);
 	projectionJittered[2][0] += currJitter.x;// 对x方向应用抖动
 	projectionJittered[2][1] += currJitter.y;  // 对y方向应用抖动
 }

@@ -100,6 +100,14 @@ Transform& Node::getTransform()
 	return this->transform;
 }
 
+void Node::setTransform(Mat4 transform)
+{
+	this->transform.setTransform(transform);
+	for (auto child : children) {
+		child->setTransform(transform);
+	}
+}
+
 void Node::setTranslate(Vec3 translation)
 {
 	this->transform.setTranslate(translation);

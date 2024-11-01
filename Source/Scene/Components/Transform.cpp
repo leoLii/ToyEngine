@@ -39,7 +39,7 @@ void Transform::setScale(const Vec3& scale)
 
 void Transform::setTransform(Mat4& matrix)
 {
-	currTransform *= matrix;
+	currTransform = matrix;
 }
 
 Mat4 Transform::getCurrMatrix() const

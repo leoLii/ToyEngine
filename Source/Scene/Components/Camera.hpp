@@ -56,6 +56,8 @@ protected:
 
 	std::vector<Vec2> jitterSamples;
 
+	uint32_t taaSamples = 16;
+
 private:
 	void projectionJitter(uint32_t);
 	void generateTAAJitterSamples();

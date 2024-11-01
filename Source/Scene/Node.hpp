@@ -47,6 +47,8 @@ public:
 
 	Transform& getTransform();
 
+	void setTransform(Mat4);
+
 	void setTranslate(Vec3);
 	void setRotate(float, Vec3);
 	void setScale(Vec3);
