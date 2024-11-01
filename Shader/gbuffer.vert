@@ -39,6 +39,6 @@ void main()
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
     vec2 cancelJitter = constant.prevJitter - constant.currJitter;
     // Transform motion vectors from NDC space to UV space (+Y is top-down).
-    fragMotionVector = (previousNDC - currentNDC) * vec2(0.5, -0.5) ;
+    fragMotionVector = (currentNDC - previousNDC) * vec2(0.5, 0.5) ;
     gl_Position = constant.jitteredPV * worldPosition;
 }

@@ -64,6 +64,13 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 {
 	gpuContext->pipelineBarrier(
 		commandBuffer,
+		vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eComputeShader,
+		vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead,
+		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
+		history->image);
+
+	gpuContext->pipelineBarrier(
+		commandBuffer,
 		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eComputeShader,
 		vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
@@ -98,16 +105,17 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
-		vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite,
+		vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
-		history->image);
+		taaOutput->image);
 
 	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
-		vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead,
+		vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
-		taaOutput->image);
+		history->image);
+
 	vk::ImageCopy copyRegion;
 	copyRegion.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 	copyRegion.srcSubresource.mipLevel = 0;

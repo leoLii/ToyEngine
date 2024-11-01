@@ -33,7 +33,7 @@ struct RasterizationState
 
 	vk::CullModeFlags cull_mode{ vk::CullModeFlagBits::eBack };
 
-	vk::FrontFace front_face{ vk::FrontFace::eClockwise };
+	vk::FrontFace front_face{ vk::FrontFace::eCounterClockwise };
 
 	vk::Bool32 depth_bias_enable{ vk::False };
 

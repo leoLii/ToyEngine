@@ -151,9 +151,9 @@ void GBufferPass::prepare()
 	renderingInfo.pDepthAttachment = &depthAttachmentInfo;
 
 	viewport.x = 0.0f;
-	viewport.y = 0.0f;
+	viewport.y = height;
 	viewport.width = width;
-	viewport.height = height;
+	viewport.height = -int(height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 

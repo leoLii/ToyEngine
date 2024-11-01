@@ -90,15 +90,15 @@ void LightingPass::prepare()
 
 	vertices = {
 		// 顶点坐标       // 纹理坐标
-		-1.0f, -1.0f,     0.0f, 1.0f,  // 左下角
-		 1.0f, -1.0f,     1.0f, 1.0f,  // 右下角
-		-1.0f,  1.0f,     0.0f, 0.0f,  // 左上角
-		 1.0f,  1.0f,     1.0f, 0.0f   // 右上角
+		-1.0f, -1.0f,     0.0f, 0.0f,  // 左下角
+		 1.0f, -1.0f,     1.0f, 0.0f,  // 右下角
+		-1.0f,  1.0f,     0.0f, 1.0f,  // 左上角
+		 1.0f,  1.0f,     1.0f, 1.0f   // 右上角
 	};
 
 	indices = {
-		0, 1, 2,
-		3, 2, 1
+		0, 2, 1,
+		3, 1, 2
 	};
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
@@ -183,7 +183,7 @@ void LightingPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.pushConstants<Constant>(
 		pipelineLayout->getHandle(),
 		vk::ShaderStageFlagBits::eFragment, 0,
-		{ Constant(Vec3(camera->getAttachNode()->getTransform()[3])) });
+		{ Constant(Vec3(camera->getAttachNode()->getTransform().getCurrMatrix()[3])) });
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
 
