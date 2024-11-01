@@ -41,6 +41,8 @@ public:
 
 	virtual void update(float deltaTime, uint32_t frameIndex) override;
 
+	virtual void lateUpdate() override;
+
 protected:
 	CameraType type;
 	Frustum frustum;

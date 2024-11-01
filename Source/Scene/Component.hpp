@@ -16,6 +16,7 @@ public:
 	virtual std::type_index getType() = 0;
 
 	virtual void update(float deltaTime, uint32_t frameIndex) = 0;
+	virtual void lateUpdate() = 0;
 
 	virtual Node* getAttachNode() const;
 

@@ -86,6 +86,10 @@ void Camera::update(float deltaTime, uint32_t frameIndex)
 	projectionJitter(frameIndex);
 }
 
+void Camera::lateUpdate()
+{
+}
+
 void Camera::generateTAAJitterSamples() 
 {
 	auto HaltonSequence = [](int index, int base) -> float {
