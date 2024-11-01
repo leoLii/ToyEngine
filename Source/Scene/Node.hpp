@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/Math.hpp"
+#include "Scene/Components/Transform.hpp"
 
 #include <vector>
 #include <string>
@@ -22,6 +23,8 @@ public:
 
 	void update(float, uint32_t);
 
+	void lateUpdate();
+
 	void setParent(Node*);
 
 	const Node* getParent() const;
@@ -42,9 +45,11 @@ public:
 
 	Mesh* getMesh();
 
-	void setTransform(Mat4);
+	Transform& getTransform();
 
-	Mat4 getTransform();
+	void setTranslate(Vec3);
+	void setRotate(float, Vec3);
+	void setScale(Vec3);
 
 	//virtual void update(float deltaTime) = 0;
 
@@ -65,7 +70,7 @@ protected:
 
 	std::vector<Node*> children;
 
-	Mat4 transform{ 1.0 };
+	Transform transform;
 
 	Mesh* mesh = nullptr;
 

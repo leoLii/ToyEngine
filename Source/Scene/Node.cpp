@@ -31,8 +31,16 @@ Node::~Node() {
 
 void Node::update(float deltaTime, uint32_t frameIndex)
 {
+	transform.update(deltaTime, frameIndex);
 	for (auto component : components) {
 		component.second->update(deltaTime, frameIndex);
+	}
+}
+
+void Node::lateUpdate()
+{
+	for (auto component : components) {
+		component.second->lateUpdate();
 	}
 }
 
@@ -48,7 +56,6 @@ const Node* Node::getParent() const
 void Node::addChild(Node* child)
 {
 	child->setParent(this);
-	child->setTransform(this->getTransform());
 	this->children.push_back(child);
 }
 
@@ -83,22 +90,38 @@ void Node::setMesh(Mesh* mesh)
 	mesh->setAttachNode(this);
 }
 
-Mesh* Node::getMesh() {
+Mesh* Node::getMesh() 
+{
 	return this->mesh;
 }
 
-void Node::setTransform(Mat4 matrix)
+Transform& Node::getTransform() 
 {
-	transform = transform * matrix;
-	for (auto child : children)
-	{
-		child->setTransform(matrix);
+	return this->transform;
+}
+
+void Node::setTranslate(Vec3 translation)
+{
+	this->transform.setTranslate(translation);
+	for (auto child : children) {
+		child->setTranslate(translation);
 	}
 }
 
-Mat4 Node::getTransform()
+void Node::setRotate(float angle, Vec3 axis)
 {
-	return transform;
+	this->transform.setRotate(angle, axis);
+	for (auto child : children) {
+		child->setRotate(angle, axis);
+	}
+}
+
+void Node::setScale(Vec3 scale)
+{
+	this->transform.setScale(scale);
+	for (auto child : children) {
+		child->setScale(scale);
+	}
 }
 
 void Node::addComponent(Component* component)

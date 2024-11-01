@@ -29,26 +29,31 @@ void Scene::update(uint32_t frameIndex)
 
 	prevUniforms.assign(uniforms.begin(), uniforms.end());
 
-	uniforms.clear();
+	//uniforms.clear();
 
-	for (auto mesh : meshes) {
-		Mat4 transform{ 1.0 };
-		auto node = mesh->getAttachNode();
+	//for (auto mesh : meshes) {
+	//	Mat4 transform{ 1.0 };
+	//	auto node = mesh->getAttachNode();
 
-		float angle = rotationSpeed * deltaTime;
+	//	float angle = rotationSpeed * deltaTime;
 
-		Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
+	//	Mat4 rotationMatrix = glm::rotate(Mat4(1.0f), glm::radians(angle), Vec3(0.0f, -1.0f, 0.0f));
 
-		//node->setTransform(rotationMatrix);
-		float positionX = movementRange * sin(deltaTime * frameIndex / 1000000.0);
-		Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(positionX, 0.0f, 0.0f));
-		node->setTransform(translationMatrix);
+	//	//node->setTransform(rotationMatrix);
+	//	float positionX = movementRange * sin(deltaTime * frameIndex / 1000000.0);
+	//	Mat4 translationMatrix = glm::translate(Mat4(1.0f), Vec3(0.0f, 0.0, positionX));
+	//	node->setTransform(translationMatrix);
 
-		uniforms.push_back(node->getTransform());
-	}
+	//	uniforms.push_back(node->getTransform());
+	//}
 
 	for (auto node : nodes) {
 		node->update(0.0, frameIndex);
+	}
+
+	for(int i = 0; i < meshes.size(); i++){
+		auto transform = meshes[i]->getAttachNode()->getTransform().getCurrMatrix();
+		uniforms[i] = transform;
 	}
 }
 
@@ -91,10 +96,10 @@ void Scene::collectMeshes()
 
 	// 收集完成后，对节点进行排序（根据相机距离，从远到近）
 	std::sort(meshes.begin(), meshes.end(), [&](Mesh* a, Mesh* b) {
-		Vec3 positionA = extractTranslation(a->getAttachNode()->getTransform());  // 提取节点 A 的世界坐标
-		Vec3 positionB = extractTranslation(b->getAttachNode()->getTransform());  // 提取节点 B 的世界坐标
+		Vec3 positionA = extractTranslation(a->getAttachNode()->getTransform().getCurrMatrix());  // 提取节点 A 的世界坐标
+		Vec3 positionB = extractTranslation(b->getAttachNode()->getTransform().getCurrMatrix());  // 提取节点 B 的世界坐标
 		
-		Vec3 cameraPosition = extractTranslation(cameraNode->getTransform());
+		Vec3 cameraPosition = extractTranslation(cameraNode->getTransform().getCurrMatrix());
 
 		float distanceA = distanceSquared(positionA, cameraPosition);  // 计算 A 到相机的距离
 		float distanceB = distanceSquared(positionB, cameraPosition);  // 计算 B 到相机的距离
@@ -112,7 +117,7 @@ void Scene::collectMeshes()
 		indices.insert(indices.end(), indexData.begin(), indexData.end());
 
 		bufferOffsets.push_back(uniforms.size() * sizeof(Mat4) * 2);
-		auto transform = mesh->getAttachNode()->getTransform();
+		auto transform = mesh->getAttachNode()->getTransform().getCurrMatrix();
 		uniforms.push_back(transform);
 	}
 
