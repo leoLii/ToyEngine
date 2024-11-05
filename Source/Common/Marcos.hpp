@@ -9,6 +9,7 @@
 #error "Unsupported target platform"
 #endif
 
+#define REVERSE_DEPTH
 
 #define NOMINMAX
 

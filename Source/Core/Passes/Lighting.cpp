@@ -67,8 +67,8 @@ void LightingPass::prepare()
 	viewport.y = 0.0f;
 	viewport.width = width;
 	viewport.height = height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
+	viewport.minDepth = 1.0f;
+	viewport.maxDepth = 0.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };

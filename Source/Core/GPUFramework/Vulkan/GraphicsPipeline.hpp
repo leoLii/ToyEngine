@@ -33,7 +33,11 @@ struct RasterizationState
 
 	vk::CullModeFlags cull_mode{ vk::CullModeFlagBits::eBack };
 
+#ifdef REVERSE_DEPTH
 	vk::FrontFace front_face{ vk::FrontFace::eCounterClockwise };
+#else
+	vk::FrontFace front_face{ vk::FrontFace::eCounterClockwise };
+#endif // INVERSE_DEPTH
 
 	vk::Bool32 depth_bias_enable{ vk::False };
 
@@ -79,8 +83,11 @@ struct DepthStencilState
 
 	vk::Bool32 depth_write_enable{ vk::True };
 
-	// Note: Using reversed depth-buffer for increased precision, so Greater depth values are kept
+#ifdef REVERSE_DEPTH
+	vk::CompareOp depth_compare_op{ vk::CompareOp::eGreaterOrEqual };
+#else
 	vk::CompareOp depth_compare_op{ vk::CompareOp::eLess };
+#endif
 
 	vk::Bool32 depth_bounds_test_enable{ vk::False };
 
