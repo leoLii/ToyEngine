@@ -9,19 +9,32 @@
 int main() {
 /////////////////////////////////////////////////////////////////////
     logging::init();
-
     Scene scene{};
     auto camera = scene.getCamera();
-    Vec3 cameraPosition = Vec3(1.0, 1.0, 1.0);
+    Vec3 cameraPosition = Vec3(2.0, 2.0, 2.0);
     camera->getAttachNode()->getTransform().setTranslate(cameraPosition);
     camera->lookAt(cameraPosition, Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/concrete_cat_statue_4k.fbx" };
-    auto node1 = scene.loadModel(path);
-    //auto node2 = scene.loadModel(path);
+    auto startPosition = Vec3(0.0f, 0.0f, 0.0f);
+    for (int i = -5; i < 5; i++) {
+        for (int j = -5; j < 5; j++) {
+            auto position = startPosition + Vec3(float(i), 0.0f, float(j));
+            auto node = scene.loadModel(path);
+            node->setScale(Vec3(3.0f, 3.0f, 3.0f));
+            node->setRotate(90.0, Vec3(-1.0f, 0.0f, 0.0f));
+            node->setTranslate(position);
+            scene.getRootNode()->addChild(node);
+        }
+    }
+    /*auto node1 = scene.loadModel(path);
     node1->setScale(Vec3(3.0f, 3.0f, 3.0f));
     node1->setRotate(90.0, Vec3(-1.0f, 0.0f, 0.0f));
     scene.getRootNode()->addChild(node1);
-    //scene.getRootNode()->addChild(node2);
+    auto node2 = scene.loadModel(path);
+    node2->setScale(Vec3(3.0f, 3.0f, 3.0f));
+    node2->setRotate(90.0, Vec3(-1.0f, 0.0f, 0.0f));
+    node2->setTranslate(Vec3(2.0f, 0.0f, -2.0f));
+    scene.getRootNode()->addChild(node2);*/
     scene.collectMeshes();
 
     Application app{};
