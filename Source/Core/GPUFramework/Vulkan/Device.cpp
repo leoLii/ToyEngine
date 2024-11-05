@@ -108,8 +108,11 @@ Device::Device(Instance& instance)
 {
     initGPU();
 
+    vk::PhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeature;
+    bufferDeviceAddressFeature.bufferDeviceAddress = VK_TRUE;
     vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature;
-    dynamicRenderingFeature.dynamicRendering = true;
+    dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+    dynamicRenderingFeature.pNext = &bufferDeviceAddressFeature;
     
     auto queueInfos = createQueueInfos();
     auto queueFamilyCount = queueFamilyProperties.size();
