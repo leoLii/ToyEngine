@@ -136,9 +136,11 @@ Mesh* AssimpLoader::processMesh(aiMesh* mesh) {
     }
     sceneMesh->setIndices(std::move(indices));
 
-    std::cout << "Processed Mesh: " << name
-        << " | Vertices: " << vertices.size()
-        << " | Indices: " << indices.size() << std::endl;
+    sceneMesh->updateAABB();
+
+    //std::cout << "Processed Mesh: " << name
+    //    << " | Vertices: " << vertices.size()
+    //    << " | Indices: " << indices.size() << std::endl;
 
     return sceneMesh;
 }

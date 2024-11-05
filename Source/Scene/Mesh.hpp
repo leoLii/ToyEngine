@@ -6,6 +6,26 @@
 
 #include "Node.hpp"
 
+struct AABB {
+	Vec3 min; // 最小点
+	Vec3 max; // 最大点
+
+	AABB() : min(Vec3(0.0)), max(Vec3(0.0)) {}
+	AABB(const Vec3& min, const Vec3& max) : min(min), max(max) {}
+
+	// 合并两个 AABB
+	AABB merge(const AABB& other) const {
+		return AABB(std::min(min, other.min), std::max(max, other.max));
+	}
+
+	// 检查 AABB 是否与另一个 AABB 相交
+	bool intersect(const AABB& other) const {
+		return (max.x >= other.min.x && min.x <= other.max.x) &&
+			(max.y >= other.min.y && min.y <= other.max.y) &&
+			(max.z >= other.min.z && min.z <= other.max.z);
+	}
+};
+
 struct Vertex {
 	Vec3 position;
 	Vec2 texcoord;
@@ -32,6 +52,8 @@ public:
 	void setBitangents(std::vector<Vec3>&&);
 	void setTexcoords(std::vector<Vec2>&&);
 	void setIndices(std::vector<uint32_t>&&);
+
+	void updateAABB();
 
 	std::vector<Vec3>& getVertices() {
 		return vertices;
@@ -104,4 +126,6 @@ protected:
 	std::vector<uint32_t> indices;
 
 	uint32_t faceCount = 0;
+
+	AABB aabb;
 };
