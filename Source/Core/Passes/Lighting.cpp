@@ -73,12 +73,14 @@ void LightingPass::prepare()
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };
 
+	sampler = resourceManager->createSampler();
+
 	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("deferredlighting.vert"), gpuContext->findShader("deferredlighting.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eFragment });
 	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
 
@@ -130,12 +132,12 @@ void LightingPass::prepare()
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {4, descriptorBufferInfo} };
 
-	sampler = resourceManager->createSampler();
+	
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
-	imageInfos[0] = vk::DescriptorImageInfo{ sampler, positionAttachment->view->getHandle(), positionAttachment->attachmentInfo.layout };
-	imageInfos[1] = vk::DescriptorImageInfo{ sampler, albedoAttachment->view->getHandle(), albedoAttachment->attachmentInfo.layout };
-	imageInfos[2] = vk::DescriptorImageInfo{ sampler, normalAttachment->view->getHandle(), normalAttachment->attachmentInfo.layout };
-	imageInfos[3] = vk::DescriptorImageInfo{ sampler, armAttachment->view->getHandle(), armAttachment->attachmentInfo.layout };
+	imageInfos[0] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, positionAttachment->view->getHandle(), positionAttachment->attachmentInfo.layout };
+	imageInfos[1] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, albedoAttachment->view->getHandle(), albedoAttachment->attachmentInfo.layout };
+	imageInfos[2] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, normalAttachment->view->getHandle(), normalAttachment->attachmentInfo.layout };
+	imageInfos[3] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, armAttachment->view->getHandle(), armAttachment->attachmentInfo.layout };
 
 	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
