@@ -48,8 +48,8 @@ protected:
 	DescriptorSetLayout* descriptorSetLayout;
 	PipelineLayout* pipelineLayout;
 	ComputePipeline* computePipeline;
-	vk::Sampler sampler1;
-	vk::Sampler sampler2;
+	vk::Sampler linearSampler;
+	vk::Sampler nearestSampler;
 	uint32_t width;
 	uint32_t height;
 

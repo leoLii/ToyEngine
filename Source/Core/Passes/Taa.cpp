@@ -28,12 +28,15 @@ TaaPass::~TaaPass()
 
 void TaaPass::prepare()
 {
+	linearSampler = resourceManager->createSampler();
+	nearestSampler = resourceManager->createSampler(vk::Filter::eNearest, vk::Filter::eNearest);
+
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eStorageImage, 1, vk::ShaderStageFlagBits::eCompute });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute });
-	bindings.push_back(vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &linearSampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &linearSampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &nearestSampler });
+	bindings.push_back(vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &nearestSampler });
 	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eCompute;
@@ -44,14 +47,12 @@ void TaaPass::prepare()
 	const ShaderModule* taaShader = gpuContext->findShader("taa.comp");
 	computePipeline = new ComputePipeline{ *gpuContext->getDevice() , pipelineLayout, taaShader };
 
-	sampler1 = resourceManager->createSampler();
-	sampler2 = resourceManager->createSampler(vk::Filter::eNearest, vk::Filter::eNearest);
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
 	imageInfos[0] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, taaOutput->view->getHandle(), taaOutput->attachmentInfo.layout };
-	imageInfos[1] = vk::DescriptorImageInfo{ sampler1, history->view->getHandle(), history->attachmentInfo.layout };
-	imageInfos[2] = vk::DescriptorImageInfo{ sampler1, lightingResult->view->getHandle(), lightingResult->attachmentInfo.layout };
-	imageInfos[3] = vk::DescriptorImageInfo{ sampler2, velocity->view->getHandle(), velocity->attachmentInfo.layout };
-	imageInfos[4] = vk::DescriptorImageInfo{ sampler2, depth->view->getHandle(), depth->attachmentInfo.layout };
+	imageInfos[1] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, history->view->getHandle(), history->attachmentInfo.layout };
+	imageInfos[2] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, lightingResult->view->getHandle(), lightingResult->attachmentInfo.layout };
+	imageInfos[3] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, velocity->view->getHandle(), velocity->attachmentInfo.layout };
+	imageInfos[4] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, depth->view->getHandle(), depth->attachmentInfo.layout };
 
 	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, {}, imageInfos);
 }
@@ -101,7 +102,6 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline->getHandle());
 	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, {});
 	commandBuffer.dispatch(int((width + 16) / 16), int((height + 16) / 16), 1);
-
 	gpuContext->pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
