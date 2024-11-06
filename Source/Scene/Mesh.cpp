@@ -38,7 +38,7 @@ void Mesh::setIndices(std::vector<uint32_t>&& indices)
 void Mesh::updateAABB()
 {
 	for (auto vertex : vertices) {
-		aabb.min = Vec3(std::min(vertex.x, aabb.min.x), std::min(vertex.y, aabb.min.y), std::min(vertex.z, aabb.min.z));
-		aabb.max = Vec3(std::max(vertex.x, aabb.max.x), std::max(vertex.y, aabb.max.y), std::max(vertex.z, aabb.max.z));
+		aabb.min = Vec3(glm::min(vertex, aabb.min));
+		aabb.max = Vec3(glm::max(vertex, aabb.max));
 	}
 }
