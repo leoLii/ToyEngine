@@ -15,7 +15,7 @@ struct AABB {
 
 	// 合并两个 AABB
 	AABB merge(const AABB& other) const {
-		return AABB(std::min(min, other.min), std::max(max, other.max));
+		return AABB(glm::min(min, other.min), glm::max(max, other.max));
 	}
 
 	// 检查 AABB 是否与另一个 AABB 相交
