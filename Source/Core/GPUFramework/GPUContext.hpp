@@ -130,6 +130,17 @@ public:
 		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
 		) const;
 
+	void pipelineBarrier2(
+		vk::CommandBuffer,
+		vk::PipelineStageFlags2, vk::PipelineStageFlags2,
+		vk::AccessFlags2, vk::AccessFlags2,
+		vk::ImageLayout, vk::ImageLayout,
+		const Image*,
+		vk::DependencyFlags = vk::DependencyFlagBits::eByRegion,
+		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 },
+		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
+	) const;
+
 protected:
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;

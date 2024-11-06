@@ -91,45 +91,45 @@ void GBufferPass::initAttachments()
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		velocityAttachment->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext->pipelineBarrier2(
 		commandBuffer,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eAllGraphics,
-		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eAllGraphics,
+		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		depthAttachment->image, vk::DependencyFlagBits::eByRegion,
 		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
@@ -154,8 +154,8 @@ void GBufferPass::prepare()
 	viewport.y = height;
 	viewport.width = width;
 	viewport.height = -int(height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
+	viewport.minDepth = 1.0f;
+	viewport.maxDepth = 0.0f;
 
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };

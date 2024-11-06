@@ -72,10 +72,10 @@ void Application::run()
 				beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 				renderCommandBuffer.begin(beginInfo);
 
-				gpuContext->pipelineBarrier(
+				gpuContext->pipelineBarrier2(
 					renderCommandBuffer,
-					vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer,
-					vk::AccessFlagBits::eNone, vk::AccessFlagBits::eTransferWrite,
+					vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eBlit,
+					vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eTransferWrite,
 					vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 					gpuContext->getSwapchainImages()[swapChainIndex]);
 
@@ -85,10 +85,10 @@ void Application::run()
 
 				taaPass->record(renderCommandBuffer);
 
-				gpuContext->pipelineBarrier(
+				gpuContext->pipelineBarrier2(
 					renderCommandBuffer,
-					vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
-					vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead,
+					vk::PipelineStageFlagBits2::eFragmentShader, vk::PipelineStageFlagBits2::eBlit,
+					vk::AccessFlagBits2::eShaderWrite, vk::AccessFlagBits2::eTransferRead,
 					vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 					resourceManager->getAttachment("taaOutput")->image);
 
@@ -109,10 +109,10 @@ void Application::run()
 					gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 					{ blit }, vk::Filter::eLinear);
 
-				gpuContext->pipelineBarrier(
+				gpuContext->pipelineBarrier2(
 					renderCommandBuffer,
-					vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe,
-					vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eNone,
+					vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eBottomOfPipe,
+					vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eNone,
 					vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
 					gpuContext->getSwapchainImages()[swapChainIndex]);
 
@@ -211,7 +211,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 	}
 
 	{
-		vk::Format format = vk::Format::eR8G8B8A8Unorm;
+		vk::Format format = vk::Format::eR16G16B16A16Snorm;
 		ImageInfo imageInfo{};
 		imageInfo.format = format;
 		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
@@ -232,7 +232,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 	}
 
 	{
-		vk::Format format = vk::Format::eR16G16Sfloat;
+		vk::Format format = vk::Format::eR16G16Snorm;
 		ImageInfo imageInfo{};
 		imageInfo.format = format;
 		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
@@ -270,7 +270,12 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 
 		AttachmentInfo attachmentInfo{};
 		attachmentInfo.format = format;
+
+#ifdef REVERSE_DEPTH
+		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 0u, 0u };
+#elif
 		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
+#endif // REVERSE_DEPTH
 
 		resourceManager->createAttachment("gDepth", imageInfo, imageViewInfo, attachmentInfo);
 	}
@@ -302,6 +307,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		imageInfo.format = format;
 		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
 		imageInfo.usage =
+			vk::ImageUsageFlagBits::eColorAttachment |
 			vk::ImageUsageFlagBits::eStorage |
 			vk::ImageUsageFlagBits::eTransferSrc;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;

@@ -198,7 +198,7 @@ void GPUContext::submit(
 
 void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphores)
 {
-    vk::PresentInfoKHR presentInfo;
+    vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = waitSemaphores.size();
     presentInfo.pWaitSemaphores = waitSemaphores.data();
 
@@ -223,7 +223,7 @@ void GPUContext::pipelineBarrier(
     vk::ImageSubresourceRange range, 
     uint32_t srcFamily, uint32_t dstFamily) const
 {
-    vk::ImageMemoryBarrier imageMemoryBarrier;
+    vk::ImageMemoryBarrier imageMemoryBarrier{};
     imageMemoryBarrier.srcAccessMask = srcAccess;
     imageMemoryBarrier.dstAccessMask = dstAccess;
     imageMemoryBarrier.oldLayout = oldLayout;
@@ -237,6 +237,36 @@ void GPUContext::pipelineBarrier(
         dstStage,
         dependencyFlags,
         0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
+}
+
+void GPUContext::pipelineBarrier2(
+    vk::CommandBuffer commandBuffer,
+    vk::PipelineStageFlags2 srcStage, vk::PipelineStageFlags2 dstStage,
+    vk::AccessFlags2 srcAccess, vk::AccessFlags2 dstAccess,
+    vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+    const Image* image,
+    vk::DependencyFlags dependencyFlags,
+    vk::ImageSubresourceRange range,
+    uint32_t srcFamily, uint32_t dstFamily) const
+{
+    vk::ImageMemoryBarrier2 imageMemoryBarrier{};
+    imageMemoryBarrier.srcStageMask = srcStage;
+    imageMemoryBarrier.dstStageMask = dstStage;
+    imageMemoryBarrier.srcAccessMask = srcAccess;
+    imageMemoryBarrier.dstAccessMask = dstAccess;
+    imageMemoryBarrier.oldLayout = oldLayout;
+    imageMemoryBarrier.newLayout = newLayout;
+    imageMemoryBarrier.image = image->getHandle();
+    imageMemoryBarrier.subresourceRange = range;
+    imageMemoryBarrier.srcQueueFamilyIndex = srcFamily;
+    imageMemoryBarrier.dstQueueFamilyIndex = dstFamily;
+
+    vk::DependencyInfo dependencyInfo{};
+    dependencyInfo.dependencyFlags = vk::DependencyFlagBits::eByRegion;
+    dependencyInfo.imageMemoryBarrierCount = 1;
+    dependencyInfo.pImageMemoryBarriers = &imageMemoryBarrier;
+
+    commandBuffer.pipelineBarrier2(dependencyInfo);
 }
 
 void GPUContext::createCommandPools()
