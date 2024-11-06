@@ -108,11 +108,17 @@ Device::Device(Instance& instance)
 {
     initGPU();
 
+    vk::PhysicalDeviceSynchronization2Features synchronization2Feature;
+    synchronization2Feature.synchronization2 = VK_TRUE;
     vk::PhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeature;
     bufferDeviceAddressFeature.bufferDeviceAddress = VK_TRUE;
+    bufferDeviceAddressFeature.pNext = &synchronization2Feature;
     vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature;
     dynamicRenderingFeature.dynamicRendering = VK_TRUE;
     dynamicRenderingFeature.pNext = &bufferDeviceAddressFeature;
+    vk::PhysicalDeviceDynamicRenderingLocalReadFeaturesKHR dynamicaRenderingLocalReadFeature;
+    dynamicaRenderingLocalReadFeature.dynamicRenderingLocalRead = VK_TRUE;
+    dynamicaRenderingLocalReadFeature.pNext = &dynamicRenderingFeature;
     
     auto queueInfos = createQueueInfos();
     auto queueFamilyCount = queueFamilyProperties.size();
@@ -121,11 +127,19 @@ Device::Device(Instance& instance)
     createInfo.pQueueCreateInfos = queueInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
     std::vector<const char*> enabledExtensions = { 
+        //swapchain
         VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
+        //dynamic rendering
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
+        //vma
         VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
         VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
-        VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME};
+        //device address
+        VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+        //simple synchronization
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
+    };
 #ifdef ARCH_OS_MACOS
     enabledExtensions.push_back("VK_KHR_portability_subset");
 #endif // ARCH_OS_MACOS
