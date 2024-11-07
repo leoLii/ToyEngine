@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/Math.hpp"
-#include "Scene/Component.hpp"
+#include "Component.hpp"
 
 #include <typeindex>
 

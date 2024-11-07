@@ -36,9 +36,11 @@ ImageView* ResourceManager::createImageView(Image* image,  ImageViewInfo viewInf
 
 Buffer* ResourceManager::createBuffer(
 	uint64_t size, 
-	vk::BufferUsageFlags usage)
+	vk::BufferUsageFlags bufferUsage,
+	VmaMemoryUsage memoryUsage,
+	bool mapped)
 {
-	auto buffer = new Buffer{ gpuContext.getDeviceRef(), size, usage };
+	auto buffer = new Buffer{ gpuContext.getDeviceRef(), size, bufferUsage, memoryUsage, mapped };
 	buffers.push_back(buffer);
 	return buffer;
 }

@@ -1,7 +1,7 @@
 #include "Node.hpp"
 #include "Mesh.hpp"
 
-#include "Component.hpp"
+#include "Components/Component.hpp"
 
 #include <random>
 

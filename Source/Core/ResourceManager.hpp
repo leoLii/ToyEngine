@@ -14,7 +14,7 @@ public:
 
 	ImageView* createImageView(Image*, ImageViewInfo = ImageViewInfo{});
 
-	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags);
+	Buffer* createBuffer(uint64_t, vk::BufferUsageFlags, VmaMemoryUsage=VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO, bool=true);
 
 	Image* createImage(ImageInfo);
 

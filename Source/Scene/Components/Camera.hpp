@@ -2,7 +2,7 @@
 
 #include "Common/Math.hpp"
 
-#include "Scene/Component.hpp"
+#include "Component.hpp"
 
 #include <vector>
 

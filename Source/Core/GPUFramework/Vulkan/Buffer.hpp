@@ -10,7 +10,7 @@ public:
 	NO_COPY(Buffer);
 
 	Buffer() = delete;
-	Buffer(const Device&, uint64_t, vk::BufferUsageFlags);
+	Buffer(const Device&, uint64_t, vk::BufferUsageFlags, VmaMemoryUsage=VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO, bool=false);
 	~Buffer();
 
 	vk::Buffer getHandle() const;

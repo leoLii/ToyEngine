@@ -2,18 +2,19 @@
 
 #include "Device.hpp"
 
-Buffer::Buffer(const Device& device, uint64_t size, vk::BufferUsageFlags usage)
+Buffer::Buffer(const Device& device, uint64_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, bool mapped)
 	:device{ device }
 {
 	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	bufferInfo.size = size;
-	bufferInfo.usage = static_cast<VkBufferUsageFlags>(usage);
+	bufferInfo.usage = static_cast<VkBufferUsageFlags>(bufferUsage);
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	VmaAllocationCreateInfo createInfo = {};
 	createInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-	createInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-	createInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	if(mapped)
+		createInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+	createInfo.usage = memoryUsage;
 
 	VkBuffer buffer;
 	auto result = vmaCreateBuffer(device.getAllocator(), &bufferInfo, &createInfo, &buffer, &allocation, &allocInfo);
