@@ -90,6 +90,68 @@ void Camera::lateUpdate()
 {
 }
 
+std::array<Vec4, 6> Camera::getFrustumPlanes()
+{
+	std::array<Vec4, 6> planes;
+	Mat4 clipMatrix = projection * view;
+
+	// 左平面
+	planes[0] = glm::vec4(
+		clipMatrix[0][3] + clipMatrix[0][0],
+		clipMatrix[1][3] + clipMatrix[1][0],
+		clipMatrix[2][3] + clipMatrix[2][0],
+		clipMatrix[3][3] + clipMatrix[3][0]
+	);
+
+	// 右平面
+	planes[1] = glm::vec4(
+		clipMatrix[0][3] - clipMatrix[0][0],
+		clipMatrix[1][3] - clipMatrix[1][0],
+		clipMatrix[2][3] - clipMatrix[2][0],
+		clipMatrix[3][3] - clipMatrix[3][0]
+	);
+
+	// 下平面
+	planes[2] = glm::vec4(
+		clipMatrix[0][3] + clipMatrix[0][1],
+		clipMatrix[1][3] + clipMatrix[1][1],
+		clipMatrix[2][3] + clipMatrix[2][1],
+		clipMatrix[3][3] + clipMatrix[3][1]
+	);
+
+	// 上平面
+	planes[3] = glm::vec4(
+		clipMatrix[0][3] - clipMatrix[0][1],
+		clipMatrix[1][3] - clipMatrix[1][1],
+		clipMatrix[2][3] - clipMatrix[2][1],
+		clipMatrix[3][3] - clipMatrix[3][1]
+	);
+
+	// 近平面
+	planes[4] = glm::vec4(
+		clipMatrix[0][3] + clipMatrix[0][2],
+		clipMatrix[1][3] + clipMatrix[1][2],
+		clipMatrix[2][3] + clipMatrix[2][2],
+		clipMatrix[3][3] + clipMatrix[3][2]
+	);
+
+	// 远平面
+	planes[5] = glm::vec4(
+		clipMatrix[0][3] - clipMatrix[0][2],
+		clipMatrix[1][3] - clipMatrix[1][2],
+		clipMatrix[2][3] - clipMatrix[2][2],
+		clipMatrix[3][3] - clipMatrix[3][2]
+	);
+
+	// 归一化
+	for (int i = 0; i < 6; i++) {
+		float length = glm::length(glm::vec3(planes[i]));
+		planes[i] /= length;
+	}
+
+	return planes;
+}
+
 void Camera::generateTAAJitterSamples() 
 {
 	auto HaltonSequence = [](int index, int base) -> float {

@@ -5,6 +5,7 @@
 #include "Component.hpp"
 
 #include <vector>
+#include <array>
 
 enum CameraType {
 	Perspect,
@@ -42,6 +43,8 @@ public:
 	virtual void update(float deltaTime, uint32_t frameIndex) override;
 
 	virtual void lateUpdate() override;
+
+	std::array<Vec4, 6> getFrustumPlanes();
 
 protected:
 	CameraType type;
