@@ -19,6 +19,10 @@ public:
 
 	void copyToGPU(const void*, const uint64_t);
 
+	const size_t getSize() const;
+
+	const size_t getOffset() const;
+
 protected:
 	const Device& device;
 

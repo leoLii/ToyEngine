@@ -43,3 +43,13 @@ void Buffer::copyToGPU(const void* bufferData, const uint64_t bufferSize)
 {
 	memcpy(allocInfo.pMappedData, bufferData, bufferSize);
 }
+
+const size_t Buffer::getSize() const
+{
+	return static_cast<size_t>(allocInfo.size);
+}
+
+const size_t Buffer::getOffset() const
+{
+	return static_cast<size_t>(allocInfo.offset);
+}
