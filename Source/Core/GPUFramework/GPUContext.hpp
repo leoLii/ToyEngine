@@ -130,7 +130,7 @@ public:
 		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
 		) const;
 
-	void pipelineBarrier2(
+	void imageBarrier(
 		vk::CommandBuffer,
 		vk::PipelineStageFlags2, vk::PipelineStageFlags2,
 		vk::AccessFlags2, vk::AccessFlags2,
@@ -138,6 +138,16 @@ public:
 		const Image*,
 		vk::DependencyFlags = vk::DependencyFlagBits::eByRegion,
 		vk::ImageSubresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 },
+		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
+	) const;
+
+	void bufferBarrier(
+		vk::CommandBuffer,
+		vk::PipelineStageFlags2, vk::PipelineStageFlags2,
+		vk::AccessFlags2, vk::AccessFlags2,
+		const Buffer*,
+		vk::DeviceSize offset,
+		vk::DeviceSize size,
 		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
 	) const;
 

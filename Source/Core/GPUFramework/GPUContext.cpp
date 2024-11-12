@@ -239,7 +239,7 @@ void GPUContext::pipelineBarrier(
         0, nullptr, 0, nullptr, 1, &imageMemoryBarrier);
 }
 
-void GPUContext::pipelineBarrier2(
+void GPUContext::imageBarrier(
     vk::CommandBuffer commandBuffer,
     vk::PipelineStageFlags2 srcStage, vk::PipelineStageFlags2 dstStage,
     vk::AccessFlags2 srcAccess, vk::AccessFlags2 dstAccess,
@@ -265,6 +265,32 @@ void GPUContext::pipelineBarrier2(
     dependencyInfo.dependencyFlags = vk::DependencyFlagBits::eByRegion;
     dependencyInfo.imageMemoryBarrierCount = 1;
     dependencyInfo.pImageMemoryBarriers = &imageMemoryBarrier;
+
+    commandBuffer.pipelineBarrier2(dependencyInfo);
+}
+
+void GPUContext::bufferBarrier(vk::CommandBuffer commandBuffer,
+    vk::PipelineStageFlags2 srcStage, vk::PipelineStageFlags2 dstStage,
+    vk::AccessFlags2 srcAccess, vk::AccessFlags2 dstAccess,
+    const Buffer* buffer,
+    vk::DeviceSize offset,
+    vk::DeviceSize size,
+    uint32_t srcFamily, uint32_t dstFamily
+) const
+{
+    vk::BufferMemoryBarrier2 bufferMemoryBarrier{};
+    bufferMemoryBarrier.srcStageMask = srcStage;
+    bufferMemoryBarrier.dstStageMask = dstStage;
+    bufferMemoryBarrier.srcAccessMask = srcAccess;
+    bufferMemoryBarrier.dstAccessMask = dstAccess;
+    bufferMemoryBarrier.buffer = buffer->getHandle();
+    bufferMemoryBarrier.offset = offset;
+    bufferMemoryBarrier.size = size;
+
+    vk::DependencyInfo dependencyInfo{};
+    dependencyInfo.dependencyFlags = vk::DependencyFlagBits::eByRegion;
+    dependencyInfo.bufferMemoryBarrierCount = 1;
+    dependencyInfo.pBufferMemoryBarriers = &bufferMemoryBarrier;
 
     commandBuffer.pipelineBarrier2(dependencyInfo);
 }

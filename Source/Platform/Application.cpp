@@ -72,7 +72,7 @@ void Application::run()
 				beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 				renderCommandBuffer.begin(beginInfo);
 
-				gpuContext->pipelineBarrier2(
+				gpuContext->imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eBlit,
 					vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eTransferWrite,
@@ -85,7 +85,7 @@ void Application::run()
 
 				taaPass->record(renderCommandBuffer);
 
-				gpuContext->pipelineBarrier2(
+				gpuContext->imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eFragmentShader, vk::PipelineStageFlagBits2::eBlit,
 					vk::AccessFlagBits2::eShaderWrite, vk::AccessFlagBits2::eTransferRead,
@@ -109,7 +109,7 @@ void Application::run()
 					gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 					{ blit }, vk::Filter::eLinear);
 
-				gpuContext->pipelineBarrier2(
+				gpuContext->imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eBottomOfPipe,
 					vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eNone,
