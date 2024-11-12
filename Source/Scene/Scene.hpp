@@ -25,8 +25,8 @@ public:
 
 	const std::vector<Vertex> getVertices() const;
 	const std::vector<uint32_t> getIndices() const;
-	const std::vector<Mat4> getUniforms() const;
-	const std::vector<Mat4> getPrevUniforms() const;
+	const std::vector<Mat4> getTransforms() const;
+	const std::vector<Mat4> getPrevTransforms() const;
 
 	const uint32_t getMeshCount() const {
 		return meshes.size();
@@ -45,8 +45,8 @@ protected:
 
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
-	std::vector<Mat4> uniforms;
-	std::vector<Mat4> prevUniforms;
+	std::vector<Mat4> transforms;
+	std::vector<Mat4> prevTransforms;
 
 private:
 	Vec3 extractTranslation(const Mat4& matrix) const;
