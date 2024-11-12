@@ -152,28 +152,28 @@ void LightingPass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,

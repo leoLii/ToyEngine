@@ -63,28 +63,28 @@ void TaaPass::update(uint32_t frameIndex)
 
 void TaaPass::record(vk::CommandBuffer commandBuffer)
 {
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		history->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		lightingResult->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		velocity->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eEarlyFragmentTests, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eDepthStencilAttachmentWrite, vk::AccessFlagBits2::eShaderRead,

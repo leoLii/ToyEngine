@@ -91,42 +91,42 @@ void GBufferPass::initAttachments()
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		velocityAttachment->image);
 
-	gpuContext->pipelineBarrier2(
+	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eAllGraphics,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -254,8 +254,8 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 void GBufferPass::update(uint32_t frameIndex)
 {
 	uniforms.clear();
-	auto models = scene->getUniforms();
-	auto prevModels = scene->getPrevUniforms();
+	auto models = scene->getTransforms();
+	auto prevModels = scene->getPrevTransforms();
 	uniforms.reserve(scene->getMeshCount());
 	for (int i = 0; i < scene->getMeshCount(); i++) {
 		uniforms.push_back(Uniform(prevModels[i], models[i]));
