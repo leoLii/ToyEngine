@@ -9,6 +9,7 @@
 GraphicsPipeline::GraphicsPipeline(
     const Device& device, 
     PipelineLayout* layout,
+    vk::PipelineCache cache, 
     GraphicsPipelineState* state, 
     std::vector<const ShaderModule*> shaderModules)
     :device{ device }
@@ -113,7 +114,7 @@ GraphicsPipeline::GraphicsPipeline(
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     vk::Result result;
-    std::tie(result, handle) = device.getHandle().createGraphicsPipeline(VK_NULL_HANDLE, pipelineInfo);
+    std::tie(result, handle) = device.getHandle().createGraphicsPipeline(cache, pipelineInfo);
 
     switch (result)
     {

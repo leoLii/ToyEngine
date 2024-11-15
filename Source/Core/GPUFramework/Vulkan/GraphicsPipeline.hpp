@@ -160,7 +160,8 @@ public:
 	GraphicsPipeline(
 		const Device&, 
 		PipelineLayout*,
-		GraphicsPipelineState*, 
+		vk::PipelineCache,
+		GraphicsPipelineState*,
 		std::vector<const ShaderModule*>);
 
 	~GraphicsPipeline();

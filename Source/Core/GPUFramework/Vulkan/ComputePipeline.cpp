@@ -7,6 +7,7 @@
 ComputePipeline::ComputePipeline(
 	const Device& device,
 	PipelineLayout* layout,
+	vk::PipelineCache cache,
 	const ShaderModule* shaderModule)
 	:device { device } 
 {
@@ -19,7 +20,7 @@ ComputePipeline::ComputePipeline(
 	pipelineInfo.layout = layout->getHandle();
 	pipelineInfo.stage = stageInfo;
 
-	auto result = device.getHandle().createComputePipeline(VK_NULL_HANDLE, pipelineInfo);
+	auto result = device.getHandle().createComputePipeline(cache, pipelineInfo);
 
 	if (result.result == vk::Result::eSuccess) {
 		handle = result.value;

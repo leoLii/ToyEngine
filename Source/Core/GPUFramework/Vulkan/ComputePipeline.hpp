@@ -11,7 +11,8 @@ public:
 	ComputePipeline() = delete;
 	ComputePipeline(
 		const Device&, 
-		PipelineLayout*, 
+		PipelineLayout*,
+		vk::PipelineCache,
 		const ShaderModule*);
 
 	~ComputePipeline();
