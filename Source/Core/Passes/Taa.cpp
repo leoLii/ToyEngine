@@ -8,22 +8,14 @@
 
 #include <string>
 
-TaaPass::TaaPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene, Vec2 size)
-	:gpuContext{gpuContext}
-	, resourceManager{ resourceManager }
-	,scene{scene}
+TaaPass::TaaPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene)
+	:ComputePass{ gpuContext, resourceManager, scene }
 {
-	width = size.x;
-	height = size.y;
 	initAttachment();
 }
 
 TaaPass::~TaaPass() 
 {
-	delete computePipeline;
-	delete pipelineLayout;
-	delete descriptorSet;
-	delete descriptorSetLayout;
 }
 
 void TaaPass::prepare()
@@ -43,9 +35,9 @@ void TaaPass::prepare()
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), {descriptorSetLayout->getHandle()}, {constants} };
-	const ShaderModule* taaShader = gpuContext->findShader("taa.comp");
-	computePipeline = new ComputePipeline{ *gpuContext->getDevice() , pipelineLayout, taaShader };
+	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
+	const ShaderModule* taaShader = resourceManager->findShader("taa.comp");
+	computePipeline = gpuContext->createComputePipeline(pipelineLayout, VK_NULL_HANDLE, taaShader);
 
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
 	imageInfos[0] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, taaOutput->view->getHandle(), taaOutput->attachmentInfo.layout };
@@ -63,6 +55,8 @@ void TaaPass::update(uint32_t frameIndex)
 
 void TaaPass::record(vk::CommandBuffer commandBuffer)
 {
+	int width = 1920;
+	int height = 1080;
 	gpuContext->imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eComputeShader,
