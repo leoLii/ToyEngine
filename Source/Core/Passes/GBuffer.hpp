@@ -1,24 +1,17 @@
 #pragma once
 
-#include "Common/Math.hpp"
-#include "Core/GPUFramework/GPUContext.hpp"
-#include "Core/ResourceManager.hpp"
-#include "Core/GPUFramework/Vulkan/VkCommon.hpp"
-#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
-#include "Scene/Scene.hpp"
+#include "Core/Passes/GraphicsPass.hpp"
 
 #include <vector>
 
-class GBufferPass {
+class GBufferPass: GraphicsPass {
 public:
-	GBufferPass(const GPUContext*, ResourceManager*, const Scene*, Vec2);
+	GBufferPass(const GPUContext*, ResourceManager*, const Scene*);
 	~GBufferPass();
 
-	void prepare();
-
-	void record(vk::CommandBuffer);
-
-	void update(uint32_t);
+	virtual void prepare() override;
+	virtual void record(vk::CommandBuffer) override;
+	virtual void update(uint32_t) override;
 
 protected:
 	struct alignas(16) Constant {
@@ -26,16 +19,13 @@ protected:
 		Mat4 jitteredPV;
 		Vec2 prevJitter;
 		Vec2 currJitter;
+		uint32_t index;
 	};
 
 	struct alignas(16) Uniform {
 		Mat4 prevModel;
 		Mat4 currModel;
 	};
-
-	const GPUContext* gpuContext;
-	ResourceManager* resourceManager;
-	const Scene* scene;
 
 	Attachment* positionAttachment;
 	Attachment* albedoAttachment;
@@ -44,27 +34,10 @@ protected:
 	Attachment* velocityAttachment;
 	Attachment* depthAttachment;
 
-	vk::PushConstantRange constants;
-	GraphicsPipelineState* pipelineState;
-	PipelineLayout* pipelineLayout;
-	GraphicsPipeline* graphicsPipeline;
-	DescriptorSet* descriptorSet;
-	DescriptorSetLayout* descriptorSetLayout;
-	vk::RenderingInfo renderingInfo;
-	vk::Viewport viewport;
-	vk::Rect2D scissor;
-
 	Buffer* uniformBuffer;
 	Buffer* vertexBuffer;
 	Buffer* indexBuffer;
 	Buffer* indirectDrawBuffer;
-
-	uint32_t width;
-	uint32_t height;
-
-	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
-	vk::RenderingAttachmentInfo depthAttachmentInfo;
-	std::vector<vk::Format> attachmentFormats;
 
 	std::vector<Uniform> uniforms;
 

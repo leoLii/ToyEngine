@@ -1,21 +1,13 @@
 #include "Lighting.hpp"
 
-LightingPass::LightingPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene, Vec2 size)
-	:gpuContext{ context }
-	, resourceManager{ resourceManager }
-	, scene{ scene }
+LightingPass::LightingPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
+	:GraphicsPass{ context, resourceManager, scene }
 {
-	width = size.x;
-	height = size.y;
 	initAttachments();
 }
 
 LightingPass::~LightingPass()
 {
-	delete graphicsPipeline;
-	delete pipelineLayout;
-	delete descriptorSetLayout;
-	delete descriptorSet;
 }
 
 void LightingPass::initAttachments()
@@ -57,6 +49,8 @@ void LightingPass::initAttachments()
 
 void LightingPass::prepare()
 {
+	uint32_t width = 1920;
+	uint32_t height = 1080;
 	renderingInfo.layerCount = 1;
 	renderingInfo.renderArea.offset = vk::Offset2D{};
 	renderingInfo.renderArea.extent = vk::Extent2D{ width, height };
@@ -75,7 +69,7 @@ void LightingPass::prepare()
 
 	sampler = resourceManager->createSampler();
 
-	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("deferredlighting.vert"), gpuContext->findShader("deferredlighting.frag") };
+	std::vector<const ShaderModule*> baseModules = { resourceManager->findShader("deferredlighting.vert"), resourceManager->findShader("deferredlighting.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
@@ -88,20 +82,7 @@ void LightingPass::prepare()
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), { descriptorSetLayout->getHandle() }, {constants} };
-
-	vertices = {
-		// 顶点坐标       // 纹理坐标
-		-1.0f, -1.0f,     0.0f, 0.0f,  // 左下角
-		 1.0f, -1.0f,     1.0f, 0.0f,  // 右下角
-		-1.0f,  1.0f,     0.0f, 1.0f,  // 左上角
-		 1.0f,  1.0f,     1.0f, 1.0f   // 右上角
-	};
-
-	indices = {
-		0, 2, 1,
-		3, 1, 2
-	};
+	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
 	vertexBindings.push_back(
@@ -122,7 +103,7 @@ void LightingPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), pipelineLayout, &state, baseModules);
+	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, VK_NULL_HANDLE, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
 	vk::DescriptorBufferInfo descriptorBufferInfo;

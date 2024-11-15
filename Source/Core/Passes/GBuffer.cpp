@@ -1,22 +1,13 @@
 #include "GBuffer.hpp"
 
-GBufferPass::GBufferPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene, Vec2 size)
-	:gpuContext{ context }
-	, resourceManager{ resourceManager }
-	, scene{ scene }
+GBufferPass::GBufferPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
+	:GraphicsPass{ context, resourceManager, scene }
 {
-	width = size.x;
-	height = size.y;
 	initAttachments();
 }
 
 GBufferPass::~GBufferPass()
 {
-	delete graphicsPipeline;
-	delete pipelineLayout;
-	delete descriptorSetLayout;
-	delete descriptorSet;
-	//delete pipelineState;
 }
 
 void GBufferPass::initAttachments()
@@ -143,6 +134,8 @@ void GBufferPass::initAttachments()
 
 void GBufferPass::prepare()
 {
+	uint32_t width = 1920;
+	uint32_t height = 1080;
 	renderingInfo.layerCount = 1;
 	renderingInfo.renderArea.offset = vk::Offset2D{};
 	renderingInfo.renderArea.extent = vk::Extent2D{ width, height };
@@ -160,7 +153,7 @@ void GBufferPass::prepare()
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };
 
-	std::vector<const ShaderModule*> baseModules = { gpuContext->findShader("gbuffer.vert"), gpuContext->findShader("gbuffer.frag") };
+	std::vector<const ShaderModule*> baseModules = { resourceManager->findShader("gbuffer.vert"), resourceManager->findShader("gbuffer.frag") };
 	vk::DescriptorSetLayoutBinding binding = vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };
 	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, { binding });
 
@@ -168,7 +161,7 @@ void GBufferPass::prepare()
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), { descriptorSetLayout->getHandle() }, {constants} };
+	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
 	vertexBindings.push_back(
@@ -195,7 +188,7 @@ void GBufferPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	graphicsPipeline = new GraphicsPipeline(*gpuContext->getDevice(), pipelineLayout, &state, baseModules);
+	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, VK_NULL_HANDLE, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
 	
@@ -223,14 +216,6 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 
 	commandBuffer.beginRendering(&renderingInfo);
 
-	commandBuffer.pushConstants<Constant>(
-		pipelineLayout->getHandle(),
-		vk::ShaderStageFlagBits::eVertex, 0,
-		{ Constant{
-			camera->getPVPrev(), 
-			camera->getPV(), 
-			camera->getPrevJitter(), camera->getCurrJitter()} });
-	
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
 
 	commandBuffer.setViewport(0, 1, &viewport);
@@ -240,6 +225,15 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.bindIndexBuffer(indexBuffer->getHandle(), 0, vk::IndexType::eUint32);
 
 	for (int i = 0; i < scene->getMeshCount(); i++) {
+		commandBuffer.pushConstants<Constant>(
+			pipelineLayout->getHandle(),
+			vk::ShaderStageFlagBits::eVertex, 0,
+			{ Constant{
+				camera->getPVPrev(),
+				camera->getPV(),
+				camera->getPrevJitter(), 
+				camera->getCurrJitter(),
+				uint32_t(i)} });
 		auto uniformOffset = scene->bufferOffsets[i];
 		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, { uniformOffset });
 		auto count = scene->getMeshes()[i]->getIndices().size();

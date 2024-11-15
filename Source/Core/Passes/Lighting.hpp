@@ -1,26 +1,17 @@
 #pragma once
 
-#pragma once
-
-#include "Common/Math.hpp"
-#include "Core/GPUFramework/GPUContext.hpp"
-#include "Core/ResourceManager.hpp"
-#include "Core/GPUFramework/Vulkan/VkCommon.hpp"
-#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
-#include "Scene/Scene.hpp"
+#include "Core/Passes/GraphicsPass.hpp"
 
 #include <vector>
 
-class LightingPass {
+class LightingPass: GraphicsPass {
 public:
-	LightingPass(const GPUContext*, ResourceManager*, const Scene*, Vec2);
+	LightingPass(const GPUContext*, ResourceManager*, const Scene*);
 	~LightingPass();
 
-	void prepare();
-
-	void record(vk::CommandBuffer);
-
-	void update(uint32_t);
+	virtual void prepare() override;
+	virtual void record(vk::CommandBuffer) override;
+	virtual void update(uint32_t) override;
 
 protected:
 	struct Constant {
@@ -32,43 +23,32 @@ protected:
 		alignas(16) Vec3 lightDirection;
 	};
 
-	const GPUContext* gpuContext;
-	ResourceManager* resourceManager;
-	const Scene* scene;
-
 	Attachment* positionAttachment;
 	Attachment* albedoAttachment;
 	Attachment* normalAttachment;
 	Attachment* armAttachment;
-
 	Attachment* lightingAttachment;
-
-	vk::PushConstantRange constants;
-	GraphicsPipelineState* pipelineState;
-	PipelineLayout* pipelineLayout;
-	GraphicsPipeline* graphicsPipeline;
-	DescriptorSet* descriptorSet;
-	DescriptorSetLayout* descriptorSetLayout;
-	vk::RenderingInfo renderingInfo;
-	vk::Viewport viewport;
-	vk::Rect2D scissor;
 
 	Buffer* uniformBuffer;
 	Buffer* vertexBuffer;
 	Buffer* indexBuffer;
 
-	std::vector<vk::RenderingAttachmentInfo> renderingAttachments;
-	std::vector<vk::Format> attachmentFormats;
-
 	Uniform uniform;
 
 	vk::Sampler sampler;
+	
+	std::vector<float> vertices = {
+		// 顶点坐标       // 纹理坐标
+		-1.0f, -1.0f,     0.0f, 0.0f,  // 左下角
+		 1.0f, -1.0f,     1.0f, 0.0f,  // 右下角
+		-1.0f,  1.0f,     0.0f, 1.0f,  // 左上角
+		 1.0f,  1.0f,     1.0f, 1.0f   // 右上角
+	};
 
-	std::vector<uint32_t> indices;
-	std::vector<float> vertices;
-
-	uint32_t width;
-	uint32_t height;
+	std::vector<uint32_t> indices = {
+		0, 2, 1,
+		3, 1, 2
+	};
 
 private:
 	void initAttachments();
