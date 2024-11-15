@@ -3,9 +3,6 @@
 #include "Common/Logging.hpp"
 
 #include <vector>
-#include <filesystem>
-#include <fstream>
-#include <sstream>
 
 GPUContext::GPUContext(
     const std::string name,
@@ -25,7 +22,6 @@ GPUContext::GPUContext(
 
     fencePool = std::make_unique<FencePool>(*device);
     semaphorePool = std::make_unique<SemaphorePool>(*device);
-    loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
     createDescriptorPool();
     createCommandPools();
 }
@@ -34,7 +30,6 @@ GPUContext::~GPUContext()
 {
     destroyCommandPools();
     destroyDescriptorPool();
-    destroyShaders();
     swapchain.reset();
     destroySurface();
 }
@@ -101,9 +96,14 @@ PipelineLayout* GPUContext::createPipelineLayout(std::vector<vk::DescriptorSetLa
     return new PipelineLayout{ *device, setLayouts, constants };
 }
 
-GraphicsPipeline* GPUContext::createGraphicsPipeline(PipelineLayout* layout, GraphicsPipelineState* state, std::vector<const ShaderModule*> shaders) const
+GraphicsPipeline* GPUContext::createGraphicsPipeline(PipelineLayout* layout, vk::PipelineCache cache, GraphicsPipelineState* state, std::vector<const ShaderModule*> shaders) const
 {
-    return new GraphicsPipeline{ *device, layout, state, shaders };
+    return new GraphicsPipeline{ *device, layout, cache, state, shaders };
+}
+
+ComputePipeline* GPUContext::createComputePipeline(PipelineLayout* layout, vk::PipelineCache cache, const ShaderModule* shader) const
+{
+    return new ComputePipeline{ *device, layout, cache, shader };
 }
 
 vk::Fence GPUContext::requestFence() const
@@ -134,18 +134,6 @@ vk::Semaphore GPUContext::requestSemaphore() const
 void GPUContext::returnSemaphore(const vk::Semaphore semaphore) const
 {
     semaphorePool->returnSemaphore(semaphore);
-}
-
-const ShaderModule* GPUContext::findShader(const std::string& name) const
-{
-    auto it = shaderModules.find(name);
-    if (it != shaderModules.end()) {
-        return it->second;
-    }
-    else {
-        LOGE("ShaderModule{} not found", name);
-        return nullptr;
-    }
 }
 
 DescriptorSetLayout* GPUContext::createDescriptorSetLayout(uint32_t index, std::vector<vk::DescriptorSetLayoutBinding> bindings) const
@@ -305,44 +293,6 @@ void GPUContext::destroyCommandPools()
     for (auto commandPool : commandPools) {
         delete commandPool;
     }
-}
-
-void GPUContext::loadShaders(const std::string& dir)
-{
-    for (const auto& entry: std::filesystem::directory_iterator(dir)) {
-        if (entry.is_regular_file()) {
-            std::ifstream file(entry.path(), std::ios::in | std::ios::binary);
-            if (file) {
-                std::ostringstream content;
-                content << file.rdbuf();
-                std::string extension = entry.path().extension().string();
-                std::string name = entry.path().filename().string();
-                if (!extension.compare(".vert")) {
-                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eVertex, content.str());
-                }
-                else if (!extension.compare(".frag")) {
-                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eFragment, content.str());
-                }
-                else if (!extension.compare(".comp")) {
-                    shaderModules[name] = new ShaderModule(*device, vk::ShaderStageFlagBits::eCompute, content.str());
-                }
-                else {
-                    continue;
-                }
-            }
-            else {
-                LOGE("无法打开文件:{}", entry.path().string());
-            }
-        }
-    }
-}
-
-void GPUContext::destroyShaders()
-{
-    for (auto shader : shaderModules) {
-        delete shader.second;
-    }
-    shaderModules.clear();
 }
 
 void GPUContext::createSurface(Window* window)

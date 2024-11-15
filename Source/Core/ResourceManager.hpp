@@ -6,11 +6,29 @@
 #include <unordered_map>
 #include <string>
 
+struct AttachmentInfo {
+	vk::Format format = vk::Format::eR8G8B8A8Unorm;
+	vk::ImageLayout layout = vk::ImageLayout::eGeneral;
+	vk::AttachmentLoadOp loadOp = vk::AttachmentLoadOp::eClear;
+	vk::AttachmentStoreOp storeOp = vk::AttachmentStoreOp::eStore;
+	vk::ClearValue clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
+};
+
+struct Attachment {
+	Image* image;
+	ImageView* view;
+	AttachmentInfo attachmentInfo;
+};
+
 class ResourceManager {
 public:
 	ResourceManager(const GPUContext&);
 
 	~ResourceManager();
+
+	const ShaderModule* findShader(const std::string&) const;
+
+	vk::PipelineCache findPipelineCache(const std::string&) const;
 
 	ImageView* createImageView(Image*, ImageViewInfo = ImageViewInfo{});
 
@@ -36,4 +54,12 @@ protected:
 	std::vector<ImageView*> imageViews;
 	std::unordered_map<std::string, Attachment*> attachments;
 	std::vector<vk::Sampler> samplers;
+	std::unordered_map<std::string, ShaderModule*> shaderModules;
+	std::unordered_map<std::string, vk::PipelineCache> pipelineCaches;
+
+private:
+	void loadShaders(const std::string&);
+	void destroyShaders();
+	void loadPipelineCaches(const std::string&);
+	void destroyPipelineCaches();
 };

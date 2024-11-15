@@ -18,6 +18,7 @@
 #include "Vulkan/DescriptorSet.hpp"
 #include "Vulkan/PipelineLayout.hpp"
 #include "Vulkan/GraphicsPipeline.hpp"
+#include "Vulkan/ComputePipeline.hpp"
 
 #include "Vulkan/Image.hpp"
 #include "Vulkan/ImageView.hpp"
@@ -79,8 +80,8 @@ public:
 
 	// Pipeline
 	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;
-	GraphicsPipeline* createGraphicsPipeline(PipelineLayout*, GraphicsPipelineState*, std::vector<const ShaderModule*>) const;
-
+	GraphicsPipeline* createGraphicsPipeline(PipelineLayout*, vk::PipelineCache, GraphicsPipelineState*, std::vector<const ShaderModule*>) const;
+	ComputePipeline* createComputePipeline(PipelineLayout*, vk::PipelineCache, const ShaderModule*) const;
 
 	// Fence & Semaphore
 	vk::Fence requestFence() const;
@@ -96,7 +97,7 @@ public:
 	void returnSemaphore(const vk::Semaphore) const;
 
 	// ShaderModule
-	const ShaderModule* findShader(const std::string&) const;
+	
 
 	// Descriptor
 	DescriptorSetLayout* createDescriptorSetLayout(uint32_t, std::vector<vk::DescriptorSetLayoutBinding>) const;
@@ -160,21 +161,15 @@ protected:
 	std::unique_ptr<Swapchain> swapchain;
 	std::unique_ptr<SemaphorePool> semaphorePool;
 	std::unique_ptr<FencePool> fencePool;
-	std::unordered_map<std::string, ShaderModule*> shaderModules;
 
 	vk::DescriptorPool descriptorPool;
-
 	vk::SurfaceKHR surface;
-
 	std::vector<CommandPool*> commandPools;
-
-	std::vector<std::shared_ptr<ImageView>> imageViews;
 
 private:
 	void createCommandPools();
 	void destroyCommandPools();
-	void loadShaders(const std::string& dir);
-	void destroyShaders();
+	
 	void createSurface(Window*);
 	void destroySurface();
 	void createDescriptorPool();

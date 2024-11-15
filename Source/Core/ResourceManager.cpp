@@ -1,8 +1,15 @@
 #include "ResourceManager.hpp"
+#include "Common/Logging.hpp"
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 ResourceManager::ResourceManager(const GPUContext& gpuContext)
 	:gpuContext{ gpuContext }
 {
+	loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
+	loadPipelineCaches("C:/Users/lihan/Desktop/workspace/ToyEngine/PipelineCache");
 }
 
 ResourceManager::~ResourceManager()
@@ -25,9 +32,35 @@ ResourceManager::~ResourceManager()
 	for (auto sampler : samplers) {
 		gpuContext.getDeviceRef().getHandle().destroySampler(sampler);
 	}
+
+	destroyShaders();
 }
 
-ImageView* ResourceManager::createImageView(Image* image,  ImageViewInfo viewInfo)
+const ShaderModule* ResourceManager::findShader(const std::string& name) const
+{
+	auto it = shaderModules.find(name);
+	if (it != shaderModules.end()) {
+		return it->second;
+	}
+	else {
+		LOGE("ShaderModule{} not found", name);
+		return nullptr;
+	}
+}
+
+vk::PipelineCache ResourceManager::findPipelineCache(const std::string& name) const
+{
+	auto it = pipelineCaches.find(name);
+	if (it != pipelineCaches.end()) {
+		return it->second;
+	}
+	else {
+		LOGE("PipelineCache{} not found", name);
+		return nullptr;
+	}
+}
+
+ImageView* ResourceManager::createImageView(Image* image, ImageViewInfo viewInfo)
 {
 	auto view = new ImageView(gpuContext.getDeviceRef(), image, viewInfo);
 	imageViews.push_back(view);
@@ -35,7 +68,7 @@ ImageView* ResourceManager::createImageView(Image* image,  ImageViewInfo viewInf
 }
 
 Buffer* ResourceManager::createBuffer(
-	uint64_t size, 
+	uint64_t size,
 	vk::BufferUsageFlags bufferUsage,
 	VmaMemoryUsage memoryUsage,
 	bool mapped)
@@ -83,7 +116,7 @@ vk::Sampler ResourceManager::createSampler(
 
 void ResourceManager::createAttachment(
 	std::string name,
-	ImageInfo imageInfo, 
+	ImageInfo imageInfo,
 	ImageViewInfo viewInfo,
 	AttachmentInfo attachmentInfo)
 {
@@ -97,4 +130,76 @@ void ResourceManager::createAttachment(
 Attachment* ResourceManager::getAttachment(std::string name)
 {
 	return attachments[name];
+}
+
+void ResourceManager::loadShaders(const std::string& dir)
+{
+	for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+		if (entry.is_regular_file()) {
+			std::ifstream file(entry.path(), std::ios::in | std::ios::binary);
+			if (file) {
+				std::ostringstream content;
+				content << file.rdbuf();
+				std::string extension = entry.path().extension().string();
+				std::string name = entry.path().filename().string();
+				if (!extension.compare(".vert")) {
+					shaderModules[name] = new ShaderModule(*gpuContext.getDevice(), vk::ShaderStageFlagBits::eVertex, content.str());
+				}
+				else if (!extension.compare(".frag")) {
+					shaderModules[name] = new ShaderModule(*gpuContext.getDevice(), vk::ShaderStageFlagBits::eFragment, content.str());
+				}
+				else if (!extension.compare(".comp")) {
+					shaderModules[name] = new ShaderModule(*gpuContext.getDevice(), vk::ShaderStageFlagBits::eCompute, content.str());
+				}
+				else {
+					continue;
+				}
+			}
+			else {
+				LOGE("无法打开文件:{}", entry.path().string());
+			}
+		}
+	}
+}
+
+void ResourceManager::destroyShaders()
+{
+	for (auto shader : shaderModules) {
+		delete shader.second;
+	}
+	shaderModules.clear();
+}
+
+void ResourceManager::loadPipelineCaches(const std::string& dir)
+{
+	for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+		if (entry.is_regular_file()) {
+			std::ifstream cacheFile(entry.path(), std::ios::in | std::ios::binary);
+			if (cacheFile) {
+				std::string name = entry.path().filename().string();
+				std::vector<uint8_t> loadedCacheData((std::istreambuf_iterator<char>(cacheFile)),
+					std::istreambuf_iterator<char>());
+				cacheFile.close();
+				// 创建包含初始数据的Pipeline Cache
+				vk::PipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+				pipelineCacheCreateInfo.initialDataSize = loadedCacheData.size();
+				pipelineCacheCreateInfo.pInitialData = loadedCacheData.data();
+
+				vk::PipelineCache pipelineCache;
+				vk::Result result = gpuContext.getDevice()->getHandle().createPipelineCache(&pipelineCacheCreateInfo, nullptr, &pipelineCache);
+				if (result != vk::Result::eSuccess) {
+					LOGE("PipelineCache load failed:{}", entry.path().string());
+				}
+				pipelineCaches[name] = pipelineCache;
+			}
+		}
+	}
+}
+
+void ResourceManager::destroyPipelineCaches()
+{
+	for (auto pipelineCache : pipelineCaches) {
+		delete pipelineCache.second;
+	}
+	pipelineCaches.clear();
 }
