@@ -103,7 +103,8 @@ void LightingPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, VK_NULL_HANDLE, &state, baseModules);
+	pipelineCache = resourceManager->findPipelineCache("Lighting");
+	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
 	vk::DescriptorBufferInfo descriptorBufferInfo;

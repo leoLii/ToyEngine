@@ -26,6 +26,7 @@ protected:
 	ResourceManager* resourceManager = nullptr;
 	const Scene* scene;
 
+	vk::PipelineCache pipelineCache;
 	GraphicsPipelineState* pipelineState = nullptr;
 	PipelineLayout* pipelineLayout = nullptr;
 	GraphicsPipeline* graphicsPipeline = nullptr;

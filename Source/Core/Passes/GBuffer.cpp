@@ -188,7 +188,8 @@ void GBufferPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, VK_NULL_HANDLE, &state, baseModules);
+	pipelineCache = resourceManager->findPipelineCache("GBuffer");
+	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
 	

@@ -28,7 +28,7 @@ public:
 
 	const ShaderModule* findShader(const std::string&) const;
 
-	vk::PipelineCache findPipelineCache(const std::string&) const;
+	vk::PipelineCache findPipelineCache(const std::string&);
 
 	ImageView* createImageView(Image*, ImageViewInfo = ImageViewInfo{});
 
@@ -61,5 +61,6 @@ private:
 	void loadShaders(const std::string&);
 	void destroyShaders();
 	void loadPipelineCaches(const std::string&);
+	void savePipelineCaches(const std::string&);
 	void destroyPipelineCaches();
 };

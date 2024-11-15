@@ -35,9 +35,10 @@ void TaaPass::prepare()
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
+	pipelineCache = resourceManager->findPipelineCache("Taa");
 	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 	const ShaderModule* taaShader = resourceManager->findShader("taa.comp");
-	computePipeline = gpuContext->createComputePipeline(pipelineLayout, VK_NULL_HANDLE, taaShader);
+	computePipeline = gpuContext->createComputePipeline(pipelineLayout, pipelineCache, taaShader);
 
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
 	imageInfos[0] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, taaOutput->view->getHandle(), taaOutput->attachmentInfo.layout };

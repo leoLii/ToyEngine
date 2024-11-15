@@ -34,6 +34,9 @@ ResourceManager::~ResourceManager()
 	}
 
 	destroyShaders();
+
+	savePipelineCaches("C:/Users/lihan/Desktop/workspace/ToyEngine/PipelineCache");
+	destroyPipelineCaches();
 }
 
 const ShaderModule* ResourceManager::findShader(const std::string& name) const
@@ -48,15 +51,22 @@ const ShaderModule* ResourceManager::findShader(const std::string& name) const
 	}
 }
 
-vk::PipelineCache ResourceManager::findPipelineCache(const std::string& name) const
+vk::PipelineCache ResourceManager::findPipelineCache(const std::string& name)
 {
 	auto it = pipelineCaches.find(name);
 	if (it != pipelineCaches.end()) {
 		return it->second;
 	}
 	else {
-		LOGE("PipelineCache{} not found", name);
-		return nullptr;
+		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+		pipelineCacheCreateInfo.initialDataSize = 0;
+		pipelineCacheCreateInfo.pInitialData = nullptr;
+
+		vk::PipelineCache pipelineCache;
+		vk::Result result = gpuContext.getDevice()->getHandle().createPipelineCache(&pipelineCacheCreateInfo, nullptr, &pipelineCache);
+		assert(result == vk::Result::eSuccess, "Failed to create pipeline cache.");
+		pipelineCaches[name] = pipelineCache;
+		return pipelineCache;
 	}
 }
 
@@ -172,34 +182,69 @@ void ResourceManager::destroyShaders()
 
 void ResourceManager::loadPipelineCaches(const std::string& dir)
 {
+	// 遍历目录中的所有文件
 	for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+		// 检查文件是否是常规文件
 		if (entry.is_regular_file()) {
-			std::ifstream cacheFile(entry.path(), std::ios::in | std::ios::binary);
-			if (cacheFile) {
-				std::string name = entry.path().filename().string();
-				std::vector<uint8_t> loadedCacheData((std::istreambuf_iterator<char>(cacheFile)),
-					std::istreambuf_iterator<char>());
-				cacheFile.close();
-				// 创建包含初始数据的Pipeline Cache
-				vk::PipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-				pipelineCacheCreateInfo.initialDataSize = loadedCacheData.size();
-				pipelineCacheCreateInfo.pInitialData = loadedCacheData.data();
+			// 获取文件的扩展名并跳过不是需要的文件后缀
+			std::string fileExtension = entry.path().extension().string();
+			if (fileExtension == ".cache") {  // 只加载后缀为 .bin 的文件
+				// 使用 `stem()` 去除文件后缀，得到文件名
+				std::string name = entry.path().stem().string();
 
-				vk::PipelineCache pipelineCache;
-				vk::Result result = gpuContext.getDevice()->getHandle().createPipelineCache(&pipelineCacheCreateInfo, nullptr, &pipelineCache);
-				if (result != vk::Result::eSuccess) {
-					LOGE("PipelineCache load failed:{}", entry.path().string());
+				std::ifstream cacheFile(entry.path(), std::ios::in | std::ios::binary);
+				if (cacheFile) {
+					// 读取文件内容到缓存数据
+					std::vector<uint8_t> loadedCacheData((std::istreambuf_iterator<char>(cacheFile)),
+						std::istreambuf_iterator<char>());
+					cacheFile.close();
+
+					// 创建 Pipeline Cache
+					vk::PipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+					pipelineCacheCreateInfo.initialDataSize = loadedCacheData.size();
+					pipelineCacheCreateInfo.pInitialData = loadedCacheData.data();
+
+					vk::PipelineCache pipelineCache;
+					vk::Result result = gpuContext.getDevice()->getHandle().createPipelineCache(&pipelineCacheCreateInfo, nullptr, &pipelineCache);
+					if (result != vk::Result::eSuccess) {
+						LOGE("PipelineCache load failed:{}", entry.path().string());
+					}
+					else {
+						pipelineCaches[name] = pipelineCache;
+					}
 				}
-				pipelineCaches[name] = pipelineCache;
 			}
 		}
+	}
+}
+
+void ResourceManager::savePipelineCaches(const std::string& dir)
+{
+	for (const auto& entry : pipelineCaches) {
+		const std::string& pipelineName = entry.first;  // 管线的名称或标识符
+		vk::PipelineCache pipelineCache = entry.second;   // 对应的管线缓存对象
+
+		// 获取当前 Pipeline Cache 数据的大小
+		size_t cacheDataSize = 0;
+		auto cacheData = gpuContext.getDevice()->getHandle().getPipelineCacheData(pipelineCache);
+		
+		// 拼接文件路径
+		std::string filePath = dir + "/" + pipelineName + ".cache";
+
+		// 保存缓存数据到文件
+		std::ofstream cacheFile(filePath, std::ios::binary);
+		if (!cacheFile) {
+			throw std::runtime_error("Failed to open file for saving pipeline cache");
+		}
+		cacheFile.write(reinterpret_cast<char*>(cacheData.data()), cacheData.size());
+		cacheFile.close();
 	}
 }
 
 void ResourceManager::destroyPipelineCaches()
 {
 	for (auto pipelineCache : pipelineCaches) {
-		delete pipelineCache.second;
+		gpuContext.getDevice()->getHandle().destroyPipelineCache(pipelineCache.second);
 	}
 	pipelineCaches.clear();
 }
