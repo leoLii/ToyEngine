@@ -110,6 +110,7 @@ Device::Device(Instance& instance)
 
     vk::PhysicalDeviceSynchronization2Features synchronization2Feature;
     synchronization2Feature.synchronization2 = VK_TRUE;
+    synchronization2Feature.pNext = VK_NULL_HANDLE;
     vk::PhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeature;
     bufferDeviceAddressFeature.bufferDeviceAddress = VK_TRUE;
     bufferDeviceAddressFeature.pNext = &synchronization2Feature;
@@ -119,6 +120,9 @@ Device::Device(Instance& instance)
     vk::PhysicalDeviceDynamicRenderingLocalReadFeaturesKHR dynamicaRenderingLocalReadFeature;
     dynamicaRenderingLocalReadFeature.dynamicRenderingLocalRead = VK_TRUE;
     dynamicaRenderingLocalReadFeature.pNext = &dynamicRenderingFeature;
+    vk::PhysicalDevicePipelineCreationCacheControlFeatures pipelineCreationCacheControlFeature;
+    pipelineCreationCacheControlFeature.pipelineCreationCacheControl = VK_TRUE;
+    pipelineCreationCacheControlFeature.pNext = &dynamicaRenderingLocalReadFeature;
     
     auto queueInfos = createQueueInfos();
     auto queueFamilyCount = queueFamilyProperties.size();
@@ -131,14 +135,16 @@ Device::Device(Instance& instance)
         VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
         //dynamic rendering
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        //VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
+        VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
         //vma
         VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
         VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
         //device address
         VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
         //simple synchronization
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+        //pipeline cache control
+        VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME
     };
 #ifdef ARCH_OS_MACOS
     enabledExtensions.push_back("VK_KHR_portability_subset");
@@ -146,7 +152,7 @@ Device::Device(Instance& instance)
 
     createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
     createInfo.ppEnabledExtensionNames = enabledExtensions.data();
-    createInfo.pNext = &dynamicRenderingFeature;
+    createInfo.pNext = &pipelineCreationCacheControlFeature;
     
     handle = gpu.createDevice(createInfo);
 
