@@ -46,6 +46,14 @@ public:
 
 	std::array<Vec4, 6> getFrustumPlanes();
 
+	const float getNear() const {
+		return frustum.zNear;
+	}
+
+	const float getFar() const {
+		return frustum.zFar;
+	}
+
 protected:
 	CameraType type;
 	Frustum frustum;
