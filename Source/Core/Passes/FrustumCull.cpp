@@ -22,6 +22,7 @@ void FrustumCullPass::prepare()
 	meshInfos.reserve(scene->getMeshCount());
 	for (int i = 0; i < scene->getMeshCount(); i++) {
 		MeshInfo info{};
+		info.meshIndex = i;
 		info.firstIndex = scene->indexOffsets[i];
 		info.indexCount = scene->getMeshes()[i]->getIndices().size();
 		info.vertexOffset = scene->vertexOffsets[i];
@@ -102,7 +103,8 @@ void FrustumCullPass::record(vk::CommandBuffer commandBuffer)
 		};
 	auto camera = scene->getCamera();
 	auto constant = CullData{};
-	constant.view = camera->getViewMatrix();
+	Mat4 temp = glm::perspective(glm::radians(20.0f), 1920.0f / 1080.0f, 0.1f, 3000.0f);
+	constant.view = temp * camera->getViewMatrix();
 	constant.P00 = camera->getProjectionMatrix()[0][0];
 	constant.P11 = camera->getProjectionMatrix()[1][1];
 	constant.zNear = camera->getNear();

@@ -5,16 +5,16 @@
 
 struct CullData
 {
-	mat4 view;
+	mat4 viewProjection;
 
 	float P00, P11, znear, zfar; // symmetric projection parameters
-	float frustum[4]; // data for left/right/top/bottom frustum planes
+	float frustum[4]; // frustum[0]: left-right x/z ratio, frustum[1]: left-right x/z ratio
+	                   // frustum[2]: top-bottom y/z ratio, frustum[3]: top-bottom y/z ratio
 	uint meshCount;
 };
 
 struct MeshDrawCommand
 {
-	// VkDrawIndexedIndirectCommand
 	uint indexCount;
 	uint instanceCount;
 	uint firstIndex;
@@ -24,16 +24,17 @@ struct MeshDrawCommand
 
 struct Mesh
 {
+	uint meshIndex;
+	uint indexCount;
+	uint firstIndex;
+	uint vertexOffset;
 	vec3 minAABB;
-    uint indexCount;
-    vec3 maxAABB;
-    uint firstIndex;
-    uint vertexOffset;
+	vec3 maxAABB;
 };
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-layout(push_constant) uniform block{
+layout(push_constant) uniform block {
     CullData cullData;
 };
 
@@ -49,33 +50,94 @@ layout(std430, set = 0, binding = 1) buffer writeonly CommandBuffer
 
 layout(std430, set = 0, binding = 2) uniform GlobalUniform
 {
-	mat4 transforms[];
+	mat4 transforms[100]; // Model matrices for each mesh
 };
 
-
-bool check_is_visible(mat4 transform, vec3 minAABB, vec3 maxAABB)
+// Function to check AABB visibility against simplified frustum planes
+bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 modelMatrix)
 {
-	
-	return true;
-}
+    vec3 vertices[8];
+    vertices[0] = vec3(aabbMin.x, aabbMin.y, aabbMin.z);
+    vertices[1] = vec3(aabbMin.x, aabbMin.y, aabbMax.z);
+    vertices[2] = vec3(aabbMin.x, aabbMax.y, aabbMin.z);
+    vertices[3] = vec3(aabbMin.x, aabbMax.y, aabbMax.z);
+    vertices[4] = vec3(aabbMax.x, aabbMin.y, aabbMin.z);
+    vertices[5] = vec3(aabbMax.x, aabbMin.y, aabbMax.z);
+    vertices[6] = vec3(aabbMax.x, aabbMax.y, aabbMin.z);
+    vertices[7] = vec3(aabbMax.x, aabbMax.y, aabbMax.z);
 
+    // Extract the 6 frustum planes from the view-projection matrix
+    vec4 planes[6];
+    planes[0] = viewProjection[3] + viewProjection[0]; // Left plane
+    planes[1] = viewProjection[3] - viewProjection[0]; // Right plane
+    planes[2] = viewProjection[3] + viewProjection[1]; // Bottom plane
+    planes[3] = viewProjection[3] - viewProjection[1]; // Top plane
+    planes[4] = viewProjection[3] + viewProjection[2]; // Near plane
+    planes[5] = viewProjection[3] - viewProjection[2]; // Far plane
+
+    // Normalize planes
+    for (int i = 0; i < 6; i++)
+    {
+        float length = length(planes[i].xyz);
+        planes[i] /= length;
+    }
+
+    // Check if the AABB is outside any of the planes
+    for (int i = 0; i < 6; i++)
+    {
+        vec4 plane = planes[i];
+
+        // Check if all vertices are outside this plane
+        bool outside = true;
+        for (int j = 0; j < 8; j++)
+        {
+            vec3 vertex = vertices[j];
+            float distance = dot(plane.xyz, vertex) + plane.w;
+            if (distance >= 0.0)
+            {
+                outside = false;
+                break;
+            }
+        }
+
+        if (outside)
+        {
+            // AABB is outside this plane
+            return false;
+        }
+    }
+
+    // AABB is inside or intersects the frustum
+    return true;
+}
 
 void main() 
 {
     uint id = gl_GlobalInvocationID.x;
-	if (id >= cullData.meshCount)
-	{
-		return;
-	}
-	Mesh mesh = meshes[id];
-	//commands[id].drawId = id;
-	commands[id].indexCount = mesh.indexCount;
-	commands[id].instanceCount = 1;
-	commands[id].firstIndex = mesh.firstIndex;
-	commands[id].vertexOffset = mesh.vertexOffset;
-	commands[id].firstInstance = 0;
+    if (id >= cullData.meshCount)
+    {
+        return;
+    }
 
-	// ModelInformation model                    = model_buffer.arr[id];
-	// bool             is_visible               = check_is_visible(global_uniform.transform, vec3(1.0), vec3(1.0));
-	// command_buffer.commands[id].instanceCount = is_visible ? 1 : 0;
+    Mesh mesh = meshes[id];
+    
+
+    // Get the model matrix for the current mesh
+    mat4 modelMatrix = transforms[id];
+
+	vec3 minAABB = mesh.minAABB;
+    vec3 maxAABB = mesh.maxAABB;
+
+	minAABB = (cullData.viewProjection * (modelMatrix * vec4(minAABB, 1.0))).xyz;
+	maxAABB = (cullData.viewProjection * (modelMatrix * vec4(maxAABB, 1.0))).xyz;
+
+    // Check visibility
+    bool isVisible = check_is_visible(cullData.viewProjection, minAABB, maxAABB, modelMatrix);
+
+    // Write draw command only if the mesh is visible
+    commands[id].indexCount = mesh.indexCount;
+    commands[id].instanceCount = isVisible ? 1 : 0; // Visible = 1 instance; Invisible = 0 instances
+    commands[id].firstIndex = mesh.firstIndex;
+    commands[id].vertexOffset = mesh.vertexOffset;
+    commands[id].firstInstance = 0;
 }

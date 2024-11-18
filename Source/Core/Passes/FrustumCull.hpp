@@ -43,11 +43,12 @@ protected:
 
 	struct alignas(16) MeshInfo
 	{
-		Vec3 minAABB;
+		uint32_t meshIndex;
 		uint32_t indexCount;
-		Vec3 maxAABB;
 		uint32_t firstIndex;
 		uint32_t vertexOffset;
+		Vec3 minAABB;
+		Vec3 maxAABB;
 	};
 
 	struct alignas(16) Uniform {
