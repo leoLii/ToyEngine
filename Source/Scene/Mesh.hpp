@@ -110,6 +110,10 @@ public:
 		return this->attachNode;
 	}
 
+	AABB getAABB() {
+		return aabb;
+	}
+
 protected:
 	std::string name = "";
 
