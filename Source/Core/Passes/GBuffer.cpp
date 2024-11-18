@@ -196,7 +196,7 @@ void GBufferPass::prepare()
 	vk::DescriptorBufferInfo descriptorBufferInfo;
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
 	descriptorBufferInfo.offset = 0;
-	descriptorBufferInfo.range = sizeof(Uniform);
+	descriptorBufferInfo.range = sizeof(Uniform) * scene->getMeshCount();
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
@@ -225,23 +225,19 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.bindVertexBuffers(0, vertexBuffer->getHandle(), { 0 });
 	commandBuffer.bindIndexBuffer(indexBuffer->getHandle(), 0, vk::IndexType::eUint32);
 
-	for (int i = 0; i < scene->getMeshCount(); i++) {
-		commandBuffer.pushConstants<Constant>(
-			pipelineLayout->getHandle(),
-			vk::ShaderStageFlagBits::eVertex, 0,
-			{ Constant{
-				camera->getPVPrev(),
-				camera->getPV(),
-				camera->getPrevJitter(), 
-				camera->getCurrJitter(),
-				uint32_t(i)} });
-		auto uniformOffset = scene->bufferOffsets[i];
-		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, { uniformOffset });
-		auto count = scene->getMeshes()[i]->getIndices().size();
-		auto vertexOffset = scene->vertexOffsets[i];
-		auto indexOffset = scene->indexOffsets[i];
-		commandBuffer.drawIndexed(count, 1, indexOffset, vertexOffset, 0);
-	}
+	commandBuffer.pushConstants<Constant>(
+		pipelineLayout->getHandle(),
+		vk::ShaderStageFlagBits::eVertex, 0,
+		{ Constant{
+			camera->getPVPrev(),
+			camera->getPV(),
+			camera->getPrevJitter(),
+			camera->getCurrJitter(),
+			1} });
+	
+	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, { 0 });
+
+	commandBuffer.drawIndexedIndirect(resourceManager->getIndirectBuffer()->getHandle(), 0, scene->getMeshCount(), sizeof(vk::DrawIndexedIndirectCommand));
 
 	commandBuffer.endRendering();
 }

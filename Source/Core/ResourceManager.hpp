@@ -46,9 +46,12 @@ public:
 
 	Attachment* getAttachment(std::string);
 
+	Buffer* createIndirectBuffer(uint64_t, vk::BufferUsageFlags, VmaMemoryUsage = VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO, bool = true);
+	Buffer* getIndirectBuffer();
+
 protected:
 	const GPUContext& gpuContext;
-
+	Buffer* indirectBuffer;
 	std::vector<Buffer*> buffers;
 	std::vector<Image*> images;
 	std::vector<ImageView*> imageViews;

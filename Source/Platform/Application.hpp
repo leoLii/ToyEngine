@@ -14,6 +14,7 @@
 class GBufferPass;
 class LightingPass;
 class TaaPass;
+class FrustumCullPass;
 
 struct ApplicationConfig
 {
@@ -74,6 +75,7 @@ protected:
 	GBufferPass* gBufferPass = nullptr;
 	LightingPass* lightingPass = nullptr;
 	TaaPass* taaPass = nullptr;
+	FrustumCullPass* cullPass = nullptr;
 
 	vk::Semaphore imageAvailableSemaphore;
 	vk::Semaphore renderFinishedSemaphore;

@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_ARB_shader_draw_parameters: require
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexcoord;
 layout(location = 2) in vec3 inNormal;
@@ -10,35 +12,43 @@ layout(push_constant) uniform PushConstants {
     mat4 jitteredPV;
     vec2 prevJitter;
     vec2 currJitter;
-} constant;
+    int id;
+};
+
+struct Transform{
+    mat4 prevModel;
+    mat4 currModel;
+};
 
 layout(set = 0, binding = 0) uniform Uniforms
 {
-    mat4 prevModel;
-    mat4 currModel;
-} ubo;
+    Transform transforms[100];
+};
 
 layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec2 fragTexcoord;
 layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 fragTangent;
 layout(location = 4) out vec2 fragMotionVector;
+layout(location = 5) out flat int out_id;
 
 void main()
 {
-    vec4 worldPosition = ubo.currModel * vec4(inPosition, 1.0);
+    Transform transform = transforms[gl_DrawIDARB];
+    vec4 worldPosition = transform.currModel * vec4(inPosition, 1.0);
     fragPosition = worldPosition.xyz;
     fragTexcoord = inTexcoord;
-    fragNormal = normalize(mat3(ubo.currModel) * inNormal);
+    fragNormal = normalize(mat3(transform.currModel) * inNormal);
     //fragNormal = inNormal;
-    fragTangent = mat3(ubo.currModel) * inTangent;
+    fragTangent = mat3(transform.currModel) * inTangent;
 
-    vec4 currentClipPos = constant.jitteredPV * ubo.currModel * vec4(inPosition, 1.0);
+    vec4 currentClipPos = jitteredPV * transform.currModel * vec4(inPosition, 1.0);
     vec2 currentNDC = currentClipPos.xy / currentClipPos.w;
-    vec4 previousClipPos = constant.prevPV * ubo.prevModel * vec4(inPosition, 1.0);
+    vec4 previousClipPos = prevPV * transform.prevModel * vec4(inPosition, 1.0);
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
-    vec2 cancelJitter = constant.prevJitter - constant.currJitter;
+    vec2 cancelJitter = prevJitter - currJitter;
     // Transform motion vectors from NDC space to UV space (+Y is top-down).
     fragMotionVector = (currentNDC - previousNDC) * vec2(0.5, 0.5) ;
-    gl_Position = constant.jitteredPV * worldPosition;
+    gl_Position = jitteredPV * worldPosition;
+    out_id = id;
 }

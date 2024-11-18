@@ -6,6 +6,7 @@
 #include "Core/Passes/GBuffer.hpp"
 #include "Core/Passes/Lighting.hpp"
 #include "Core/Passes/Taa.hpp"
+#include "Core/Passes/FrustumCull.hpp"
 
 #include "../ThirdParty/stb_image.h"
 
@@ -29,9 +30,10 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	this->scene = scene;
 
 	Vec2 size(config.width, config.height);
-	gBufferPass = new GBufferPass{ gpuContext.get(), resourceManager.get(), scene, size};
-	lightingPass = new LightingPass{ gpuContext.get(), resourceManager.get(), scene, size};
-	taaPass = new TaaPass{ gpuContext.get(), resourceManager.get(), scene, size};
+	gBufferPass = new GBufferPass{ gpuContext.get(), resourceManager.get(), scene};
+	lightingPass = new LightingPass{ gpuContext.get(), resourceManager.get(), scene};
+	taaPass = new TaaPass{ gpuContext.get(), resourceManager.get(), scene};
+	cullPass = new FrustumCullPass{ gpuContext.get(), resourceManager.get(), scene };
 
 	imageAvailableSemaphore = gpuContext->requestSemaphore();
 	renderFinishedSemaphore = gpuContext->requestSemaphore();
@@ -43,6 +45,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	gBufferPass->prepare();
 	lightingPass->prepare();
 	taaPass->prepare();
+	cullPass->prepare();
 }
 
 void Application::run()
@@ -54,6 +57,7 @@ void Application::run()
 		scene->update(frameIndex);
 		gBufferPass->update(frameIndex);
 		lightingPass->update(frameIndex);
+		cullPass->update(frameIndex);
 
 		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
 		deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;
@@ -78,6 +82,8 @@ void Application::run()
 					vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eTransferWrite,
 					vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 					gpuContext->getSwapchainImages()[swapChainIndex]);
+
+				cullPass->record(renderCommandBuffer);
 
 				gBufferPass->record(renderCommandBuffer);
 
@@ -143,6 +149,7 @@ void Application::close()
 	delete gBufferPass;
 	delete lightingPass;
 	delete taaPass;
+	delete cullPass;
 }
 
 void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)

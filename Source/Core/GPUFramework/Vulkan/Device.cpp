@@ -117,12 +117,15 @@ Device::Device(Instance& instance)
     vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature;
     dynamicRenderingFeature.dynamicRendering = VK_TRUE;
     dynamicRenderingFeature.pNext = &bufferDeviceAddressFeature;
-    vk::PhysicalDeviceDynamicRenderingLocalReadFeaturesKHR dynamicaRenderingLocalReadFeature;
+    /*vk::PhysicalDeviceDynamicRenderingLocalReadFeaturesKHR dynamicaRenderingLocalReadFeature;
     dynamicaRenderingLocalReadFeature.dynamicRenderingLocalRead = VK_TRUE;
-    dynamicaRenderingLocalReadFeature.pNext = &dynamicRenderingFeature;
+    dynamicaRenderingLocalReadFeature.pNext = &dynamicRenderingFeature;*/
     vk::PhysicalDevicePipelineCreationCacheControlFeatures pipelineCreationCacheControlFeature;
     pipelineCreationCacheControlFeature.pipelineCreationCacheControl = VK_TRUE;
-    pipelineCreationCacheControlFeature.pNext = &dynamicaRenderingLocalReadFeature;
+    pipelineCreationCacheControlFeature.pNext = &dynamicRenderingFeature;
+    vk::PhysicalDeviceShaderDrawParameterFeatures shaderDrawParameterFeature;
+    shaderDrawParameterFeature.shaderDrawParameters = VK_TRUE;
+    shaderDrawParameterFeature.pNext = &pipelineCreationCacheControlFeature;
     
     auto queueInfos = createQueueInfos();
     auto queueFamilyCount = queueFamilyProperties.size();
@@ -135,7 +138,8 @@ Device::Device(Instance& instance)
         VK_KHR_SWAPCHAIN_EXTENSION_NAME, 
         //dynamic rendering
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
+        VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
+        //VK_KHR_DYNAMIC_RENDERING_LOCAL_READ_EXTENSION_NAME,
         //vma
         VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
         VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,

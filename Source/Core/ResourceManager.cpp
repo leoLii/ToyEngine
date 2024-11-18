@@ -8,6 +8,7 @@
 ResourceManager::ResourceManager(const GPUContext& gpuContext)
 	:gpuContext{ gpuContext }
 {
+
 	loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
 	loadPipelineCaches("C:/Users/lihan/Desktop/workspace/ToyEngine/PipelineCache");
 }
@@ -140,6 +141,21 @@ void ResourceManager::createAttachment(
 Attachment* ResourceManager::getAttachment(std::string name)
 {
 	return attachments[name];
+}
+
+Buffer* ResourceManager::createIndirectBuffer(
+	uint64_t size,
+	vk::BufferUsageFlags bufferUsage,
+	VmaMemoryUsage memoryUsage,
+	bool mapped)
+{
+	indirectBuffer = createBuffer(size, bufferUsage, memoryUsage, mapped);
+	return indirectBuffer;
+}
+
+Buffer* ResourceManager::getIndirectBuffer()
+{
+	return indirectBuffer;
 }
 
 void ResourceManager::loadShaders(const std::string& dir)
