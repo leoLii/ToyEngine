@@ -11,7 +11,7 @@ int main() {
     logging::init();
     Scene scene{};
     auto camera = scene.getCamera();
-    Vec3 cameraPosition = Vec3(2.0, 2.0, 2.0);
+    Vec3 cameraPosition = Vec3(2.5, 2.5, 2.5);
     camera->getAttachNode()->getTransform().setTranslate(cameraPosition);
     camera->lookAt(cameraPosition, Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/concrete_cat_statue_4k.fbx" };
