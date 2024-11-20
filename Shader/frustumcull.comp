@@ -71,6 +71,8 @@ bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 mode
         planes[i] /= length;
     }
 
+    bool visible = true;
+
     // Check if the AABB is outside any of the planes
     for (int i = 0; i < 6; i++) {
         vec4 plane = planes[i];
@@ -82,13 +84,11 @@ bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 mode
         float distance = dot(plane.xyz, center) + plane.w;
 
         // If the distance is less than -radius, the AABB is completely outside the plane
-        if (distance < -radius) {
-            return false;
-        }
+        visible = visible && (distance >= -radius);
     }
 
     // AABB is inside or intersects the frustum
-    return true;
+    return visible;
 }
 
 void main() {

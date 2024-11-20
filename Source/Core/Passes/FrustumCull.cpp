@@ -103,7 +103,7 @@ void FrustumCullPass::record(vk::CommandBuffer commandBuffer)
 		};
 	auto camera = scene->getCamera();
 	auto constant = CullData{};
-	constant.view = glm::transpose(camera->getProjectionMatrix() * camera->getViewMatrix());
+	constant.projectionView = glm::transpose(camera->getProjectionMatrix() * camera->getViewMatrix());
 	constant.P00 = camera->getProjectionMatrix()[0][0];
 	constant.P11 = camera->getProjectionMatrix()[1][1];
 	constant.zNear = camera->getNear();

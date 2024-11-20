@@ -35,7 +35,7 @@ public:
 protected:
 
 	struct alignas(16) CullData {
-		Mat4 view;
+		Mat4 projectionView;
 		float P00; float P11; float zNear; float zFar;
 		float frustum[4];
 		uint32_t model_count;
