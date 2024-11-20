@@ -3,33 +3,30 @@
 #extension GL_GOOGLE_include_directive: require
 #extension GL_EXT_scalar_block_layout: require
 
-struct CullData
-{
-	mat4 viewProjection;
+struct CullData {
+    mat4 viewProjection;
 
-	float P00, P11, znear, zfar; // symmetric projection parameters
-	float frustum[4]; // frustum[0]: left-right x/z ratio, frustum[1]: left-right x/z ratio
-	                   // frustum[2]: top-bottom y/z ratio, frustum[3]: top-bottom y/z ratio
-	uint meshCount;
+    float P00, P11, znear, zfar; // symmetric projection parameters
+    float frustum[4]; // frustum[0]: left-right x/z ratio, frustum[1]: left-right x/z ratio
+                      // frustum[2]: top-bottom y/z ratio, frustum[3]: top-bottom y/z ratio
+    uint meshCount;
 };
 
-struct MeshDrawCommand
-{
-	uint indexCount;
-	uint instanceCount;
-	uint firstIndex;
-	uint vertexOffset;
-	uint firstInstance;
+struct MeshDrawCommand {
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    uint vertexOffset;
+    uint firstInstance;
 };
 
-struct Mesh
-{
-	uint meshIndex;
-	uint indexCount;
-	uint firstIndex;
-	uint vertexOffset;
-	vec3 minAABB;
-	vec3 maxAABB;
+struct Mesh {
+    uint meshIndex;
+    uint indexCount;
+    uint firstIndex;
+    uint vertexOffset;
+    vec3 minAABB;
+    vec3 maxAABB;
 };
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
@@ -38,33 +35,26 @@ layout(push_constant) uniform block {
     CullData cullData;
 };
 
-layout(std430, set = 0, binding = 0) buffer readonly Meshes
-{
-	Mesh meshes[];
+layout(std430, set = 0, binding = 0) buffer readonly Meshes {
+    Mesh meshes[];
 };
 
-layout(std430, set = 0, binding = 1) buffer writeonly CommandBuffer
-{
-	MeshDrawCommand commands[];
+layout(std430, set = 0, binding = 1) buffer writeonly CommandBuffer {
+    MeshDrawCommand commands[];
 };
 
-layout(std430, set = 0, binding = 2) uniform GlobalUniform
-{
-	mat4 transforms[100]; // Model matrices for each mesh
+layout(std430, set = 0, binding = 2) uniform GlobalUniform {
+    mat4 transforms[100]; // Model matrices for each mesh
 };
 
 // Function to check AABB visibility against simplified frustum planes
-bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 modelMatrix)
-{
-    vec3 vertices[8];
-    vertices[0] = vec3(aabbMin.x, aabbMin.y, aabbMin.z);
-    vertices[1] = vec3(aabbMin.x, aabbMin.y, aabbMax.z);
-    vertices[2] = vec3(aabbMin.x, aabbMax.y, aabbMin.z);
-    vertices[3] = vec3(aabbMin.x, aabbMax.y, aabbMax.z);
-    vertices[4] = vec3(aabbMax.x, aabbMin.y, aabbMin.z);
-    vertices[5] = vec3(aabbMax.x, aabbMin.y, aabbMax.z);
-    vertices[6] = vec3(aabbMax.x, aabbMax.y, aabbMin.z);
-    vertices[7] = vec3(aabbMax.x, aabbMax.y, aabbMax.z);
+bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 modelMatrix) {
+    // Calculate AABB center and half-extents
+    vec3 center = (aabbMin + aabbMax) * 0.5;
+    vec3 halfExtents = (aabbMax - aabbMin) * 0.5;
+
+    // Transform center to world space
+    vec3 transformedCenter = (modelMatrix * vec4(center, 1.0)).xyz;
 
     // Extract the 6 frustum planes from the view-projection matrix
     vec4 planes[6];
@@ -76,33 +66,23 @@ bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 mode
     planes[5] = viewProjection[3] - viewProjection[2]; // Far plane
 
     // Normalize planes
-    for (int i = 0; i < 6; i++)
-    {
+    for (int i = 0; i < 6; i++) {
         float length = length(planes[i].xyz);
         planes[i] /= length;
     }
 
     // Check if the AABB is outside any of the planes
-    for (int i = 0; i < 6; i++)
-    {
+    for (int i = 0; i < 6; i++) {
         vec4 plane = planes[i];
 
-        // Check if all vertices are outside this plane
-        bool outside = true;
-        for (int j = 0; j < 8; j++)
-        {
-            vec3 vertex = vertices[j];
-            float distance = dot(plane.xyz, vertex) + plane.w;
-            if (distance >= 0.0)
-            {
-                outside = false;
-                break;
-            }
-        }
+        // Compute the projection interval radius of AABB onto the plane normal
+        float radius = dot(halfExtents, abs(plane.xyz));
 
-        if (outside)
-        {
-            // AABB is outside this plane
+        // Compute the signed distance from the center to the plane
+        float distance = dot(plane.xyz, center) + plane.w;
+
+        // If the distance is less than -radius, the AABB is completely outside the plane
+        if (distance < -radius) {
             return false;
         }
     }
@@ -111,25 +91,20 @@ bool check_is_visible(mat4 viewProjection, vec3 aabbMin, vec3 aabbMax, mat4 mode
     return true;
 }
 
-void main() 
-{
+void main() {
     uint id = gl_GlobalInvocationID.x;
-    if (id >= cullData.meshCount)
-    {
+    if (id >= cullData.meshCount) {
         return;
     }
 
     Mesh mesh = meshes[id];
-    
 
     // Get the model matrix for the current mesh
     mat4 modelMatrix = transforms[id];
 
-	vec3 minAABB = mesh.minAABB;
-    vec3 maxAABB = mesh.maxAABB;
-
-	minAABB = (cullData.viewProjection * (modelMatrix * vec4(minAABB, 1.0))).xyz;
-	maxAABB = (cullData.viewProjection * (modelMatrix * vec4(maxAABB, 1.0))).xyz;
+    // Transform AABB to world space
+    vec3 minAABB = (modelMatrix * vec4(mesh.minAABB, 1.0)).xyz;
+    vec3 maxAABB = (modelMatrix * vec4(mesh.maxAABB, 1.0)).xyz;
 
     // Check visibility
     bool isVisible = check_is_visible(cullData.viewProjection, minAABB, maxAABB, modelMatrix);
