@@ -1,22 +1,20 @@
 #include "Texture.hpp"
 
-#include <stdexcept>
+#include "Common/Logging.hpp"
 
 Texture::Texture(const char* path)
 	:path{ path }
 {
-	data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
-    if (!data) {
-        throw std::runtime_error("Failed to load texture image!");
+    KTX_error_code result = ktxTexture2_CreateFromNamedFile(path, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &insideTexture);
+    if (result != KTX_SUCCESS) {
+        LOGE("Failed to load KTX file: {}", path);
     }
 }
 
 Texture::~Texture()
 {
-    stbi_image_free(data);
-}
-
-void* Texture::getData()
-{
-    return static_cast<void*>(data);
+    if (insideTexture) {
+        ktxTexture_Destroy((ktxTexture*)insideTexture);  // 使用通用销毁函数
+        insideTexture = nullptr;
+    }
 }
