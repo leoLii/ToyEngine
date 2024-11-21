@@ -32,7 +32,7 @@ public:
              uint32_t                                      api_version                = VK_API_VERSION_1_3);
     
     
-    vk::Instance getHandle();
+    vk::Instance getHandle() const;
     
 protected:
     vk::Instance handle{VK_NULL_HANDLE};

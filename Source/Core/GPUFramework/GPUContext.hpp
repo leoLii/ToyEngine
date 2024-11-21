@@ -47,6 +47,10 @@ public:
 
 	~GPUContext();
 
+	const Instance* getInstance() const {
+		return instance.get();
+	}
+
 	// Device
 	const Device* getDevice() const;
 
@@ -77,6 +81,8 @@ public:
 
 	// CommandPool
 	vk::CommandBuffer requestCommandBuffer(CommandType, vk::CommandBufferLevel level) const;
+
+	vk::CommandPool getCommandPool() const;
 
 	// Pipeline
 	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;

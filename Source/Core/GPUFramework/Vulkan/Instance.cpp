@@ -80,7 +80,7 @@ Instance::Instance(const std::string                            &applicationName
 #endif
 }
 
-vk::Instance Instance::getHandle(){
+vk::Instance Instance::getHandle() const {
     return this->handle;
 }
 

@@ -91,6 +91,11 @@ vk::CommandBuffer GPUContext::requestCommandBuffer(CommandType type, vk::Command
     return commandPools[0]->requestCommandBuffer(level);
 }
 
+vk::CommandPool GPUContext::getCommandPool() const
+{
+    return commandPools[0]->getHandle();
+}
+
 PipelineLayout* GPUContext::createPipelineLayout(std::vector<vk::DescriptorSetLayout> setLayouts, std::vector<vk::PushConstantRange> constants) const
 {
     return new PipelineLayout{ *device, setLayouts, constants };

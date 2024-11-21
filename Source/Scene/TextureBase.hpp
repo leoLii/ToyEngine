@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-class Texture {
+class TextureBase {
 public:
-	Texture(const char*);
-	~Texture();
+	TextureBase(const char*);
+	~TextureBase();
 
 	ktxTexture2* getktxTexture();
 
