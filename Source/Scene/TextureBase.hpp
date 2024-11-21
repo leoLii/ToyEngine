@@ -12,10 +12,7 @@ public:
 	TextureBase(const char*);
 	~TextureBase();
 
-	ktxTexture2* getktxTexture();
-
 protected:
 	const char* path;
 	ktxTexture2* insideTexture;
-	
 };
