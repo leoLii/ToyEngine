@@ -36,15 +36,16 @@ void main()
 {
     Transform transform = transforms[gl_DrawIDARB];
     vec4 worldPosition = transform.currModel * vec4(inPosition, 1.0);
+    vec4 prevWorldPosition = transform.prevModel * vec4(inPosition, 1.0);
     fragPosition = worldPosition.xyz;
     fragTexcoord = inTexcoord;
-    fragNormal = normalize(mat3(transform.currModel) * inNormal);
+    fragNormal = normalize((transform.currModel * vec4(inNormal, 1.0)).xyz);
     //fragNormal = inNormal;
-    fragTangent = mat3(transform.currModel) * inTangent;
+    fragTangent = (transform.currModel * vec4(inTangent, 1.0)).xyz;
 
-    vec4 currentClipPos = jitteredPV * transform.currModel * vec4(inPosition, 1.0);
+    vec4 currentClipPos = jitteredPV * worldPosition;
     vec2 currentNDC = currentClipPos.xy / currentClipPos.w;
-    vec4 previousClipPos = prevPV * transform.prevModel * vec4(inPosition, 1.0);
+    vec4 previousClipPos = prevPV * prevWorldPosition;
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
     vec2 cancelJitter = prevJitter - currJitter;
     // Transform motion vectors from NDC space to UV space (+Y is top-down).
