@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/Texture.hpp"
+#include "Core/Texture.hpp"
 
 #include "VkCommon.hpp"
 #include "../GPUContext.hpp"
