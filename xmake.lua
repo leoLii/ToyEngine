@@ -4,7 +4,7 @@ set_arch("x64")
 add_rules("mode.debug", "mode.release")
 set_languages("c++20")
 
-add_requires("glfw", "spdlog")
+add_requires("glfw", "spdlog", "boost")
 add_includedirs("$(projectdir)/Source/", 
                 "$(projectdir)/ThirdParty/", 
                 os.getenv("VK_SDK_PATH").."/Include/", 
@@ -18,7 +18,7 @@ target("Engine")
     set_kind("binary")
     add_headerfiles("$(projectdir)/**/*.h", "$(projectdir)/**/*.hpp")
     add_files("$(projectdir)/**/*.cpp")
-    add_packages("glfw", "spdlog")
+    add_packages("glfw", "spdlog", "boost")
     after_build(function (target)
         os.cp(os.getenv("ASSIMP_PATH").."/bin/x64/assimp-vc143-mt.dll", path.join(target:targetdir(), "assimp-vc143-mt.dll"))
         os.cp(os.getenv("KTX_PATH").."/bin/ktx.dll", path.join(target:targetdir(), "ktx.dll"))
