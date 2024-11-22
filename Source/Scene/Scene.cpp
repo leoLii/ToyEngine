@@ -6,7 +6,7 @@ Scene::Scene()
 {
 	rootNode = new Node("root");
 	cameraNode = new Node{ "camera" };
-	camera = new Camera{ CameraType::Perspect, Frustum{60.0f, 1920.0f, 1080.0f, 0.1f, 3000.0f} };
+	camera = new Camera{ CameraType::Perspect, Frustum{90.0f, 1920.0f, 1080.0f, 0.1f, 3000.0f} };
 	cameraNode->addComponent(camera);
 	rootNode->addChild(cameraNode);
 }
