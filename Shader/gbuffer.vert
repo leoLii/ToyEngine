@@ -34,22 +34,36 @@ layout(location = 5) out flat int out_id;
 
 void main()
 {
+    // Load transform once
     Transform transform = transforms[gl_DrawIDARB];
+
+    // Precompute world position and clip positions
     vec4 worldPosition = transform.currModel * vec4(inPosition, 1.0);
     vec4 prevWorldPosition = transform.prevModel * vec4(inPosition, 1.0);
+
+    // Precompute normal and tangent transformation
+    vec3 transformedNormal = normalize((transform.currModel * vec4(inNormal, 0.0)).xyz);
+    vec3 transformedTangent = (transform.currModel * vec4(inTangent, 0.0)).xyz;
+
+    // Output to varying variables
     fragPosition = worldPosition.xyz;
     fragTexcoord = inTexcoord;
-    fragNormal = normalize((transform.currModel * vec4(inNormal, 1.0)).xyz);
-    //fragNormal = inNormal;
-    fragTangent = (transform.currModel * vec4(inTangent, 1.0)).xyz;
+    fragNormal = transformedNormal;
+    fragTangent = transformedTangent;
 
+    // Calculate clip space positions
     vec4 currentClipPos = jitteredPV * worldPosition;
-    vec2 currentNDC = currentClipPos.xy / currentClipPos.w;
     vec4 previousClipPos = prevPV * prevWorldPosition;
+
+    // Convert from clip space to NDC
+    vec2 currentNDC = currentClipPos.xy / currentClipPos.w;
     vec2 previousNDC = previousClipPos.xy / previousClipPos.w;
-    vec2 cancelJitter = prevJitter - currJitter;
-    // Transform motion vectors from NDC space to UV space (+Y is top-down).
-    fragMotionVector = (currentNDC - previousNDC) * vec2(0.5, 0.5) ;
-    gl_Position = jitteredPV * worldPosition;
+
+    // Motion vector calculation in UV space
+    vec2 jitterCompensation = prevJitter - currJitter;
+    fragMotionVector = (currentNDC - previousNDC) * 0.5 + jitterCompensation * vec2(0.5);
+
+    // Assign outputs
+    gl_Position = currentClipPos;
     out_id = id;
 }

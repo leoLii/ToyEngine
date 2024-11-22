@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-class TextureBase {
+class Texture {
 public:
-	TextureBase(const char*);
-	~TextureBase();
+	Texture(const char*);
+	~Texture();
 
 protected:
 	const char* path;

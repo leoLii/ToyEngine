@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Scene/TextureBase.hpp"
+#include "Scene/Texture.hpp"
 
 #include "VkCommon.hpp"
 #include "../GPUContext.hpp"
 
 #include <ktxvulkan.h>
 
-class TextureVulkan : public TextureBase {
+class TextureVulkan : public Texture {
 public:
 	TextureVulkan(const char*, const GPUContext&);
 	~TextureVulkan();

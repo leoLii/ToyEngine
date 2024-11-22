@@ -1,8 +1,8 @@
-#include "TextureBase.hpp"
+#include "Texture.hpp"
 
 #include "Common/Logging.hpp"
 
-TextureBase::TextureBase(const char* path)
+Texture::Texture(const char* path)
 	:path{ path }
 {
     KTX_error_code result = ktxTexture2_CreateFromNamedFile(path, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &insideTexture);
@@ -11,7 +11,7 @@ TextureBase::TextureBase(const char* path)
     }
 }
 
-TextureBase::~TextureBase()
+Texture::~Texture()
 {
     if (insideTexture) {
         ktxTexture2_Destroy(insideTexture);  // 使用通用销毁函数
