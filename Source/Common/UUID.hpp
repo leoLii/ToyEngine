@@ -8,7 +8,7 @@
 
 using uuid = boost::uuids::uuid;
 
-uuid GenerateUUID() {
+inline uuid GenerateUUID() {
 	boost::uuids::random_generator generator;
 	boost::uuids::uuid uuid = generator();
 	return uuid;
