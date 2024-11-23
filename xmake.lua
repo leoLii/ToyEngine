@@ -12,7 +12,7 @@ add_includedirs("$(projectdir)/Source/",
                 os.getenv("KTX_PATH").."/include")
 add_linkdirs(os.getenv("VK_SDK_PATH").."/Lib/", os.getenv("ASSIMP_PATH").."/lib/x64", os.getenv("KTX_PATH").."/lib")
 add_rpathdirs(os.getenv("VK_SDK_PATH").."/Bin/", os.getenv("ASSIMP_PATH").."/bin/x64", os.getenv("KTX_PATH").."/bin")
-add_links("vulkan-1", "shaderc_shared", "assimp-vc143-mt", "ktx.lib")
+add_links("vulkan-1", "shaderc_shared", "assimp-vc143-mt", "ktx.lib", "bcrypt.lib")
 
 target("Engine")
     set_kind("binary")
