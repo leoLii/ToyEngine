@@ -1,5 +1,8 @@
 #include "GBuffer.hpp"
 
+#include "Core/TextureManager.hpp"
+#include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
+
 GBufferPass::GBufferPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
 	:GraphicsPass{ context, resourceManager, scene }
 {
@@ -154,8 +157,14 @@ void GBufferPass::prepare()
 	scissor.extent = vk::Extent2D{ width, height };
 
 	std::vector<const ShaderModule*> baseModules = { resourceManager->findShader("gbuffer.vert"), resourceManager->findShader("gbuffer.frag") };
-	vk::DescriptorSetLayoutBinding binding = vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };
-	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, { binding });
+	std::vector<vk::DescriptorSetLayoutBinding> bindings = {
+		vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex },
+		vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
+		vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
+		vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
+		vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
+	};
+	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eVertex;
 	constants.size = sizeof(Constant);
@@ -197,9 +206,35 @@ void GBufferPass::prepare()
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
 	descriptorBufferInfo.offset = 0;
 	descriptorBufferInfo.range = sizeof(Uniform) * scene->getMeshCount();
-
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
+
+	sampler = resourceManager->createSampler();
+	auto albedoTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/diffuse.ktx2");
+	auto normalTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/normal.ktx2");
+	auto metalTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/metal.ktx2");
+	auto roughnessTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/roughness.ktx2");
+	vk::DescriptorImageInfo albedoInfo{
+		sampler,
+		albedoTexture->getImageView(),
+		albedoTexture->getImageLayout() };
+	vk::DescriptorImageInfo normalInfo{
+		sampler,
+		normalTexture->getImageView(),
+		normalTexture->getImageLayout() };
+	vk::DescriptorImageInfo metalInfo{
+		sampler,
+		metalTexture->getImageView(),
+		metalTexture->getImageLayout() };
+	vk::DescriptorImageInfo roughnessInfo{
+		sampler,
+		roughnessTexture->getImageView(),
+		roughnessTexture->getImageLayout() };
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
+	imageInfos[1] = albedoInfo;
+	imageInfos[2] = normalInfo;
+	imageInfos[3] = metalInfo;
+	imageInfos[4] = roughnessInfo;
+
 	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
 	auto vertices = scene->getVertices();

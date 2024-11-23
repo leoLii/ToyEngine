@@ -27,6 +27,8 @@ protected:
 		Mat4 currModel;
 	};
 
+	vk::Sampler sampler;
+
 	Attachment* positionAttachment;
 	Attachment* albedoAttachment;
 	Attachment* normalAttachment;

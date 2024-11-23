@@ -32,10 +32,19 @@ TextureVulkan::TextureVulkan(const char* path, const GPUContext& gpuContext)
             if (t == 'u') auto sign_t = -1;
         }
     }
+
+    vk::ImageViewCreateInfo createInfo;
+    createInfo.image = static_cast<vk::Image>(vulkanTexture.image);
+    createInfo.format = static_cast<vk::Format>(vulkanTexture.imageFormat);
+    createInfo.viewType = static_cast<vk::ImageViewType>(vulkanTexture.viewType);
+    createInfo.components = vk::ComponentMapping{};
+    createInfo.subresourceRange = vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
+    view = gpuContext.getDevice()->getHandle().createImageView(createInfo);
 }
 
 TextureVulkan::~TextureVulkan()
 {
+    gpuContext.getDevice()->getHandle().destroyImageView(view);
     ktxVulkanTexture_Destruct(&vulkanTexture, gpuContext.getDevice()->getHandle(), nullptr);
     ktxVulkanDeviceInfo_Destruct(&kvdi);
 }

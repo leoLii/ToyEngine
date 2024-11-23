@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Texture.hpp"
+#include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
 
 #include <unordered_map>
 #include <memory>
@@ -18,24 +19,29 @@ struct TextureDesc
 {
 	const char* path;
     TextureState state = TextureState::Invalid; ///< Current state of the texture.
-    Texture* pTexture;                      ///< Valid texture object when state is 'Loaded', or nullptr if loading failed.
+    TextureVulkan* pTexture;                      ///< Valid texture object when state is 'Loaded', or nullptr if loading failed.
 
     bool isValid() const { return state != TextureState::Invalid; }
 };
 
 class TextureManager {
 public:
-	TextureManager(uint64_t = 1024);
-	~TextureManager();
+	static TextureManager& GetInstance(){
+		static TextureManager instance{};
+		return instance;
+	}
 
 	void createTextureReference(std::vector<const char*>&&, const GPUContext& gpuContext);
 
-	Texture* findTexture(const char*);
+	TextureVulkan *findTexture(std::string);
 
 protected:
-	std::unordered_map<const char*, TextureDesc> mTextureDescs;
+	std::unordered_map<std::string, TextureDesc> mTextureDescs;
 	const uint64_t mMaxTextureCount;
 
 private:
+	TextureManager(uint64_t = 1024);
+	~TextureManager();
+
 	void loadFromDisk(const GPUContext&);
 };

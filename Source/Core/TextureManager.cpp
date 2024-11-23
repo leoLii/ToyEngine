@@ -17,12 +17,12 @@ void TextureManager::createTextureReference(std::vector<const char*>&& paths, co
 {
 	for (auto path : paths) {
 		auto texture = new TextureVulkan{ path, gpuContext };
-		TextureDesc textureDesc{ path, TextureState::Referenced, texture };
-		mTextureDescs.insert(std::make_pair(path, std::move(textureDesc)));
+		TextureDesc textureDesc{ path, TextureState::Loaded, texture };
+		mTextureDescs.insert(std::make_pair(std::string(path), std::move(textureDesc)));
 	}
 }
 
-Texture* TextureManager::findTexture(const char* path)
+TextureVulkan* TextureManager::findTexture(std::string path)
 {
 	return mTextureDescs.find(path)->second.pTexture;
 }
