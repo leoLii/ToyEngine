@@ -96,7 +96,9 @@ void main()
 
     // 计算光照并输出
     float NdotL = max(dot(normal, L), 0.0);
+    vec3 ambient = vec3(0.2) * albedo;
     vec3 color = (diffuse + specular) * radiance * NdotL;
-
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0/2.2));
     fragColor = vec4(color, 1.0);
 }
