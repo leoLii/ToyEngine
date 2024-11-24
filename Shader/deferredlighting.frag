@@ -74,7 +74,7 @@ void main()
     // 计算光照强度
     // float distance = length(light.position - fragPos);
     // float attenuation = light.intensity / (distance * distance);
-    vec3 radiance = ubo.color * 3.0;
+    vec3 radiance = ubo.color * 5.0;
 
     // F0（反射率在金属度的基础上有所不同）
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
