@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Common/Math.hpp"
-#include "Scene/Scene.hpp"
 #include "Core/ResourceManager.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
@@ -11,7 +10,7 @@
 
 class GraphicsPass {
 public:
-	GraphicsPass(const GPUContext*, ResourceManager*, const Scene*);
+	GraphicsPass(const GPUContext*, ResourceManager*);
 	virtual ~GraphicsPass();
 
 	virtual void prepare() = 0;
@@ -21,7 +20,6 @@ public:
 protected:
 	const GPUContext* gpuContext;
 	ResourceManager* resourceManager = nullptr;
-	const Scene* scene;
 
 	vk::PipelineCache pipelineCache;
 	GraphicsPipelineState* pipelineState = nullptr;

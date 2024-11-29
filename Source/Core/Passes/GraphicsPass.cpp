@@ -1,9 +1,8 @@
 #include "GraphicsPass.hpp"
 
-GraphicsPass::GraphicsPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
+GraphicsPass::GraphicsPass(const GPUContext* context, ResourceManager* resourceManager)
 	:gpuContext{ context }
 	, resourceManager{ resourceManager }
-	, scene{ scene }
 {
 }
 
