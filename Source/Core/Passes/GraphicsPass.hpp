@@ -1,14 +1,11 @@
 #pragma once
 
 #include "Common/Math.hpp"
-
 #include "Scene/Scene.hpp"
-
 #include "Core/ResourceManager.hpp"
 #include "Core/GPUFramework/GPUContext.hpp"
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
 #include "Core/GPUFramework/Vulkan/GraphicsPipeline.hpp"
-
 
 #include <vector>
 
