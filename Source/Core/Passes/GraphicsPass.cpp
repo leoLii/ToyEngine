@@ -1,7 +1,7 @@
 #include "GraphicsPass.hpp"
 
-GraphicsPass::GraphicsPass(const GPUContext* context, ResourceManager* resourceManager)
-	:gpuContext{ context }
+GraphicsPass::GraphicsPass(ResourceManager* resourceManager)
+	:gpuContext{ GPUContext::GetInstance() }
 	, resourceManager{ resourceManager }
 {
 }

@@ -37,17 +37,17 @@
 
 class GPUContext {
 public:
-	GPUContext() = delete;
+	static GPUContext& GetInstance() {
+		static GPUContext gpuContext{};
+		return gpuContext;
+	}
 
-	GPUContext(
-		const std::string,
-		const std::vector<const char*>& = {}, 
-		const std::vector<const char*>& = {}, 
+	void init(const std::string,
+		const std::vector<const char*> & = {},
+		const std::vector<const char*> & = {},
 		Window* = nullptr);
 
-	~GPUContext();
-
-	const Instance* getInstance() const {
+	const Instance* getVulkanInstance() const {
 		return instance.get();
 	}
 
@@ -159,6 +159,10 @@ public:
 	) const;
 
 protected:
+	GPUContext() = default;
+
+	~GPUContext();
+
 	std::vector<const char*> vulkanExtensions;
 	std::vector<const char*> vulkanLayers;
 

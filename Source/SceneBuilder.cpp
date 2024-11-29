@@ -1,4 +1,5 @@
 #include "SceneBuilder.hpp"
+#include "Rendering/Material.hpp"
 
 void BuildScene(Scene&& scene) {
     auto camera = scene.getCamera();
@@ -23,4 +24,13 @@ void BuildScene(Scene&& scene) {
             scene.getRootNode()->addChild(node);
         }
     }
+}
+
+void CreateMaterials(Scene&& scene) {
+    /*MaterialConfig materialConfig{};
+    materialConfig.shaders = 
+    */
+   /* GraphicsPass* pass = new 
+    MaterialConfig materialConfig{};
+    auto defaultMaterial = new Material{"PBR", materialConfig , }*/
 }

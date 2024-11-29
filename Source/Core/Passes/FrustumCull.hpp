@@ -12,7 +12,7 @@ class DescriptorSetLayout;
 
 class FrustumCullPass: ComputePass {
 public:
-	FrustumCullPass(const GPUContext*, ResourceManager*, const Scene*);
+	FrustumCullPass(ResourceManager*, const Scene*);
 	~FrustumCullPass();
 
 	void prepare();

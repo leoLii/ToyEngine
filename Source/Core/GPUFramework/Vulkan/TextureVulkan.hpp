@@ -9,7 +9,7 @@
 
 class TextureVulkan : public Texture {
 public:
-	TextureVulkan(const char*, const GPUContext&);
+	TextureVulkan(const char*);
 	~TextureVulkan();
 
 	vk::ImageLayout getImageLayout() {

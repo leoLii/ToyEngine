@@ -1,7 +1,7 @@
 #include "Lighting.hpp"
 
-LightingPass::LightingPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
-	:GraphicsPass{ context, resourceManager }
+LightingPass::LightingPass(ResourceManager* resourceManager, const Scene* scene)
+	:GraphicsPass{ resourceManager }
 	, scene{ scene }
 {
 	initAttachments();
@@ -30,12 +30,12 @@ void LightingPass::initAttachments()
 		attachmentFormats.push_back(lightingAttachment->attachmentInfo.format);
 	}
 
-	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->pipelineBarrier(
+	gpuContext.pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eColorAttachmentWrite,
@@ -43,9 +43,9 @@ void LightingPass::initAttachments()
 		lightingAttachment->image);
 	commandBuffer.end();
 
-	gpuContext->submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext.submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
 
-	gpuContext->getDevice()->getTransferQueue().waitIdle();
+	gpuContext.getDevice()->getTransferQueue().waitIdle();
 }
 
 void LightingPass::prepare()
@@ -77,13 +77,13 @@ void LightingPass::prepare()
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eFragment });
-	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
+	descriptorSetLayout = gpuContext.createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eFragment;
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
+	pipelineLayout = gpuContext.createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
 	vertexBindings.push_back(
@@ -105,7 +105,7 @@ void LightingPass::prepare()
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
 	pipelineCache = resourceManager->findPipelineCache("Lighting");
-	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
+	graphicsPipeline = gpuContext.createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
 	vk::DescriptorBufferInfo descriptorBufferInfo;
@@ -122,7 +122,7 @@ void LightingPass::prepare()
 	imageInfos[2] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, normalAttachment->view->getHandle(), normalAttachment->attachmentInfo.layout };
 	imageInfos[3] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, armAttachment->view->getHandle(), armAttachment->attachmentInfo.layout };
 
-	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
+	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
 	vertexBuffer = resourceManager->createBuffer(vertices.size() * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer);
 	vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(float));
@@ -135,28 +135,28 @@ void LightingPass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,

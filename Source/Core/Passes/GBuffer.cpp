@@ -3,8 +3,8 @@
 #include "Core/TextureManager.hpp"
 #include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
 
-GBufferPass::GBufferPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
-	:GraphicsPass{ context, resourceManager }
+GBufferPass::GBufferPass(ResourceManager* resourceManager, const Scene* scene)
+	:GraphicsPass{ resourceManager }
 	,scene{ scene }
 {
 	initAttachments();
@@ -81,47 +81,47 @@ void GBufferPass::initAttachments()
 		depthAttachmentInfo.clearValue = depthAttachment->attachmentInfo.clearValue;
 	}
 
-	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		velocityAttachment->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eAllGraphics,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -131,9 +131,9 @@ void GBufferPass::initAttachments()
 
 	commandBuffer.end();
 
-	gpuContext->submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext.submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
 	
-	gpuContext->getDevice()->getTransferQueue().waitIdle();
+	gpuContext.getDevice()->getTransferQueue().waitIdle();
 }
 
 void GBufferPass::prepare()
@@ -165,13 +165,13 @@ void GBufferPass::prepare()
 		vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
 		vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
 	};
-	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
+	descriptorSetLayout = gpuContext.createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eVertex;
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
+	pipelineLayout = gpuContext.createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 
 	std::vector<vk::VertexInputBindingDescription> vertexBindings;
 	vertexBindings.push_back(
@@ -199,7 +199,7 @@ void GBufferPass::prepare()
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
 	pipelineCache = resourceManager->findPipelineCache("GBuffer");
-	graphicsPipeline = gpuContext->createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
+	graphicsPipeline = gpuContext.createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
 	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
 	
@@ -236,7 +236,7 @@ void GBufferPass::prepare()
 	imageInfos[3] = metalInfo;
 	imageInfos[4] = roughnessInfo;
 
-	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
+	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
 	auto vertices = scene->getVertices();
 	vertexBuffer = resourceManager->createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);

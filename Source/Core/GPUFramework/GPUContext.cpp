@@ -4,7 +4,15 @@
 
 #include <vector>
 
-GPUContext::GPUContext(
+GPUContext::~GPUContext() 
+{
+    destroyCommandPools();
+    destroyDescriptorPool();
+    swapchain.reset();
+    destroySurface();
+}
+
+void GPUContext::init(
     const std::string name,
     const std::vector<const char*>& layers,
     const std::vector<const char*>& extensions,
@@ -12,7 +20,7 @@ GPUContext::GPUContext(
 {
     this->vulkanExtensions = extensions;
     this->vulkanLayers = layers;
-	instance = std::make_unique<Instance>(name, extensions, layers);
+    instance = std::make_unique<Instance>(name, extensions, layers);
     device = std::make_unique<Device>(*instance);
     // Deal with headless and normal rendering, only window rendering for now.
     if (window != nullptr) {
@@ -26,15 +34,7 @@ GPUContext::GPUContext(
     createCommandPools();
 }
 
-GPUContext::~GPUContext() 
-{
-    destroyCommandPools();
-    destroyDescriptorPool();
-    swapchain.reset();
-    destroySurface();
-}
-
-const Device* GPUContext::getDevice() const 
+const Device* GPUContext::getDevice() const
 {
     return this->device.get();
 }

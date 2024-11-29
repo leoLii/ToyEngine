@@ -1,7 +1,7 @@
 #include "ComputePass.hpp"
 
-ComputePass::ComputePass(const GPUContext* context, ResourceManager* resourceManager)
-	:gpuContext{ context }
+ComputePass::ComputePass(ResourceManager* resourceManager)
+	:gpuContext{ GPUContext::GetInstance() }
 	, resourceManager{ resourceManager }
 {
 }

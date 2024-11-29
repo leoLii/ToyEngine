@@ -22,7 +22,7 @@ struct Attachment {
 
 class ResourceManager {
 public:
-	ResourceManager(const GPUContext&);
+	ResourceManager();
 
 	~ResourceManager();
 

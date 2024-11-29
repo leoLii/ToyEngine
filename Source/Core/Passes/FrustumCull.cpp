@@ -2,8 +2,8 @@
 
 #include "Core/GPUFramework/Vulkan/ComputePipeline.hpp"
 
-FrustumCullPass::FrustumCullPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene)
-	:ComputePass { gpuContext, resourceManager }
+FrustumCullPass::FrustumCullPass(ResourceManager* resourceManager, const Scene* scene)
+	:ComputePass { resourceManager }
 	, scene{ scene } 
 {
 }
@@ -42,23 +42,23 @@ void FrustumCullPass::prepare()
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eCompute });
-	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
+	descriptorSetLayout = gpuContext.createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eCompute;
 	constants.size = sizeof(CullData);
 	constants.offset = 0;
 
 	pipelineCache = resourceManager->findPipelineCache("FrustumCull");
-	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), {descriptorSetLayout->getHandle()}, {constants} };
+	pipelineLayout = new PipelineLayout{ *gpuContext.getDevice(), {descriptorSetLayout->getHandle()}, {constants} };
 	const ShaderModule* cullShader = resourceManager->findShader("frustumcull.comp");
-	computePipeline = new ComputePipeline{ *gpuContext->getDevice() , pipelineLayout, pipelineCache, cullShader };
+	computePipeline = new ComputePipeline{ *gpuContext.getDevice() , pipelineLayout, pipelineCache, cullShader };
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos;
 	bufferInfos[0] = vk::DescriptorBufferInfo{ meshBuffer->getHandle(), 0, sizeof(MeshInfo) * meshInfos.size() };
 	bufferInfos[1] = vk::DescriptorBufferInfo{ indirectDrawCommandBuffer->getHandle(), 0, sizeof(MeshDrawCommand) * meshInfos.size() };
 	bufferInfos[2] = vk::DescriptorBufferInfo{ uniformBuffer->getHandle(), 0, sizeof(Uniform) * meshInfos.size() };
 
-	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, bufferInfos, {});
+	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, bufferInfos, {});
 
 	meshBuffer->copyToGPU(static_cast<const void*>(meshInfos.data()), sizeof(MeshInfo) * meshInfos.size());
 }
@@ -76,19 +76,19 @@ void FrustumCullPass::update(uint32_t frameIndex)
 
 void FrustumCullPass::record(vk::CommandBuffer commandBuffer)
 {
-	gpuContext->bufferBarrier(
+	gpuContext.bufferBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eHost, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eHostWrite, vk::AccessFlagBits2::eShaderRead,
 		meshBuffer, 0, meshBuffer->getSize());
 
-	gpuContext->bufferBarrier(
+	gpuContext.bufferBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eNone, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eShaderWrite,
 		indirectDrawCommandBuffer, 0, indirectDrawCommandBuffer->getSize());
 
-	gpuContext->bufferBarrier(
+	gpuContext.bufferBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eHost, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eHostWrite, vk::AccessFlagBits2::eShaderRead,

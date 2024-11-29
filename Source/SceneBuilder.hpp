@@ -7,3 +7,5 @@
 #include <random>
 
 void BuildScene(Scene&&);
+
+void CreateMaterials(Scene&&);

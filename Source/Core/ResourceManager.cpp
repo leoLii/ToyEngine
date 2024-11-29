@@ -5,10 +5,9 @@
 #include <fstream>
 #include <sstream>
 
-ResourceManager::ResourceManager(const GPUContext& gpuContext)
-	:gpuContext{ gpuContext }
+ResourceManager::ResourceManager()
+	:gpuContext{ GPUContext::GetInstance() }
 {
-
 	loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
 	loadPipelineCaches("C:/Users/lihan/Desktop/workspace/ToyEngine/PipelineCache");
 }

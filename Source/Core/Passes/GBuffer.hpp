@@ -7,7 +7,7 @@
 
 class GBufferPass: GraphicsPass {
 public:
-	GBufferPass(const GPUContext*, ResourceManager*, const Scene*);
+	GBufferPass(ResourceManager*, const Scene*);
 	~GBufferPass();
 
 	virtual void prepare() override;

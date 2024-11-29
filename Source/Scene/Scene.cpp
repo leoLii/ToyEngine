@@ -18,6 +18,10 @@ Scene::~Scene()
 	}
 	nodes.clear();
 	meshes.clear();
+	for (auto material : materials) {
+		delete material.second;
+	}
+	materials.clear();
 }
 
 void Scene::update(uint32_t frameIndex)
@@ -150,6 +154,11 @@ const std::vector<Mat4> Scene::getTransforms() const
 const std::vector<Mat4> Scene::getPrevTransforms() const
 {
 	return prevTransforms;
+}
+
+void Scene::addMaterial(uint32_t order, Material* material)
+{
+	materials.insert(std::make_pair(order, material));
 }
 
 // 从矩阵中提取平移分量（假设列主序矩阵）

@@ -8,8 +8,8 @@
 
 #include <string>
 
-TaaPass::TaaPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene)
-	:ComputePass{ gpuContext, resourceManager }
+TaaPass::TaaPass(ResourceManager* resourceManager, const Scene* scene)
+	:ComputePass{ resourceManager }
 	, scene{ scene }
 {
 	initAttachment();
@@ -30,16 +30,16 @@ void TaaPass::prepare()
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &linearSampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 3, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &nearestSampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 4, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eCompute, &nearestSampler });
-	descriptorSetLayout = gpuContext->createDescriptorSetLayout(0, bindings);
+	descriptorSetLayout = gpuContext.createDescriptorSetLayout(0, bindings);
 
 	constants.stageFlags = vk::ShaderStageFlagBits::eCompute;
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
 	pipelineCache = resourceManager->findPipelineCache("Taa");
-	pipelineLayout = gpuContext->createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
+	pipelineLayout = gpuContext.createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
 	const ShaderModule* taaShader = resourceManager->findShader("taa.comp");
-	computePipeline = gpuContext->createComputePipeline(pipelineLayout, pipelineCache, taaShader);
+	computePipeline = gpuContext.createComputePipeline(pipelineLayout, pipelineCache, taaShader);
 
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
 	imageInfos[0] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, taaOutput->view->getHandle(), taaOutput->attachmentInfo.layout };
@@ -48,7 +48,7 @@ void TaaPass::prepare()
 	imageInfos[3] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, velocity->view->getHandle(), velocity->attachmentInfo.layout };
 	imageInfos[4] = vk::DescriptorImageInfo{ VK_NULL_HANDLE, depth->view->getHandle(), depth->attachmentInfo.layout };
 
-	descriptorSet = gpuContext->requireDescriptorSet(descriptorSetLayout, {}, imageInfos);
+	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, {}, imageInfos);
 }
 
 void TaaPass::update(uint32_t frameIndex)
@@ -59,28 +59,28 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 {
 	int width = 1920;
 	int height = 1080;
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		history->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		lightingResult->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		velocity->image);
 
-	gpuContext->imageBarrier(
+	gpuContext.imageBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eEarlyFragmentTests, vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eDepthStencilAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
@@ -98,14 +98,14 @@ void TaaPass::record(vk::CommandBuffer commandBuffer)
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, computePipeline->getHandle());
 	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, {});
 	commandBuffer.dispatch(int((width + 16) / 16), int((height + 16) / 16), 1);
-	gpuContext->pipelineBarrier(
+	gpuContext.pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
 		vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		taaOutput->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext.pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eTransfer,
 		vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite,
@@ -147,19 +147,19 @@ void TaaPass::initAttachment()
 	taaOutput = resourceManager->getAttachment("taaOutput");
 	history = resourceManager->getAttachment("taaHistory");
 	
-	auto commandBuffer = gpuContext->requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
 
-	gpuContext->pipelineBarrier(
+	gpuContext.pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eShaderRead,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		history->image);
 
-	gpuContext->pipelineBarrier(
+	gpuContext.pipelineBarrier(
 		commandBuffer,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader,
 		vk::AccessFlagBits::eNone, vk::AccessFlagBits::eMemoryWrite,
@@ -168,7 +168,7 @@ void TaaPass::initAttachment()
 	
 	commandBuffer.end();
 
-	gpuContext->submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext.submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
 
-	gpuContext->getDevice()->getTransferQueue().waitIdle();
+	gpuContext.getDevice()->getTransferQueue().waitIdle();
 }

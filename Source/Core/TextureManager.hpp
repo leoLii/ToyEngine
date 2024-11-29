@@ -31,7 +31,7 @@ public:
 		return instance;
 	}
 
-	void createTextureReference(std::vector<const char*>&&, const GPUContext& gpuContext);
+	void createTextureReference(std::vector<const char*>&&);
 
 	TextureVulkan *findTexture(std::string);
 

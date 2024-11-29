@@ -13,10 +13,10 @@ TextureManager::~TextureManager()
 	mTextureDescs.clear();
 }
 
-void TextureManager::createTextureReference(std::vector<const char*>&& paths, const GPUContext& gpuContext)
+void TextureManager::createTextureReference(std::vector<const char*>&& paths)
 {
 	for (auto path : paths) {
-		auto texture = new TextureVulkan{ path, gpuContext };
+		auto texture = new TextureVulkan{ path };
 		TextureDesc textureDesc{ path, TextureState::Loaded, texture };
 		mTextureDescs.insert(std::make_pair(std::string(path), std::move(textureDesc)));
 	}

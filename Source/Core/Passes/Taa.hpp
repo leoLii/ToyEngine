@@ -7,7 +7,7 @@
 
 class TaaPass: ComputePass {
 public:
-	TaaPass(const GPUContext*, ResourceManager*, const Scene*);
+	TaaPass(ResourceManager*, const Scene*);
 	~TaaPass();
 
 	virtual void prepare() override;
