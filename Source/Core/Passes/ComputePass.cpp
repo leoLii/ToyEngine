@@ -1,9 +1,8 @@
 #include "ComputePass.hpp"
 
-ComputePass::ComputePass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
+ComputePass::ComputePass(const GPUContext* context, ResourceManager* resourceManager)
 	:gpuContext{ context }
 	, resourceManager{ resourceManager }
-	, scene{ scene }
 {
 }
 
