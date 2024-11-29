@@ -1,12 +1,7 @@
 #pragma once
 
-#include "Common/Math.hpp"
-#include "Core/GPUFramework/GPUContext.hpp"
-#include "Core/ResourceManager.hpp"
-#include "Core/GPUFramework/Vulkan/VkCommon.hpp"
-#include "Core/GPUFramework/Vulkan/RenderPass.hpp"
+#include "Core/Passes/ComputePass.hpp"
 #include "Scene/Scene.hpp"
-#include "Scene/Components/Camera.hpp"
 
 #include <vector>
 
@@ -15,7 +10,7 @@ class ComputePipeline;
 class DescriptorSet;
 class DescriptorSetLayout;
 
-class FrustumCullPass {
+class FrustumCullPass: ComputePass {
 public:
 	FrustumCullPass(const GPUContext*, ResourceManager*, const Scene*);
 	~FrustumCullPass();
@@ -60,22 +55,11 @@ protected:
 		vk::DrawIndexedIndirectCommand command;
 	};
 
-	const GPUContext* gpuContext;
-	ResourceManager* resourceManager;
 	const Scene* scene;
 
 	Buffer* meshBuffer;
 	Buffer* uniformBuffer;
 	Buffer* indirectDrawCommandBuffer;
-	//Buffer* vertexBuffer;
-	//Buffer* indexBuffer;
-	//Buffer* deviceAddressBuffer;
-
-	vk::PushConstantRange constants;
-	DescriptorSet* descriptorSet;
-	DescriptorSetLayout* descriptorSetLayout;
-	PipelineLayout* pipelineLayout;
-	ComputePipeline* computePipeline;
 
 	Frustum furstum;
 

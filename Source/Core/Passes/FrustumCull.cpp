@@ -3,18 +3,13 @@
 #include "Core/GPUFramework/Vulkan/ComputePipeline.hpp"
 
 FrustumCullPass::FrustumCullPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene)
-	:gpuContext{ gpuContext }
-	, resourceManager{ resourceManager }
+	:ComputePass { gpuContext, resourceManager }
 	, scene{ scene } 
 {
 }
 
 FrustumCullPass::~FrustumCullPass()
 {
-	delete computePipeline;
-	delete pipelineLayout;
-	delete descriptorSet;
-	delete descriptorSetLayout;
 }
 
 void FrustumCullPass::prepare()
@@ -52,9 +47,11 @@ void FrustumCullPass::prepare()
 	constants.stageFlags = vk::ShaderStageFlagBits::eCompute;
 	constants.size = sizeof(CullData);
 	constants.offset = 0;
+
+	pipelineCache = resourceManager->findPipelineCache("FrustumCull");
 	pipelineLayout = new PipelineLayout{ *gpuContext->getDevice(), {descriptorSetLayout->getHandle()}, {constants} };
 	const ShaderModule* cullShader = resourceManager->findShader("frustumcull.comp");
-	computePipeline = new ComputePipeline{ *gpuContext->getDevice() , pipelineLayout, VK_NULL_HANDLE, cullShader };
+	computePipeline = new ComputePipeline{ *gpuContext->getDevice() , pipelineLayout, pipelineCache, cullShader };
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos;
 	bufferInfos[0] = vk::DescriptorBufferInfo{ meshBuffer->getHandle(), 0, sizeof(MeshInfo) * meshInfos.size() };
