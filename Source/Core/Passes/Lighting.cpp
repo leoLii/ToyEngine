@@ -1,7 +1,8 @@
 #include "Lighting.hpp"
 
 LightingPass::LightingPass(const GPUContext* context, ResourceManager* resourceManager, const Scene* scene)
-	:GraphicsPass{ context, resourceManager, scene }
+	:GraphicsPass{ context, resourceManager }
+	, scene{ scene }
 {
 	initAttachments();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Passes/ComputePass.hpp"
+#include "Scene/Scene.hpp"
 
 #include <vector>
 
@@ -16,6 +17,7 @@ public:
 	void end();
 
 protected:
+	const Scene* scene;
 	struct Constant {
 		Vec2 size;
 		Vec2 jitter;

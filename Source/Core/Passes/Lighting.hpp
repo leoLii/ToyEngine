@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Passes/GraphicsPass.hpp"
+#include "Scene/Scene.hpp"
 
 #include <vector>
 
@@ -14,6 +15,7 @@ public:
 	virtual void update(uint32_t) override;
 
 protected:
+	const Scene* scene;
 	struct Constant {
 		Vec3 cameraPosition;
 	};

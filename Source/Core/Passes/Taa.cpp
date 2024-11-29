@@ -9,7 +9,8 @@
 #include <string>
 
 TaaPass::TaaPass(const GPUContext* gpuContext, ResourceManager* resourceManager, const Scene* scene)
-	:ComputePass{ gpuContext, resourceManager, scene }
+	:ComputePass{ gpuContext, resourceManager }
+	, scene{ scene }
 {
 	initAttachment();
 }
