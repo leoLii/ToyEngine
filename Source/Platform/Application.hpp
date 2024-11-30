@@ -15,6 +15,7 @@ class GBufferPass;
 class LightingPass;
 class TaaPass;
 class FrustumCullPass;
+class TextureManager;
 
 struct ApplicationConfig
 {
@@ -45,9 +46,6 @@ protected:
 	ApplicationConfig config;
 
 	std::unique_ptr<Window> window;
-
-	std::unique_ptr<GPUContext> gpuContext;
-	std::unique_ptr<ResourceManager> resourceManager;
 
 	bool headless = false;
 

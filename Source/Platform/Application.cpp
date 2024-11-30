@@ -6,9 +6,10 @@
 #include "Core/Passes/GBuffer.hpp"
 #include "Core/Passes/Lighting.hpp"
 #include "Core/Passes/Taa.hpp"
+#include "Core/Passes/temporalAntiAliasing.hpp"
 #include "Core/Passes/FrustumCull.hpp"
-
-#include "../ThirdParty/stb_image.h"
+#include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
+#include "Core/TextureManager.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -20,27 +21,37 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	window = std::make_unique<Window>(config.name, config.width, config.height);
 	auto windowExtensions = Window::requireWindowExtensions();
 	config.extensions.insert(config.extensions.end(), windowExtensions.begin(), windowExtensions.end());
+	
+	GPUContext::GetSingleton().init(config.name, config.layers, config.extensions, window.get());
 
-	gpuContext = std::make_unique<GPUContext>(config.name, config.layers, config.extensions, window.get());
-	resourceManager = std::make_unique<ResourceManager>(*gpuContext);
 	createAttachments(1920, 1080);
 
-	fence = gpuContext->requestFence();
+	//auto texture = TextureVulkan{ , *gpuContext };
+	fence = GPUContext::GetSingleton().requestFence();
 
+	std::vector<const char*> texturePath = {
+		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/diffuse.ktx2",
+		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/normal.ktx2",
+		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/metal.ktx2",
+		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/roughness.ktx2"
+	};
+	
+	TextureManager::GetSingleton().createTextureReference(std::move(texturePath));
+	
 	this->scene = scene;
 
 	Vec2 size(config.width, config.height);
-	gBufferPass = new GBufferPass{ gpuContext.get(), resourceManager.get(), scene};
-	lightingPass = new LightingPass{ gpuContext.get(), resourceManager.get(), scene};
-	taaPass = new TaaPass{ gpuContext.get(), resourceManager.get(), scene};
-	cullPass = new FrustumCullPass{ gpuContext.get(), resourceManager.get(), scene };
+	gBufferPass = new GBufferPass{ scene };
+	lightingPass = new LightingPass{ scene };
+	taaPass = new TaaPass{ scene };
+	cullPass = new FrustumCullPass{ scene };
 
-	imageAvailableSemaphore = gpuContext->requestSemaphore();
-	renderFinishedSemaphore = gpuContext->requestSemaphore();
-	transferFinishedSemaphore = gpuContext->requestSemaphore();
+	imageAvailableSemaphore = GPUContext::GetSingleton().requestSemaphore();
+	renderFinishedSemaphore = GPUContext::GetSingleton().requestSemaphore();
+	transferFinishedSemaphore = GPUContext::GetSingleton().requestSemaphore();
 
-	renderCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
-	transferCommandBuffer = gpuContext->requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
+	renderCommandBuffer = GPUContext::GetSingleton().requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
+	transferCommandBuffer = GPUContext::GetSingleton().requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary);
 
 	gBufferPass->prepare();
 	lightingPass->prepare();
@@ -65,23 +76,23 @@ void Application::run()
 
 		window->pollEvents();
 
-		gpuContext->waitForFences(fence);
-		gpuContext->resetFences(fence);
-		auto acquieResult = gpuContext->acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
+		GPUContext::GetSingleton().waitForFences(fence);
+		GPUContext::GetSingleton().resetFences(fence);
+		auto acquieResult = GPUContext::GetSingleton().acquireNextImage(imageAvailableSemaphore, VK_NULL_HANDLE);
 		uint32_t swapChainIndex = std::get<1>(acquieResult);
-
+		//gpuContext->getDevice()->getHandle().resetCommandPool(gpuContext->getCommandPool(), vk::CommandPoolResetFlagBits::eReleaseResources);
 		if (std::get<0>(acquieResult) == vk::Result::eSuccess) {
 			{
 				vk::CommandBufferBeginInfo beginInfo;
 				beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 				renderCommandBuffer.begin(beginInfo);
 
-				gpuContext->imageBarrier(
+				GPUContext::GetSingleton().imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eBlit,
 					vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eTransferWrite,
 					vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
-					gpuContext->getSwapchainImages()[swapChainIndex]);
+					GPUContext::GetSingleton().getSwapchainImages()[swapChainIndex]);
 
 				cullPass->record(renderCommandBuffer);
 
@@ -91,12 +102,12 @@ void Application::run()
 
 				taaPass->record(renderCommandBuffer);
 
-				gpuContext->imageBarrier(
+				GPUContext::GetSingleton().imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eFragmentShader, vk::PipelineStageFlagBits2::eBlit,
 					vk::AccessFlagBits2::eShaderWrite, vk::AccessFlagBits2::eTransferRead,
 					vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
-					resourceManager->getAttachment("taaOutput")->image);
+					ResourceManager::GetSingleton().getAttachment("taaOutput")->image);
 
 				vk::ImageBlit blit;
 				blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
@@ -111,19 +122,19 @@ void Application::run()
 				blit.dstSubresource.layerCount = 1;
 
 				renderCommandBuffer.blitImage(
-					resourceManager->getAttachment("taaOutput")->image->getHandle(), vk::ImageLayout::eGeneral,
-					gpuContext->getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
+					ResourceManager::GetSingleton().getAttachment("taaOutput")->image->getHandle(), vk::ImageLayout::eGeneral,
+					GPUContext::GetSingleton().getSwapchainImages()[swapChainIndex]->getHandle(), vk::ImageLayout::eTransferDstOptimal,
 					{ blit }, vk::Filter::eLinear);
 
-				gpuContext->imageBarrier(
+				GPUContext::GetSingleton().imageBarrier(
 					renderCommandBuffer,
 					vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eBottomOfPipe,
 					vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eNone,
 					vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
-					gpuContext->getSwapchainImages()[swapChainIndex]);
+					GPUContext::GetSingleton().getSwapchainImages()[swapChainIndex]);
 
 				renderCommandBuffer.end();
-				gpuContext->submit(
+				GPUContext::GetSingleton().submit(
 					CommandType::Graphics,
 					{imageAvailableSemaphore},
 					{ vk::PipelineStageFlagBits::eAllGraphics },
@@ -133,18 +144,18 @@ void Application::run()
 			}
 
 			// Present the image to the screen
-			gpuContext->present(swapChainIndex, { renderFinishedSemaphore });
+			GPUContext::GetSingleton().present(swapChainIndex, { renderFinishedSemaphore });
 		}
 	}
 }
 
 void Application::close()
 {
-	gpuContext->getDevice()->getHandle().waitIdle();
-	gpuContext->returnSemaphore(renderFinishedSemaphore);
-	gpuContext->returnSemaphore(imageAvailableSemaphore);
-	gpuContext->returnSemaphore(transferFinishedSemaphore);
-	gpuContext->returnFence(fence);
+	GPUContext::GetSingleton().getDevice()->getHandle().waitIdle();
+	GPUContext::GetSingleton().returnSemaphore(renderFinishedSemaphore);
+	GPUContext::GetSingleton().returnSemaphore(imageAvailableSemaphore);
+	GPUContext::GetSingleton().returnSemaphore(transferFinishedSemaphore);
+	GPUContext::GetSingleton().returnFence(fence);
 
 	delete gBufferPass;
 	delete lightingPass;
@@ -172,7 +183,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		AttachmentInfo attachmentInfo;
 		attachmentInfo.format = format;
 
-		resourceManager->createAttachment("gPosition", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gPosition", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -193,7 +204,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		AttachmentInfo attachmentInfo{};
 		attachmentInfo.format = format;
 
-		resourceManager->createAttachment("gAlbedo", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gAlbedo", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -214,7 +225,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		AttachmentInfo attachmentInfo{};
 		attachmentInfo.format = format;
 
-		resourceManager->createAttachment("gNormal", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gNormal", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -235,7 +246,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		AttachmentInfo attachmentInfo{};
 		attachmentInfo.format = format;
 
-		resourceManager->createAttachment("gARM", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gARM", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -256,7 +267,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		AttachmentInfo attachmentInfo{};
 		attachmentInfo.format = format;
 
-		resourceManager->createAttachment("gVelocity", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gVelocity", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -284,7 +295,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
 #endif // REVERSE_DEPTH
 
-		resourceManager->createAttachment("gDepth", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("gDepth", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -305,7 +316,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		attachmentInfo.format = format;
 		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
-		resourceManager->createAttachment("ColorBuffer", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("ColorBuffer", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -328,7 +339,7 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		attachmentInfo.format = format;
 		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
-		resourceManager->createAttachment("taaOutput", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("taaOutput", imageInfo, imageViewInfo, attachmentInfo);
 	}
 
 	{
@@ -350,6 +361,34 @@ void Application::createAttachments(uint32_t renderWidth, uint32_t renderHeight)
 		attachmentInfo.format = format;
 		attachmentInfo.clearValue = vk::ClearColorValue{ 0u, 0u, 0u, 0u };
 
-		resourceManager->createAttachment("taaHistory", imageInfo, imageViewInfo, attachmentInfo);
+		ResourceManager::GetSingleton().createAttachment("taaHistory", imageInfo, imageViewInfo, attachmentInfo);
+	}
+
+	{
+		vk::Format format = vk::Format::eD32Sfloat;
+		ImageInfo imageInfo{};
+		imageInfo.format = format;
+		imageInfo.extent = vk::Extent3D{ renderWidth, renderHeight, 1 };
+		imageInfo.mipmapLevel = 1;
+		imageInfo.usage =
+			vk::ImageUsageFlagBits::eInputAttachment |
+			vk::ImageUsageFlagBits::eTransferDst |
+			vk::ImageUsageFlagBits::eSampled;
+		imageInfo.queueFamilyCount = 1;
+		imageInfo.pQueueFamilyIndices = { 0 };
+
+		ImageViewInfo imageViewInfo{};
+		imageViewInfo.format = format;
+
+		AttachmentInfo attachmentInfo{};
+		attachmentInfo.format = format;
+		//attachmentInfo.loadOp = vk::AttachmentLoadOp::eLoad;
+#ifdef REVERSE_DEPTH
+		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 0u, 0u };
+#elif
+		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
+#endif // REVERSE_DEPTH
+
+		ResourceManager::GetSingleton().createAttachment("DepthPyrimid", imageInfo, imageViewInfo, attachmentInfo);
 	}
 }
