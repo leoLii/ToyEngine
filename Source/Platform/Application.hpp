@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Window.hpp"
-#include "Core/GPUFramework/GPUContext.hpp"
-#include "Core/ResourceManager.hpp"
-#include "Scene/Mesh.hpp"
+#include "Platform/Window.hpp"
 
 #include <chrono>
 #include <string>
@@ -11,11 +8,14 @@
 #include <vector>
 #include <thread>
 
+class Scene;
+class Window;
 class GBufferPass;
 class LightingPass;
 class TaaPass;
 class FrustumCullPass;
 class TextureManager;
+class RenderContext;
 
 struct ApplicationConfig
 {
@@ -45,7 +45,7 @@ public:
 protected:
 	ApplicationConfig config;
 
-	std::unique_ptr<Window> window;
+	Window* window;
 
 	bool headless = false;
 
@@ -63,22 +63,5 @@ protected:
 
 	std::chrono::time_point<std::chrono::system_clock> lastFrameTime;
 
-	vk::Fence fence;
-
-	vk::CommandBuffer renderCommandBuffer;
-	vk::CommandBuffer transferCommandBuffer;
-
 	Scene* scene;
-
-	GBufferPass* gBufferPass = nullptr;
-	LightingPass* lightingPass = nullptr;
-	TaaPass* taaPass = nullptr;
-	FrustumCullPass* cullPass = nullptr;
-
-	vk::Semaphore imageAvailableSemaphore;
-	vk::Semaphore renderFinishedSemaphore;
-	vk::Semaphore transferFinishedSemaphore;
-
-private:
-	void createAttachments(uint32_t, uint32_t);
 };

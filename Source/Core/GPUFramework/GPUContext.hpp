@@ -124,7 +124,7 @@ public:
 	void present(
 		uint32_t,
 		std::vector<vk::Semaphore>
-	);
+	) const;
 
 	void pipelineBarrier(
 		vk::CommandBuffer,

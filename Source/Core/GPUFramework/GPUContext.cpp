@@ -189,7 +189,7 @@ void GPUContext::submit(
     
 }
 
-void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphores)
+void GPUContext::present(uint32_t index, std::vector<vk::Semaphore> waitSemaphores) const
 {
     vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = waitSemaphores.size();
