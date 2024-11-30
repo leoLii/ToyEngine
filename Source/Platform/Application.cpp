@@ -45,18 +45,15 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 void Application::run()
 {
 	while (!window->shouldClose()) {
+		window->pollEvents();
 
-		++frameIndex;
+		beginFrame();
 
 		scene->update(frameIndex);
 
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-		deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;
-		lastFrameTime = now;
-
-		window->pollEvents();
-
 		RenderContext::GetSingleton().render(frameIndex);
+
+		endFrame();
 	}
 }
 
@@ -64,4 +61,16 @@ void Application::close()
 {
 	delete window;
 	RenderContext::GetSingleton().clear();
+}
+
+void Application::beginFrame()
+{
+	++frameIndex;
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	deltaTime = std::chrono::duration<double, std::milli>(now - lastFrameTime).count() / 1000.0;
+	lastFrameTime = now;
+}
+
+void Application::endFrame()
+{
 }

@@ -40,6 +40,10 @@ public:
 
 	void close();
 
+	void beginFrame();
+
+	void endFrame();
+
 	void loadImage();
 
 protected:
