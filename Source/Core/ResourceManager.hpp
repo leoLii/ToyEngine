@@ -22,9 +22,10 @@ struct Attachment {
 
 class ResourceManager {
 public:
-	ResourceManager();
-
-	~ResourceManager();
+	static ResourceManager& GetSingleton() {
+		static ResourceManager instance{};
+		return instance;
+	}
 
 	const ShaderModule* findShader(const std::string&) const;
 
@@ -61,6 +62,8 @@ protected:
 	std::unordered_map<std::string, vk::PipelineCache> pipelineCaches;
 
 private:
+	ResourceManager();
+	~ResourceManager();
 	void loadShaders(const std::string&);
 	void destroyShaders();
 	void loadPipelineCaches(const std::string&);

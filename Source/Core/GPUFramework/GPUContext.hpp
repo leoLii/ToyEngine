@@ -37,7 +37,7 @@
 
 class GPUContext {
 public:
-	static GPUContext& GetInstance() {
+	static GPUContext& GetSingleton() {
 		static GPUContext gpuContext{};
 		return gpuContext;
 	}
@@ -47,7 +47,7 @@ public:
 		const std::vector<const char*> & = {},
 		Window* = nullptr);
 
-	const Instance* getVulkanInstance() const {
+	const Instance* getInstance() const {
 		return instance.get();
 	}
 

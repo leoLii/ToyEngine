@@ -14,7 +14,7 @@
 
 class ComputePass {
 public:
-	ComputePass(ResourceManager*);
+	ComputePass();
 	virtual ~ComputePass();
 
 	virtual void prepare() = 0;
@@ -23,7 +23,7 @@ public:
 
 protected:
 	const GPUContext& gpuContext;
-	ResourceManager* resourceManager = nullptr;
+	ResourceManager& resourceManager;
 
 	vk::PipelineCache pipelineCache;
 	PipelineLayout* pipelineLayout = nullptr;

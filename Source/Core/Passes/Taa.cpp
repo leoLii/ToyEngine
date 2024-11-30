@@ -8,9 +8,8 @@
 
 #include <string>
 
-TaaPass::TaaPass(ResourceManager* resourceManager, const Scene* scene)
-	:ComputePass{ resourceManager }
-	, scene{ scene }
+TaaPass::TaaPass(const Scene* scene)
+	:scene{ scene }
 {
 	initAttachment();
 }
@@ -21,8 +20,8 @@ TaaPass::~TaaPass()
 
 void TaaPass::prepare()
 {
-	linearSampler = resourceManager->createSampler();
-	nearestSampler = resourceManager->createSampler(vk::Filter::eNearest, vk::Filter::eNearest);
+	linearSampler = resourceManager.createSampler();
+	nearestSampler = resourceManager.createSampler(vk::Filter::eNearest, vk::Filter::eNearest);
 
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eStorageImage, 1, vk::ShaderStageFlagBits::eCompute });
@@ -36,9 +35,9 @@ void TaaPass::prepare()
 	constants.size = sizeof(Constant);
 	constants.offset = 0;
 
-	pipelineCache = resourceManager->findPipelineCache("Taa");
+	pipelineCache = resourceManager.findPipelineCache("Taa");
 	pipelineLayout = gpuContext.createPipelineLayout({ descriptorSetLayout->getHandle() }, { constants });
-	const ShaderModule* taaShader = resourceManager->findShader("taa.comp");
+	const ShaderModule* taaShader = resourceManager.findShader("taa.comp");
 	computePipeline = gpuContext.createComputePipeline(pipelineLayout, pipelineCache, taaShader);
 
 	std::unordered_map<uint32_t, vk::DescriptorImageInfo> imageInfos;
@@ -140,12 +139,12 @@ void TaaPass::end()
 
 void TaaPass::initAttachment()
 {
-	lightingResult = resourceManager->getAttachment("ColorBuffer");
-	velocity = resourceManager->getAttachment("gVelocity");
-	depth = resourceManager->getAttachment("gDepth");
+	lightingResult = resourceManager.getAttachment("ColorBuffer");
+	velocity = resourceManager.getAttachment("gVelocity");
+	depth = resourceManager.getAttachment("gDepth");
 
-	taaOutput = resourceManager->getAttachment("taaOutput");
-	history = resourceManager->getAttachment("taaHistory");
+	taaOutput = resourceManager.getAttachment("taaOutput");
+	history = resourceManager.getAttachment("taaHistory");
 	
 	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
 	vk::CommandBufferBeginInfo beginInfo;

@@ -4,7 +4,7 @@
 
 TextureVulkan::TextureVulkan(const char* path)
 	:Texture{ path },
-     gpuContext{ GPUContext::GetInstance() }
+     gpuContext{ GPUContext::GetSingleton() }
 {
     ktxTexture2_TranscodeBasis(insideTexture, KTX_TF_BC7_M6_OPAQUE_ONLY, KTX_TF_HIGH_QUALITY);
     ktxVulkanDeviceInfo_Construct(

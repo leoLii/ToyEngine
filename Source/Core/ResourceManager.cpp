@@ -6,7 +6,7 @@
 #include <sstream>
 
 ResourceManager::ResourceManager()
-	:gpuContext{ GPUContext::GetInstance() }
+	:gpuContext{ GPUContext::GetSingleton() }
 {
 	loadShaders("C:/Users/lihan/Desktop/workspace/ToyEngine/Shader");
 	loadPipelineCaches("C:/Users/lihan/Desktop/workspace/ToyEngine/PipelineCache");

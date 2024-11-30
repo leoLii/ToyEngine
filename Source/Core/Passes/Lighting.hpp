@@ -7,7 +7,7 @@
 
 class LightingPass: GraphicsPass {
 public:
-	LightingPass(ResourceManager*, const Scene*);
+	LightingPass(const Scene*);
 	~LightingPass();
 
 	virtual void prepare() override;

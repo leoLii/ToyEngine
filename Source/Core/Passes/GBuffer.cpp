@@ -3,9 +3,8 @@
 #include "Core/TextureManager.hpp"
 #include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
 
-GBufferPass::GBufferPass(ResourceManager* resourceManager, const Scene* scene)
-	:GraphicsPass{ resourceManager }
-	,scene{ scene }
+GBufferPass::GBufferPass(const Scene* scene)
+	:scene{ scene }
 {
 	initAttachments();
 }
@@ -17,7 +16,7 @@ GBufferPass::~GBufferPass()
 void GBufferPass::initAttachments()
 {
 	{
-		positionAttachment = resourceManager->getAttachment("gPosition");
+		positionAttachment = resourceManager.getAttachment("gPosition");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = positionAttachment->view->getHandle();
 		attachmentInfo.imageLayout = positionAttachment->attachmentInfo.layout;
@@ -28,7 +27,7 @@ void GBufferPass::initAttachments()
 		attachmentFormats.push_back(positionAttachment->attachmentInfo.format);
 	}
 	{
-		albedoAttachment = resourceManager->getAttachment("gAlbedo");
+		albedoAttachment = resourceManager.getAttachment("gAlbedo");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = albedoAttachment->view->getHandle();
 		attachmentInfo.imageLayout = albedoAttachment->attachmentInfo.layout;
@@ -39,7 +38,7 @@ void GBufferPass::initAttachments()
 		attachmentFormats.push_back(albedoAttachment->attachmentInfo.format);
 	}
 	{
-		normalAttachment = resourceManager->getAttachment("gNormal");
+		normalAttachment = resourceManager.getAttachment("gNormal");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = normalAttachment->view->getHandle();
 		attachmentInfo.imageLayout = normalAttachment->attachmentInfo.layout;
@@ -50,7 +49,7 @@ void GBufferPass::initAttachments()
 		attachmentFormats.push_back(normalAttachment->attachmentInfo.format);
 	}
 	{
-		armAttachment = resourceManager->getAttachment("gARM");
+		armAttachment = resourceManager.getAttachment("gARM");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = armAttachment->view->getHandle();
 		attachmentInfo.imageLayout = armAttachment->attachmentInfo.layout;
@@ -61,7 +60,7 @@ void GBufferPass::initAttachments()
 		attachmentFormats.push_back(armAttachment->attachmentInfo.format);
 	}
 	{
-		velocityAttachment = resourceManager->getAttachment("gVelocity");
+		velocityAttachment = resourceManager.getAttachment("gVelocity");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = velocityAttachment->view->getHandle();
 		attachmentInfo.imageLayout = velocityAttachment->attachmentInfo.layout;
@@ -73,7 +72,7 @@ void GBufferPass::initAttachments()
 	}
 
 	{
-		depthAttachment = resourceManager->getAttachment("gDepth");
+		depthAttachment = resourceManager.getAttachment("gDepth");
 		depthAttachmentInfo.imageView = depthAttachment->view->getHandle();
 		depthAttachmentInfo.imageLayout = depthAttachment->attachmentInfo.layout;
 		depthAttachmentInfo.loadOp = depthAttachment->attachmentInfo.loadOp;
@@ -157,7 +156,7 @@ void GBufferPass::prepare()
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };
 
-	std::vector<const ShaderModule*> baseModules = { resourceManager->findShader("gbuffer.vert"), resourceManager->findShader("gbuffer.frag") };
+	std::vector<const ShaderModule*> baseModules = { resourceManager.findShader("gbuffer.vert"), resourceManager.findShader("gbuffer.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings = {
 		vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex },
 		vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment },
@@ -198,10 +197,10 @@ void GBufferPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	pipelineCache = resourceManager->findPipelineCache("GBuffer");
+	pipelineCache = resourceManager.findPipelineCache("GBuffer");
 	graphicsPipeline = gpuContext.createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
-	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
+	uniformBuffer = resourceManager.createBuffer(sizeof(Uniform) * scene->getMeshCount(), vk::BufferUsageFlagBits::eUniformBuffer);
 	
 	vk::DescriptorBufferInfo descriptorBufferInfo;
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
@@ -209,11 +208,11 @@ void GBufferPass::prepare()
 	descriptorBufferInfo.range = sizeof(Uniform) * scene->getMeshCount();
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos = { {0, descriptorBufferInfo} };
 
-	sampler = resourceManager->createSampler();
-	auto albedoTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/diffuse.ktx2");
-	auto normalTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/normal.ktx2");
-	auto metalTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/metal.ktx2");
-	auto roughnessTexture = TextureManager::GetInstance().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/roughness.ktx2");
+	sampler = resourceManager.createSampler();
+	auto albedoTexture = TextureManager::GetSingleton().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/diffuse.ktx2");
+	auto normalTexture = TextureManager::GetSingleton().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/normal.ktx2");
+	auto metalTexture = TextureManager::GetSingleton().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/metal.ktx2");
+	auto roughnessTexture = TextureManager::GetSingleton().findTexture("C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/roughness.ktx2");
 	vk::DescriptorImageInfo albedoInfo{
 		sampler,
 		albedoTexture->getImageView(),
@@ -239,11 +238,11 @@ void GBufferPass::prepare()
 	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
 	auto vertices = scene->getVertices();
-	vertexBuffer = resourceManager->createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);
+	vertexBuffer = resourceManager.createBuffer(vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer);
 	vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(Vertex));
 
 	auto indices = scene->getIndices();
-	indexBuffer = resourceManager->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
+	indexBuffer = resourceManager.createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
 	indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 }
 
@@ -273,7 +272,7 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 	
 	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, { 0 });
 
-	commandBuffer.drawIndexedIndirect(resourceManager->getIndirectBuffer()->getHandle(), 0, scene->getMeshCount(), sizeof(vk::DrawIndexedIndirectCommand));
+	commandBuffer.drawIndexedIndirect(resourceManager.getIndirectBuffer()->getHandle(), 0, scene->getMeshCount(), sizeof(vk::DrawIndexedIndirectCommand));
 
 	commandBuffer.endRendering();
 }

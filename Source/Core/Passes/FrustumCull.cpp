@@ -2,9 +2,8 @@
 
 #include "Core/GPUFramework/Vulkan/ComputePipeline.hpp"
 
-FrustumCullPass::FrustumCullPass(ResourceManager* resourceManager, const Scene* scene)
-	:ComputePass { resourceManager }
-	, scene{ scene } 
+FrustumCullPass::FrustumCullPass(const Scene* scene)
+	:scene{ scene } 
 {
 }
 
@@ -27,14 +26,14 @@ void FrustumCullPass::prepare()
 	}
 
 	auto meshCount = scene->getMeshCount();
-	meshBuffer = resourceManager->createBuffer(
+	meshBuffer = resourceManager.createBuffer(
 		sizeof(MeshInfo) * meshCount, 
 		vk::BufferUsageFlagBits::eStorageBuffer);
-	indirectDrawCommandBuffer = resourceManager->createIndirectBuffer(
+	indirectDrawCommandBuffer = resourceManager.createIndirectBuffer(
 		sizeof(MeshDrawCommand) * meshCount,
 		vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
 		VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY, false);
-	uniformBuffer = resourceManager->createBuffer(
+	uniformBuffer = resourceManager.createBuffer(
 		sizeof(Uniform) * meshCount, 
 		vk::BufferUsageFlagBits::eUniformBuffer);
 
@@ -48,9 +47,9 @@ void FrustumCullPass::prepare()
 	constants.size = sizeof(CullData);
 	constants.offset = 0;
 
-	pipelineCache = resourceManager->findPipelineCache("FrustumCull");
+	pipelineCache = resourceManager.findPipelineCache("FrustumCull");
 	pipelineLayout = new PipelineLayout{ *gpuContext.getDevice(), {descriptorSetLayout->getHandle()}, {constants} };
-	const ShaderModule* cullShader = resourceManager->findShader("frustumcull.comp");
+	const ShaderModule* cullShader = resourceManager.findShader("frustumcull.comp");
 	computePipeline = new ComputePipeline{ *gpuContext.getDevice() , pipelineLayout, pipelineCache, cullShader };
 
 	std::unordered_map<uint32_t, vk::DescriptorBufferInfo> bufferInfos;

@@ -26,7 +26,7 @@ struct TextureDesc
 
 class TextureManager {
 public:
-	static TextureManager& GetInstance(){
+	static TextureManager& GetSingleton(){
 		static TextureManager instance{};
 		return instance;
 	}

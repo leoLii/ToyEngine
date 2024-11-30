@@ -1,8 +1,7 @@
 #include "Lighting.hpp"
 
-LightingPass::LightingPass(ResourceManager* resourceManager, const Scene* scene)
-	:GraphicsPass{ resourceManager }
-	, scene{ scene }
+LightingPass::LightingPass(const Scene* scene)
+	:scene{ scene }
 {
 	initAttachments();
 }
@@ -13,13 +12,13 @@ LightingPass::~LightingPass()
 
 void LightingPass::initAttachments()
 {
-	positionAttachment = resourceManager->getAttachment("gPosition");
-	albedoAttachment = resourceManager->getAttachment("gAlbedo");
-	normalAttachment = resourceManager->getAttachment("gNormal");
-	armAttachment = resourceManager->getAttachment("gARM");
+	positionAttachment = resourceManager.getAttachment("gPosition");
+	albedoAttachment = resourceManager.getAttachment("gAlbedo");
+	normalAttachment = resourceManager.getAttachment("gNormal");
+	armAttachment = resourceManager.getAttachment("gARM");
 
 	{
-		lightingAttachment = resourceManager->getAttachment("ColorBuffer");
+		lightingAttachment = resourceManager.getAttachment("ColorBuffer");
 		vk::RenderingAttachmentInfo attachmentInfo{};
 		attachmentInfo.imageView = lightingAttachment->view->getHandle();
 		attachmentInfo.imageLayout = lightingAttachment->attachmentInfo.layout;
@@ -68,9 +67,9 @@ void LightingPass::prepare()
 	scissor.offset = vk::Offset2D{ 0, 0 };
 	scissor.extent = vk::Extent2D{ width, height };
 
-	sampler = resourceManager->createSampler();
+	sampler = resourceManager.createSampler();
 
-	std::vector<const ShaderModule*> baseModules = { resourceManager->findShader("deferredlighting.vert"), resourceManager->findShader("deferredlighting.frag") };
+	std::vector<const ShaderModule*> baseModules = { resourceManager.findShader("deferredlighting.vert"), resourceManager.findShader("deferredlighting.frag") };
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
 	bindings.push_back(vk::DescriptorSetLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, &sampler });
@@ -104,10 +103,10 @@ void LightingPass::prepare()
 	state.dynamicStates.push_back(vk::DynamicState::eScissor);
 	state.renderingInfo.colorAttachmentFormats = attachmentFormats;
 
-	pipelineCache = resourceManager->findPipelineCache("Lighting");
+	pipelineCache = resourceManager.findPipelineCache("Lighting");
 	graphicsPipeline = gpuContext.createGraphicsPipeline(pipelineLayout, pipelineCache, &state, baseModules);
 
-	uniformBuffer = resourceManager->createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
+	uniformBuffer = resourceManager.createBuffer(sizeof(Uniform), vk::BufferUsageFlagBits::eUniformBuffer);
 	vk::DescriptorBufferInfo descriptorBufferInfo;
 	descriptorBufferInfo.buffer = uniformBuffer->getHandle();
 	descriptorBufferInfo.offset = 0;
@@ -124,10 +123,10 @@ void LightingPass::prepare()
 
 	descriptorSet = gpuContext.requireDescriptorSet(descriptorSetLayout, bufferInfos, imageInfos);
 
-	vertexBuffer = resourceManager->createBuffer(vertices.size() * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer);
+	vertexBuffer = resourceManager.createBuffer(vertices.size() * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer);
 	vertexBuffer->copyToGPU(static_cast<const void*>(vertices.data()), vertices.size() * sizeof(float));
 
-	indexBuffer = resourceManager->createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
+	indexBuffer = resourceManager.createBuffer(indices.size() * sizeof(uint32_t), vk::BufferUsageFlagBits::eIndexBuffer);
 	indexBuffer->copyToGPU(static_cast<const void*>(indices.data()), indices.size() * sizeof(uint32_t));
 }
 
