@@ -61,8 +61,8 @@ void RenderContext::render(uint64_t frameIndex)
 
 			gpuContext.imageBarrier(
 				renderCommandBuffer,
-				vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eBlit,
-				vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eTransferWrite,
+				vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone,
+				vk::PipelineStageFlagBits2::eBlit, vk::AccessFlagBits2::eTransferWrite,
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 				gpuContext.getSwapchainImages()[swapChainIndex]);
 
@@ -76,8 +76,8 @@ void RenderContext::render(uint64_t frameIndex)
 
 			gpuContext.imageBarrier(
 				renderCommandBuffer,
-				vk::PipelineStageFlagBits2::eFragmentShader, vk::PipelineStageFlagBits2::eBlit,
-				vk::AccessFlagBits2::eShaderWrite, vk::AccessFlagBits2::eTransferRead,
+				vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderWrite, 
+				vk::PipelineStageFlagBits2::eBlit, vk::AccessFlagBits2::eTransferRead,
 				vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 				resourceManager.getAttachment("taaOutput")->image);
 
@@ -100,8 +100,8 @@ void RenderContext::render(uint64_t frameIndex)
 
 			gpuContext.imageBarrier(
 				renderCommandBuffer,
-				vk::PipelineStageFlagBits2::eTransfer, vk::PipelineStageFlagBits2::eBottomOfPipe,
-				vk::AccessFlagBits2::eTransferWrite, vk::AccessFlagBits2::eNone,
+				vk::PipelineStageFlagBits2::eTransfer, vk::AccessFlagBits2::eTransferWrite, 
+				vk::PipelineStageFlagBits2::eBottomOfPipe, vk::AccessFlagBits2::eNone,
 				vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
 				gpuContext.getSwapchainImages()[swapChainIndex]);
 
