@@ -1,10 +1,6 @@
 #pragma once
 
-#include "Scene/Scene.hpp"
-#include "Scene/Node.hpp"
-#include "Scene/Components/Camera.hpp"
-
-#include <random>
+class Scene;
 
 void BuildScene(Scene&&);
 

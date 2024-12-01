@@ -1,5 +1,9 @@
 #include "SceneBuilder.hpp"
 #include "Rendering/Material.hpp"
+#include "Scene/Scene.hpp"
+#include "Scene/Components/Camera.hpp"
+
+#include <random>
 
 void BuildScene(Scene&& scene) {
     auto camera = scene.getCamera();
