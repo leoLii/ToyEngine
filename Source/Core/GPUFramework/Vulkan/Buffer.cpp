@@ -51,5 +51,6 @@ const size_t Buffer::getSize() const
 
 const size_t Buffer::getOffset() const
 {
-	return static_cast<size_t>(allocInfo.offset);
+	//return static_cast<size_t>(allocInfo.offset);
+	return 0;
 }

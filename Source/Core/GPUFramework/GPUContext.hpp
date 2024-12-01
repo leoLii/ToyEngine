@@ -139,8 +139,8 @@ public:
 
 	void imageBarrier(
 		vk::CommandBuffer,
-		vk::PipelineStageFlags2, vk::PipelineStageFlags2,
-		vk::AccessFlags2, vk::AccessFlags2,
+		vk::PipelineStageFlags2, vk::AccessFlags2, 
+		vk::PipelineStageFlags2, vk::AccessFlags2,
 		vk::ImageLayout, vk::ImageLayout,
 		const Image*,
 		vk::DependencyFlags = vk::DependencyFlagBits::eByRegion,
@@ -150,11 +150,9 @@ public:
 
 	void bufferBarrier(
 		vk::CommandBuffer,
-		vk::PipelineStageFlags2, vk::PipelineStageFlags2,
-		vk::AccessFlags2, vk::AccessFlags2,
+		vk::PipelineStageFlags2, vk::AccessFlags2,
+		vk::PipelineStageFlags2, vk::AccessFlags2,
 		const Buffer*,
-		vk::DeviceSize offset,
-		vk::DeviceSize size,
 		uint32_t = VK_QUEUE_FAMILY_IGNORED, uint32_t = VK_QUEUE_FAMILY_IGNORED
 	) const;
 

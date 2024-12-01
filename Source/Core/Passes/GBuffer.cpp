@@ -87,43 +87,43 @@ void GBufferPass::initAttachments()
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone, 
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		velocityAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eTopOfPipe, vk::PipelineStageFlagBits2::eAllGraphics,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+		vk::PipelineStageFlagBits2::eTopOfPipe, vk::AccessFlagBits2::eNone, 
+		vk::PipelineStageFlagBits2::eAllGraphics, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		depthAttachment->image, vk::DependencyFlagBits::eByRegion,
 		vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1 });
@@ -252,8 +252,8 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 
 	gpuContext.bufferBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eComputeShader, vk::PipelineStageFlagBits2::eDrawIndirect,
-		vk::AccessFlagBits2::eMemoryWrite, vk::AccessFlagBits2::eIndirectCommandRead,
+		vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eMemoryWrite, 
+		vk::PipelineStageFlagBits2::eDrawIndirect, vk::AccessFlagBits2::eIndirectCommandRead,
 		resourceManager.getIndirectBuffer(), 0, resourceManager.getIndirectBuffer()->getSize());
 
 	commandBuffer.beginRendering(&renderingInfo);

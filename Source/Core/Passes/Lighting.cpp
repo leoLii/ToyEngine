@@ -136,29 +136,29 @@ void LightingPass::record(vk::CommandBuffer commandBuffer)
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
-		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite, 
+		vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		positionAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
-		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		albedoAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
-		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		normalAttachment->image);
 
 	gpuContext.imageBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eFragmentShader,
-		vk::AccessFlagBits2::eColorAttachmentWrite, vk::AccessFlagBits2::eShaderRead,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderRead,
 		vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,
 		armAttachment->image);
 

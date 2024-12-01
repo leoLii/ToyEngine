@@ -77,21 +77,21 @@ void FrustumCullPass::record(vk::CommandBuffer commandBuffer)
 {
 	gpuContext.bufferBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eHost, vk::PipelineStageFlagBits2::eComputeShader,
-		vk::AccessFlagBits2::eHostWrite, vk::AccessFlagBits2::eShaderRead,
-		meshBuffer, 0, meshBuffer->getSize());
+		vk::PipelineStageFlagBits2::eHost, vk::AccessFlagBits2::eHostWrite, 
+		vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderRead,
+		meshBuffer);
 
 	gpuContext.bufferBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eNone, vk::PipelineStageFlagBits2::eComputeShader,
-		vk::AccessFlagBits2::eNone, vk::AccessFlagBits2::eShaderWrite,
-		indirectDrawCommandBuffer, 0, indirectDrawCommandBuffer->getSize());
+		vk::PipelineStageFlagBits2::eNone, vk::AccessFlagBits2::eNone, 
+		vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderWrite,
+		indirectDrawCommandBuffer);
 
 	gpuContext.bufferBarrier(
 		commandBuffer,
-		vk::PipelineStageFlagBits2::eHost, vk::PipelineStageFlagBits2::eComputeShader,
-		vk::AccessFlagBits2::eHostWrite, vk::AccessFlagBits2::eShaderRead,
-		uniformBuffer, 0, uniformBuffer->getSize());
+		vk::PipelineStageFlagBits2::eHost, vk::AccessFlagBits2::eHostWrite, 
+		vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderRead,
+		uniformBuffer);
 
 	auto normalizePlane = [](Vec4 p)->Vec4
 		{
