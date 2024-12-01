@@ -250,6 +250,12 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 {
 	auto camera = scene->getCamera();
 
+	gpuContext.bufferBarrier(
+		commandBuffer,
+		vk::PipelineStageFlagBits2::eComputeShader, vk::PipelineStageFlagBits2::eDrawIndirect,
+		vk::AccessFlagBits2::eMemoryWrite, vk::AccessFlagBits2::eIndirectCommandRead,
+		resourceManager.getIndirectBuffer(), 0, resourceManager.getIndirectBuffer()->getSize());
+
 	commandBuffer.beginRendering(&renderingInfo);
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline->getHandle());
@@ -271,7 +277,7 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 			1} });
 	
 	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout->getHandle(), 0, { descriptorSet->getHandle() }, { 0 });
-
+	
 	commandBuffer.drawIndexedIndirect(resourceManager.getIndirectBuffer()->getHandle(), 0, scene->getMeshCount(), sizeof(vk::DrawIndexedIndirectCommand));
 
 	commandBuffer.endRendering();
