@@ -40,6 +40,8 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	this->scene = scene;
 
 	RenderContext::GetSingleton().prepare(scene);
+
+	renderThread = std::thread(&Application::render, this);
 }
 
 void Application::run()
@@ -50,15 +52,14 @@ void Application::run()
 		beginFrame();
 
 		scene->update(frameIndex);
-
-		RenderContext::GetSingleton().render(frameIndex);
-
+		
 		endFrame();
 	}
 }
 
 void Application::close()
 {
+	renderThread.join();
 	delete window;
 	RenderContext::GetSingleton().clear();
 }
@@ -73,4 +74,13 @@ void Application::beginFrame()
 
 void Application::endFrame()
 {
+}
+
+void Application::render()
+{
+	while (!window->shouldClose()) {
+		if (scene->getIsReady()) {
+			RenderContext::GetSingleton().render(frameIndex);
+		}
+	}
 }

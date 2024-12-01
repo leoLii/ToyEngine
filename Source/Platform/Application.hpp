@@ -46,6 +46,8 @@ public:
 
 	void loadImage();
 
+	void render();
+
 protected:
 	ApplicationConfig config;
 
@@ -68,4 +70,6 @@ protected:
 	std::chrono::time_point<std::chrono::system_clock> lastFrameTime;
 
 	Scene* scene;
+
+	std::thread renderThread;
 };
