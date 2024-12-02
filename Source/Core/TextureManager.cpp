@@ -10,6 +10,9 @@ TextureManager::TextureManager(uint64_t maxTextureCount)
 
 TextureManager::~TextureManager()
 {
+	for (auto texture : mTextureDescs) {
+		delete texture.second.pTexture;
+	}
 	mTextureDescs.clear();
 }
 
