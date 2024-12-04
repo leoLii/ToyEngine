@@ -86,14 +86,14 @@ vk::SurfaceKHR GPUContext::getSurface() const
     return surface;
 }
 
-vk::CommandBuffer GPUContext::requestCommandBuffer(CommandType type, vk::CommandBufferLevel level) const
+vk::CommandBuffer GPUContext::requestCommandBuffer(CommandType type, vk::CommandBufferLevel level, uint32_t poolIndex) const
 {
-    return commandPools[0]->requestCommandBuffer(level);
+    return commandPools[poolIndex]->requestCommandBuffer(level);
 }
 
-vk::CommandPool GPUContext::getCommandPool() const
+vk::CommandPool GPUContext::getCommandPool(uint32_t poolIndex) const
 {
-    return commandPools[0]->getHandle();
+    return commandPools[poolIndex]->getHandle();
 }
 
 PipelineLayout* GPUContext::createPipelineLayout(std::vector<vk::DescriptorSetLayout> setLayouts, std::vector<vk::PushConstantRange> constants) const
@@ -288,6 +288,7 @@ void GPUContext::bufferBarrier(vk::CommandBuffer commandBuffer,
 
 void GPUContext::createCommandPools()
 {
+    commandPools.push_back(new CommandPool{ *device, 0 });
     commandPools.push_back(new CommandPool{ *device, 0 });
 }
 

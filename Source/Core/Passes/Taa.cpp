@@ -146,7 +146,7 @@ void TaaPass::initAttachment()
 	taaOutput = resourceManager.getAttachment("taaOutput");
 	history = resourceManager.getAttachment("taaHistory");
 	
-	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary, 0);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);

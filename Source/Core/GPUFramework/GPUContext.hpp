@@ -80,9 +80,9 @@ public:
 	vk::SurfaceKHR getSurface() const;
 
 	// CommandPool
-	vk::CommandBuffer requestCommandBuffer(CommandType, vk::CommandBufferLevel level) const;
+	vk::CommandBuffer requestCommandBuffer(CommandType, vk::CommandBufferLevel, uint32_t) const;
 
-	vk::CommandPool getCommandPool() const;
+	vk::CommandPool getCommandPool(uint32_t) const;
 
 	// Pipeline
 	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;
