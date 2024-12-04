@@ -63,7 +63,7 @@ protected:
 
 	uint32_t fps = 0;
 
-	uint64_t frameIndex = -1;
+	std::atomic<uint64_t> frameIndex = -1;
 
 	float deltaTime = 0.0;
 

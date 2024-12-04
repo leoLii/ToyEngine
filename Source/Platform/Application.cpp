@@ -1,7 +1,5 @@
 #include "Application.hpp"
 
-
-
 #include "Scene/Scene.hpp"
 #include "Scene/Mesh.hpp"
 #include "Scene/Components/Camera.hpp"
@@ -25,7 +23,7 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	window = new Window{ config.name, config.width, config.height };
 	auto windowExtensions = Window::requireWindowExtensions();
 	config.extensions.insert(config.extensions.end(), windowExtensions.begin(), windowExtensions.end());
-	
+
 	GPUContext::GetSingleton().init(config.name, config.layers, config.extensions, window);
 
 	std::vector<const char*> texturePath = {
@@ -34,9 +32,9 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/metal.ktx2",
 		"C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/textures/roughness.ktx2"
 	};
-	
+
 	TextureManager::GetSingleton().createTextureReference(std::move(texturePath));
-	
+
 	this->scene = scene;
 
 	RenderContext::GetSingleton().prepare(scene);
@@ -49,10 +47,21 @@ void Application::run()
 	while (!window->shouldClose()) {
 		window->pollEvents();
 
+		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex);
+
+		// 确保上一帧渲染完成
+		while (!frameData.rendered) {
+			std::this_thread::yield();  // 逻辑线程等待
+		}
+
+
 		beginFrame();
 
+		frameData.readyForRender.store(true);
+		frameData.rendered.store(false);
+
 		scene->update(frameIndex);
-		
+
 		endFrame();
 	}
 }
@@ -74,13 +83,18 @@ void Application::beginFrame()
 
 void Application::endFrame()
 {
+	////Present here
+
 }
 
 void Application::render()
 {
 	while (!window->shouldClose()) {
-		if (scene->getIsReady()) {
-			RenderContext::GetSingleton().render(frameIndex);
+		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex);
+		if (!frameData.readyForRender) {
+			std::this_thread::yield();  // 渲染线程等待
+			continue;
 		}
+		RenderContext::GetSingleton().render(frameIndex);
 	}
 }
