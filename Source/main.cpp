@@ -1,7 +1,6 @@
 #include "Common/Logging.hpp"
-
 #include "Platform/Application.hpp"
-
+#include "Scene/Scene.hpp"
 #include "SceneBuilder.hpp"
 
 int main() {
