@@ -139,7 +139,7 @@ void RenderContext::clear()
 	delete cullPass;
 }
 
-FrameData& RenderContext::getFrameData(uint32_t index)
+FrameData& RenderContext::getFrameData(uint64_t index)
 {
 	return frameDatas[index % MAX_FRAMES_IN_FLIGHT];
 }

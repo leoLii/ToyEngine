@@ -35,7 +35,7 @@ public:
 	void render(uint64_t);
 	void clear();
 
-	FrameData& getFrameData(uint32_t);
+	FrameData& getFrameData(uint64_t);
 
 protected:
 	const GPUContext& gpuContext;
