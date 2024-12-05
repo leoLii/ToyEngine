@@ -94,11 +94,9 @@ std::vector<vk::DeviceQueueCreateInfo> Device::createQueueInfos()
                 queue_priorities[queueFamilyIndex].resize(queueFamilyProperty.queueCount, 0.5f);
             }
 
-        vk::DeviceQueueCreateInfo& queueCreateInfo = queueCreateInfos[queueFamilyIndex];
-
-        queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
-        queueCreateInfo.queueCount = queueFamilyProperty.queueCount;
-        queueCreateInfo.pQueuePriorities = queue_priorities[queueFamilyIndex].data();
+        queueCreateInfos[queueFamilyIndex].queueFamilyIndex = queueFamilyIndex;
+        queueCreateInfos[queueFamilyIndex].queueCount = queueFamilyProperty.queueCount;
+        queueCreateInfos[queueFamilyIndex].pQueuePriorities = queue_priorities[queueFamilyIndex].data();
     }
     return queueCreateInfos;
 }
@@ -159,7 +157,6 @@ Device::Device(Instance& instance)
     createInfo.pNext = &pipelineCreationCacheControlFeature;
     
     handle = gpu.createDevice(createInfo);
-
 
     graphicsQueue = handle.getQueue(0, 0);
     presentQueue = handle.getQueue(0, 1);
