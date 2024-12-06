@@ -271,7 +271,7 @@ void RenderContext::createAttachments(uint32_t renderWidth, uint32_t renderHeigh
 
 #ifdef REVERSE_DEPTH
 		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 0u, 0u };
-#elif
+#else
 		attachmentInfo.clearValue = vk::ClearDepthStencilValue{ 1u, 0u };
 #endif // REVERSE_DEPTH
 
