@@ -76,7 +76,7 @@ protected:
     vk::Queue textureLoadQueue{ VK_NULL_HANDLE };
 
     uint32_t graphicsFamilyIndex = 0;
-    uint32_t computeFamilyIndex = 2;
+    uint32_t computeFamilyIndex = 0;
     uint32_t transferFamilyIndex = 1;
     uint32_t presentFamilyIndex = 2;
 

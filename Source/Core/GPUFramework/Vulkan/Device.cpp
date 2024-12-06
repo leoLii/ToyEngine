@@ -160,7 +160,7 @@ Device::Device(Instance& instance)
 
     graphicsQueue = handle.getQueue(graphicsFamilyIndex, 0);
     presentQueue = handle.getQueue(presentFamilyIndex, 1);
-    computeQueue = handle.getQueue(computeFamilyIndex, 0);
+    computeQueue = handle.getQueue(computeFamilyIndex, 1);
     transferQueue = handle.getQueue(transferFamilyIndex, 0);
 
     textureLoadQueue = handle.getQueue(graphicsFamilyIndex, 15);

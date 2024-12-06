@@ -254,7 +254,9 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 		commandBuffer,
 		vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eMemoryWrite, 
 		vk::PipelineStageFlagBits2::eDrawIndirect, vk::AccessFlagBits2::eIndirectCommandRead,
-		resourceManager.getIndirectBuffer(), 0, resourceManager.getIndirectBuffer()->getSize());
+		resourceManager.getIndirectBuffer(),
+		std::get<0>(gpuContext.getDevice()->getQueue(QueueType::qCompute)), 
+		std::get<0>(gpuContext.getDevice()->getQueue(QueueType::qGraphics)));
 
 	commandBuffer.beginRendering(&renderingInfo);
 

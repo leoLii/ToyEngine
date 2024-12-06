@@ -95,11 +95,11 @@ public:
 	// Fence & Semaphore
 	vk::Fence requestFence() const;
 
-	void waitForFences(const vk::Fence) const;
+	void waitForFences(std::vector<vk::Fence>) const;
 
-	void resetFences(const vk::Fence) const;
+	void resetFences(std::vector<vk::Fence>) const;
 
-	void returnFence(const vk::Fence) const;
+	void returnFence(vk::Fence) const;
 
 	vk::Semaphore requestSemaphore() const;
 

@@ -121,17 +121,17 @@ vk::Fence GPUContext::requestFence() const
 	return fencePool->requestFence();
 }
 
-void GPUContext::waitForFences(const vk::Fence fence) const
+void GPUContext::waitForFences(std::vector<vk::Fence> fences) const
 {
-	fencePool->waitForFences(fence);
+	fencePool->waitForFences(fences);
 }
 
-void GPUContext::resetFences(const vk::Fence fence) const
+void GPUContext::resetFences(std::vector<vk::Fence> fences) const
 {
-	fencePool->resetFences(fence);
+	fencePool->resetFences(fences);
 }
 
-void GPUContext::returnFence(const vk::Fence fence) const
+void GPUContext::returnFence(vk::Fence fence) const
 {
 	fencePool->returnFence(fence);
 }

@@ -18,9 +18,11 @@ class FrustumCullPass;
 struct FrameData {
 	std::atomic<bool> readyForRender{ false };  // 帧数据是否可供渲染线程使用
 	std::atomic<bool> rendered{ true };
-	vk::Semaphore presentSemaphore, renderSemaphore;
+	vk::Semaphore renderFinished, imageAvailable, computeFinished;
 	vk::Fence renderFence;
-	vk::CommandBuffer mainCommandBuffer;
+	vk::Fence computeFence;
+	vk::CommandBuffer renderCommandBuffer;
+	vk::CommandBuffer computeCommandBuffer;
 };
 
 class RenderContext {
