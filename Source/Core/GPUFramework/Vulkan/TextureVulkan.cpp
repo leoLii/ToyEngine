@@ -11,8 +11,8 @@ TextureVulkan::TextureVulkan(const char* path)
         &kvdi,
         gpuContext.getDevice()->getUsingGPU(), 
         gpuContext.getDevice()->getHandle(), 
-        gpuContext.getDevice()->getTransferQueue(),
-        gpuContext.getCommandPool(0), nullptr);
+        gpuContext.getDevice()->getTextureLoadQueue(),
+        gpuContext.getTextureLoadPool(), nullptr);
 
     auto ktxresult = ktxTexture2_VkUpload(insideTexture, &kvdi, &vulkanTexture);
     if (KTX_SUCCESS != ktxresult) {

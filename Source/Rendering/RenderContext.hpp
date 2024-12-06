@@ -20,7 +20,6 @@ struct FrameData {
 	std::atomic<bool> rendered{ true };
 	vk::Semaphore presentSemaphore, renderSemaphore;
 	vk::Fence renderFence;
-	vk::CommandPool commandPool;
 	vk::CommandBuffer mainCommandBuffer;
 };
 

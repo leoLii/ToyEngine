@@ -146,7 +146,7 @@ void TaaPass::initAttachment()
 	taaOutput = resourceManager.getAttachment("taaOutput");
 	history = resourceManager.getAttachment("taaHistory");
 	
-	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary, 0);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::cGraphics, vk::CommandBufferLevel::ePrimary, 0);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
@@ -167,7 +167,7 @@ void TaaPass::initAttachment()
 	
 	commandBuffer.end();
 
-	gpuContext.submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext.submit(CommandType::cGraphics, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
 
-	gpuContext.getDevice()->getTransferQueue().waitIdle();
+	std::get<1>(gpuContext.getDevice()->getQueue(QueueType::qGraphics)).waitIdle();
 }

@@ -12,6 +12,7 @@
 #include <vector>
 #include <unordered_map>
 #include <optional>
+#include <tuple>
 
 class Instance;
 class Queue;
@@ -32,22 +33,10 @@ public:
     vk::Device getHandle() const;
 
     const std::vector<vk::QueueFamilyProperties> getQueueFamilyProperties() const;
-    
-    vk::Queue getGraphicsQueue() const {
-        return this->graphicsQueue;
-    }
-    
-    vk::Queue getComputeQueue() const {
-        return this->computeQueue;
-    }
-    
-    vk::Queue getTransferQueue() const {
-        return this->transferQueue;
-    }
-    
-    vk::Queue getPresentQueue() const{
-        return this->presentQueue;
-    }
+
+    std::tuple<uint32_t, vk::Queue> getQueue(QueueType) const;
+
+    vk::Queue getTextureLoadQueue() const;
 
     const VmaAllocator& getAllocator() const {
         return this->allocator;
@@ -83,6 +72,13 @@ protected:
     vk::Queue computeQueue{ VK_NULL_HANDLE };
     vk::Queue presentQueue{ VK_NULL_HANDLE };
     vk::Queue transferQueue{ VK_NULL_HANDLE };
+
+    vk::Queue textureLoadQueue{ VK_NULL_HANDLE };
+
+    uint32_t graphicsFamilyIndex = 0;
+    uint32_t computeFamilyIndex = 2;
+    uint32_t transferFamilyIndex = 1;
+    uint32_t presentFamilyIndex = 2;
 
 private:
     std::vector<vk::DeviceQueueCreateInfo> createQueueInfos();

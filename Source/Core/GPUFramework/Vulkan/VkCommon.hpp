@@ -109,7 +109,15 @@ private:
 
 enum CommandType
 {
-	Graphics,
-	Compute,
-	Transfer
+	cGraphics,
+	cCompute,
+	cTransfer
+};
+
+enum QueueType
+{
+	qGraphics = 0,
+	qCompute,
+	qTransfer,
+	qPresent
 };

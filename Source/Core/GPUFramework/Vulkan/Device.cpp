@@ -158,10 +158,12 @@ Device::Device(Instance& instance)
     
     handle = gpu.createDevice(createInfo);
 
-    graphicsQueue = handle.getQueue(0, 0);
-    presentQueue = handle.getQueue(0, 1);
-    computeQueue = handle.getQueue(0, 2);
-    transferQueue = handle.getQueue(0, 3);
+    graphicsQueue = handle.getQueue(graphicsFamilyIndex, 0);
+    presentQueue = handle.getQueue(presentFamilyIndex, 1);
+    computeQueue = handle.getQueue(computeFamilyIndex, 0);
+    transferQueue = handle.getQueue(transferFamilyIndex, 0);
+
+    textureLoadQueue = handle.getQueue(graphicsFamilyIndex, 15);
 
     // init allocator
     VmaVulkanFunctions vulkanFunctions = {};
@@ -199,3 +201,26 @@ const std::vector<vk::QueueFamilyProperties> Device::getQueueFamilyProperties() 
 {
     return queueFamilyProperties;
 }
+
+std::tuple<uint32_t, vk::Queue> Device::getQueue(QueueType queueType) const
+{
+    switch (queueType)
+    {
+    case QueueType::qGraphics:
+        return std::make_tuple(graphicsFamilyIndex, graphicsQueue);
+    case QueueType::qCompute:
+        return std::make_tuple(computeFamilyIndex, computeQueue);
+    case QueueType::qTransfer:
+        return std::make_tuple(transferFamilyIndex, transferQueue);
+    case QueueType::qPresent:
+        return std::make_tuple(presentFamilyIndex, presentQueue);
+    default:
+        return std::make_tuple(0, VK_NULL_HANDLE);
+    }
+}
+
+vk::Queue Device::getTextureLoadQueue() const
+{
+    return textureLoadQueue;
+}
+

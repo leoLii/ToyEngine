@@ -80,7 +80,7 @@ void GBufferPass::initAttachments()
 		depthAttachmentInfo.clearValue = depthAttachment->attachmentInfo.clearValue;
 	}
 
-	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::Transfer, vk::CommandBufferLevel::ePrimary, 0);
+	auto commandBuffer = gpuContext.requestCommandBuffer(CommandType::cGraphics, vk::CommandBufferLevel::ePrimary, 0);
 	vk::CommandBufferBeginInfo beginInfo;
 	beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 	commandBuffer.begin(beginInfo);
@@ -130,9 +130,9 @@ void GBufferPass::initAttachments()
 
 	commandBuffer.end();
 
-	gpuContext.submit(CommandType::Transfer, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
+	gpuContext.submit(CommandType::cGraphics, {}, {}, { commandBuffer }, {}, VK_NULL_HANDLE);
 	
-	gpuContext.getDevice()->getTransferQueue().waitIdle();
+	std::get<1>(gpuContext.getDevice()->getQueue(QueueType::qGraphics)).waitIdle();
 }
 
 void GBufferPass::prepare()

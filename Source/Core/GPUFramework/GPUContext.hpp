@@ -30,6 +30,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <array>
 
 /// <summary>
 /// GPUContext is designed to deal with physical level functions.
@@ -82,7 +83,9 @@ public:
 	// CommandPool
 	vk::CommandBuffer requestCommandBuffer(CommandType, vk::CommandBufferLevel, uint32_t) const;
 
-	vk::CommandPool getCommandPool(uint32_t) const;
+	vk::CommandPool getCommandPool(uint32_t, QueueType) const;
+
+	vk::CommandPool getTextureLoadPool() const;
 
 	// Pipeline
 	PipelineLayout* createPipelineLayout(std::vector<vk::DescriptorSetLayout>, std::vector<vk::PushConstantRange>) const;
@@ -172,7 +175,11 @@ protected:
 
 	vk::DescriptorPool descriptorPool;
 	vk::SurfaceKHR surface;
-	std::vector<CommandPool*> commandPools;
+	//std::vector<CommandPool*> commandPools;
+
+	std::vector<std::vector<CommandPool*>> commandPools;
+
+	CommandPool* textureLoadPool;
 
 private:
 	void createCommandPools();

@@ -26,8 +26,7 @@ void RenderContext::prepare(const Scene* scene)
 		frameDatas[i].renderFence = gpuContext.requestFence();
 		frameDatas[i].renderSemaphore = gpuContext.requestSemaphore();
 		frameDatas[i].presentSemaphore = gpuContext.requestSemaphore();
-		frameDatas[i].commandPool = gpuContext.getCommandPool(i);
-		frameDatas[i].mainCommandBuffer = gpuContext.requestCommandBuffer(CommandType::Graphics, vk::CommandBufferLevel::ePrimary, i);
+		frameDatas[i].mainCommandBuffer = gpuContext.requestCommandBuffer(CommandType::cGraphics, vk::CommandBufferLevel::ePrimary, i);
 	}
 
 	gBufferPass = new GBufferPass{ scene };
@@ -100,7 +99,7 @@ void RenderContext::render(uint64_t frameIndex)
 				{ blit }, vk::Filter::eLinear);
 
 			gpuContext.imageBarrier(
-				frameData.mainCommandBuffer,
+			frameData.mainCommandBuffer,
 				vk::PipelineStageFlagBits2::eTransfer, vk::AccessFlagBits2::eTransferWrite,
 				vk::PipelineStageFlagBits2::eBottomOfPipe, vk::AccessFlagBits2::eNone,
 				vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::ePresentSrcKHR,
@@ -108,7 +107,7 @@ void RenderContext::render(uint64_t frameIndex)
 
 			frameData.mainCommandBuffer.end();
 			gpuContext.submit(
-				CommandType::Graphics,
+				CommandType::cGraphics,
 				{ frameData.renderSemaphore },
 				{ vk::PipelineStageFlagBits::eAllGraphics },
 				{ frameData.mainCommandBuffer },

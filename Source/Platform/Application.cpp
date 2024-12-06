@@ -47,13 +47,12 @@ void Application::run()
 	while (!window->shouldClose()) {
 		window->pollEvents();
 
-		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex);
+		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex.load());
 
 		// 确保上一帧渲染完成
 		while (!frameData.rendered) {
 			std::this_thread::yield();  // 逻辑线程等待
 		}
-
 
 		beginFrame();
 
