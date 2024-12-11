@@ -1,5 +1,7 @@
 #include "Application.hpp"
 
+#include "InputManager.hpp"
+
 #include "Scene/Scene.hpp"
 #include "Scene/Mesh.hpp"
 #include "Scene/Components/Camera.hpp"
@@ -10,7 +12,6 @@
 #include "Core/Passes/Lighting.hpp"
 #include "Core/Passes/Taa.hpp"
 #include "Core/Passes/FrustumCull.hpp"
-
 #include "Rendering/RenderContext.hpp"
 
 #include <cstddef>
@@ -46,6 +47,25 @@ void Application::run()
 {
 	while (!window->shouldClose()) {
 		window->pollEvents();
+
+		// Read joystick axis
+		float moveX = InputManager::GetSingleton().getAxis(SDL_CONTROLLER_AXIS_LEFTX);
+		float moveY = InputManager::GetSingleton().getAxis(SDL_CONTROLLER_AXIS_LEFTY);
+		float rotateX = InputManager::GetSingleton().getAxis(SDL_CONTROLLER_AXIS_RIGHTX);
+		float rotateY = InputManager::GetSingleton().getAxis(SDL_CONTROLLER_AXIS_RIGHTY);
+
+		auto camera = scene->getCamera();
+		// Movement
+		if (fabs(moveX) > 0.1f || fabs(moveY) > 0.1f) {
+			camera->move(Vec2(moveX, moveY), 0.1);
+		}
+
+
+		// Rotation
+		//if (fabs(rotateX) > 0.1f || fabs(rotateY) > 0.1f) {
+		//	camera->rotate(Vec2(rotateX, rotateY), 0.1);
+		//}
+
 
 		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex.load());
 

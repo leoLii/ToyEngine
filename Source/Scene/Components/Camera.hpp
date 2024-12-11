@@ -40,6 +40,9 @@ public:
 	Vec2 getPrevJitter() const;
 	Vec2 getCurrJitter() const;
 
+	void move(Vec2, float);
+	void rotate(Vec2, float);
+
 	virtual void update(float deltaTime, uint32_t frameIndex) override;
 
 	virtual void lateUpdate() override;
@@ -54,9 +57,19 @@ public:
 		return frustum.zFar;
 	}
 
+	const Vec3 getDirection() const {
+		return direction;
+	}
+
+	const Vec3 getUp() const {
+		return up;
+	}
+
 protected:
 	CameraType type;
 	Frustum frustum;
+	Vec3 direction;
+	Vec3 up{ 0.0, 1.0, 0.0 };
 	Vec2 prevJitter;
 	Vec2 currJitter;
 	Mat4 view{ 1.0 };

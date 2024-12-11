@@ -1,5 +1,9 @@
 #include "Camera.hpp"
 
+#include "Scene/Node.hpp"
+
+#include <Common/Math.hpp>
+
 Camera::Camera(CameraType type, Frustum frustum)
 	:type{ type }
 	, frustum{ frustum }
@@ -29,6 +33,7 @@ std::type_index Camera::getType()
 void Camera::lookAt(Vec3 eye, Vec3 center, Vec3 up)
 {
 	this->view = glm::lookAt(eye, center, up);
+	direction = glm::normalize(center - eye);
 }
 
 const Mat4 Camera::getViewMatrix() const
@@ -74,6 +79,27 @@ Vec2 Camera::getPrevJitter() const
 Vec2 Camera::getCurrJitter() const
 {
 	return currJitter;
+}
+
+void Camera::move(Vec2 input, float speed)
+{
+	Vec3 right = glm::normalize(glm::cross(direction, up));
+	Vec3 forward = direction;
+	Vec3 movement = (right * input.x + forward * -input.y) * speed;
+	attachNode->getTransform().setTranslate(movement);
+	lookAt(attachNode->getTransform().getPosition(), attachNode->getTransform().getPosition() + direction, up);
+}
+
+void Camera::rotate(Vec2 input, float speed)
+{
+	float yaw = input.x * speed;
+	float pitch = input.y * speed;
+	Vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction = glm::normalize(front);
+	lookAt(attachNode->getTransform().getPosition(), attachNode->getTransform().getPosition() + direction, up);
 }
 
 void Camera::update(float deltaTime, uint32_t frameIndex)

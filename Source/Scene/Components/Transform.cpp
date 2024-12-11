@@ -6,7 +6,7 @@ Transform::Transform()
 
 void Transform::update(float deltaTime, uint32_t frameIndex)
 {
-	currTransform = glm::translate(Mat4(1.0), translation) *
+	currTransform = glm::translate(Mat4(1.0), position) *
 		glm::mat4_cast(rotation) *
 		glm::scale(Mat4(1.0), scale);
 }
@@ -23,7 +23,7 @@ std::type_index Transform::getType()
 
 void Transform::setTranslate(const Vec3& direction)
 {
-	this->translation += direction;
+	this->position += direction;
 }
 
 void Transform::setRotate(const float angle, const Vec3& axis)
