@@ -21,7 +21,7 @@
 void Application::init(ApplicationConfig& config, Scene* scene)
 {
 	window = new Window{ config.name, config.width, config.height };
-	auto windowExtensions = Window::requireWindowExtensions();
+	auto windowExtensions = window->requireWindowExtensions();
 	config.extensions.insert(config.extensions.end(), windowExtensions.begin(), windowExtensions.end());
 
 	GPUContext::GetSingleton().init(config.name, config.layers, config.extensions, window);

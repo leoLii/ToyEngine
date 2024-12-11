@@ -7,11 +7,14 @@
 
 #pragma once
 
+#define SDL_MAIN_HANDLED
+
 #include "Core/GPUFramework/Vulkan/VkCommon.hpp"
 
-#include <GLFW/glfw3.h>
 #include <string>
 #include <vector>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
 
 class Window{
 public:
@@ -26,12 +29,13 @@ public:
     
     void getFramebufferSize(int* width, int* height);
 
-    static std::vector<const char*> requireWindowExtensions();
+    std::vector<const char*> requireWindowExtensions();
 
-    GLFWwindow* getHandle();
+    SDL_Window* getHandle();
     
 protected:
-    GLFWwindow* window;
+    SDL_Window* window{ nullptr };
+    bool closeSemaphore = false;
     std::string name;
     size_t width;
     size_t height;

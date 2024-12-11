@@ -9,40 +9,52 @@
 
 Window::Window(std::string name, size_t width, size_t height)
 :name(name), width(width), height(height){
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    this->window = glfwCreateWindow(width, height, "Vulkan window", nullptr, nullptr);
+    SDL_Init(SDL_INIT_EVERYTHING);
+    window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
 }
 
 Window::~Window(){
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
-bool Window::shouldClose(){
-    return glfwWindowShouldClose(this->window);
+bool Window::shouldClose() {
+    return closeSemaphore;
 }
 
 void Window::pollEvents(){
-    glfwPollEvents();
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type)
+        {
+        case SDL_QUIT:
+            closeSemaphore = true;
+            break;
+        
+        default:
+            break;
+        }
+    }
 }
 
 void Window::waitEvents(){
-    glfwWaitEvents();
+    SDL_WaitEvent(nullptr);
 }
 
 void Window::getFramebufferSize(int* width, int* height){
-    glfwGetFramebufferSize(this->window, width, height);
+    SDL_GetWindowSize(window, width, height);
 }
 
 std::vector<const char*> Window::requireWindowExtensions()
 {
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    return std::vector<const char*>(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    uint32_t count = 0;
+    SDL_Vulkan_GetInstanceExtensions(window, &count, nullptr);
+    std::vector<const char*> extensions(count);
+    SDL_Vulkan_GetInstanceExtensions(window, &count, extensions.data());
+    return extensions;
 }
 
-GLFWwindow* Window::getHandle()
+SDL_Window* Window::getHandle()
 {
     return window;
 }

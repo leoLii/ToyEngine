@@ -318,8 +318,8 @@ void GPUContext::destroyCommandPools()
 void GPUContext::createSurface(Window* window)
 {
 	VkSurfaceKHR VKSurface;
-	auto result = glfwCreateWindowSurface(instance->getHandle(), window->getHandle(), nullptr, &VKSurface);
-	if (result != VK_SUCCESS) {
+	auto result = SDL_Vulkan_CreateSurface(window->getHandle(), instance->getHandle(), &VKSurface);
+	if (result != SDL_TRUE) {
 		throw VulkanException(static_cast<vk::Result>(result));
 	}
 	surface = static_cast<vk::SurfaceKHR>(VKSurface);
