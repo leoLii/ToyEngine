@@ -19,6 +19,9 @@ public:
 	void setTranslate(const Vec3&);
 	void setRotate(const float, const Vec3&);
 	void setScale(const Vec3&);
+	Quat getRotation() {
+		return rotation;
+	}
 
 	const Vec3& getPosition() {
 		return position;

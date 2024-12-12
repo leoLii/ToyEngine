@@ -68,7 +68,7 @@ public:
 protected:
 	CameraType type;
 	Frustum frustum;
-	Vec3 direction;
+	Vec3 direction{ 0.0, 0.0, -1.0 };
 	Vec3 up{ 0.0, 1.0, 0.0 };
 	Vec2 prevJitter;
 	Vec2 currJitter;

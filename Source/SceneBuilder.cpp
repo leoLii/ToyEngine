@@ -9,7 +9,6 @@ void BuildScene(Scene&& scene) {
     auto camera = scene.getCamera();
     Vec3 cameraPosition = Vec3(2.5, 2.5, 2.5);
     camera->getAttachNode()->getTransform().setTranslate(cameraPosition);
-    camera->lookAt(cameraPosition, Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
     std::string path{ "C:/Users/lihan/Desktop/workspace/ToyEngine/Resource/cat/cat.fbx" };
     std::default_random_engine random_generator;
     random_generator.seed(42);

@@ -11,6 +11,7 @@ Window::Window(std::string name, size_t width, size_t height)
 :name(name), width(width), height(height){
     SDL_Init(SDL_INIT_EVERYTHING);
     window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
+    SDL_SetWindowGrab(window, SDL_TRUE);
 }
 
 Window::~Window(){

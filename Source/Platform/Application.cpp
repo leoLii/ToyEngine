@@ -60,12 +60,10 @@ void Application::run()
 			camera->move(Vec2(moveX, moveY), 0.1);
 		}
 
-
 		// Rotation
-		//if (fabs(rotateX) > 0.1f || fabs(rotateY) > 0.1f) {
-		//	camera->rotate(Vec2(rotateX, rotateY), 0.1);
-		//}
-
+		if (fabs(rotateX) > 0.1f || fabs(rotateY) > 0.1f) {
+			camera->rotate(Vec2(-rotateX, -rotateY), 0.4);
+		}
 
 		auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex.load());
 

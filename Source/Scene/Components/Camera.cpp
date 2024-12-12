@@ -33,7 +33,6 @@ std::type_index Camera::getType()
 void Camera::lookAt(Vec3 eye, Vec3 center, Vec3 up)
 {
 	this->view = glm::lookAt(eye, center, up);
-	direction = glm::normalize(center - eye);
 }
 
 const Mat4 Camera::getViewMatrix() const
@@ -87,23 +86,26 @@ void Camera::move(Vec2 input, float speed)
 	Vec3 forward = direction;
 	Vec3 movement = (right * input.x + forward * -input.y) * speed;
 	attachNode->getTransform().setTranslate(movement);
-	lookAt(attachNode->getTransform().getPosition(), attachNode->getTransform().getPosition() + direction, up);
 }
 
 void Camera::rotate(Vec2 input, float speed)
 {
 	float yaw = input.x * speed;
 	float pitch = input.y * speed;
-	Vec3 front;
-	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction = glm::normalize(front);
-	lookAt(attachNode->getTransform().getPosition(), attachNode->getTransform().getPosition() + direction, up);
+	// 更新 Transform 的旋转
+	attachNode->getTransform().setRotate(yaw, Vec3(0.0f, 1.0f, 0.0f));  // 绕Y轴旋转 yaw
+	attachNode->getTransform().setRotate(pitch, Vec3(1.0f, 0.0f, 0.0f)); // 绕X轴旋转 pitch
+
+	// 更新摄像机的方向和上向量
+	Mat4 rotationMatrix = glm::mat4_cast(attachNode->getTransform().getRotation()); // 获取当前旋转矩阵
+	direction = glm::normalize(Vec3(rotationMatrix * Vec4(0.0f, 0.0f, -1.0f, 0.0f))); // 更新方向
+	up = glm::normalize(Vec3(rotationMatrix * Vec4(0.0f, 1.0f, 0.0f, 0.0f)));         // 更新上向量
 }
 
 void Camera::update(float deltaTime, uint32_t frameIndex)
 {
+	lookAt(attachNode->getTransform().getPosition(), attachNode->getTransform().getPosition() + direction, up);
+
 	prevView = view;
 	projectionJittered = projection;
 	prevJitter = currJitter;
