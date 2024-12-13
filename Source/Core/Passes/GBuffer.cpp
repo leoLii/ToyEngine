@@ -273,7 +273,7 @@ void GBufferPass::record(vk::CommandBuffer commandBuffer)
 		vk::ShaderStageFlagBits::eVertex, 0,
 		{ Constant{
 			camera->getPVPrev(),
-			camera->getPV(),
+			camera->getPVJittered(),
 			camera->getPrevJitter(),
 			camera->getCurrJitter(),
 			1} });
