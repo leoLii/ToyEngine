@@ -67,6 +67,8 @@ void Scene::update(uint32_t frameIndex)
 	}
 
 	count++;
+
+	isReady.store(true);
 }
 
 Node* Scene::getRootNode()
@@ -159,6 +161,11 @@ const std::vector<Mat4> Scene::getPrevTransforms() const
 void Scene::addMaterial(uint32_t order, Material* material)
 {
 	materials.insert(std::make_pair(order, material));
+}
+
+const std::map<uint32_t, Material*>& Scene::getMaterials() const
+{
+	return materials;
 }
 
 // 从矩阵中提取平移分量（假设列主序矩阵）
