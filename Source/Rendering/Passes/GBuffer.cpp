@@ -6,7 +6,6 @@
 GBufferPass::GBufferPass(const Scene* scene)
 	:scene{ scene }
 {
-	initAttachments();
 }
 
 GBufferPass::~GBufferPass()
@@ -137,6 +136,8 @@ void GBufferPass::initAttachments()
 
 void GBufferPass::prepare()
 {
+	initAttachments();
+
 	uint32_t width = 1920;
 	uint32_t height = 1080;
 	renderingInfo.layerCount = 1;

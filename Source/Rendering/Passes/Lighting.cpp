@@ -3,7 +3,6 @@
 LightingPass::LightingPass(const Scene* scene)
 	:scene{ scene }
 {
-	initAttachments();
 }
 
 LightingPass::~LightingPass()
@@ -49,6 +48,8 @@ void LightingPass::initAttachments()
 
 void LightingPass::prepare()
 {
+	initAttachments();
+
 	uint32_t width = 1920;
 	uint32_t height = 1080;
 	renderingInfo.layerCount = 1;

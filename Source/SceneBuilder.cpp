@@ -1,11 +1,15 @@
 #include "SceneBuilder.hpp"
-#include "Rendering/Material.hpp"
+
 #include "Scene/Scene.hpp"
 #include "Scene/Components/Camera.hpp"
 
+#include "Rendering/Material.hpp"
+#include "Rendering/Passes/GBuffer.hpp"
+#include "Rendering/Passes/Lighting.hpp"
+
 #include <random>
 
-void BuildScene(Scene&& scene) {
+void BuildScene(Scene& scene) {
     auto camera = scene.getCamera();
     Vec3 cameraPosition = Vec3(2.5, 2.5, 2.5);
     camera->getAttachNode()->getTransform().setTranslate(cameraPosition);
@@ -29,11 +33,18 @@ void BuildScene(Scene&& scene) {
     }
 }
 
-void CreateMaterials(Scene&& scene) {
-    /*MaterialConfig materialConfig{};
-    materialConfig.shaders = 
-    */
-   /* GraphicsPass* pass = new 
+void CreateMaterials(Scene& scene) {
     MaterialConfig materialConfig{};
-    auto defaultMaterial = new Material{"PBR", materialConfig , }*/
+    Material* material = new Material{ "pbr", materialConfig };
+    material->setShader({"deferredlighting.vert", "deferredlighting.frag"});
+    material->setProperty("gPosition", Property{ 0, PropertyType::TEXTURE });
+    material->setProperty("gAlbedo", Property{ 1, PropertyType::TEXTURE });
+    material->setProperty("gNormal", Property{ 2, PropertyType::TEXTURE });
+    material->setProperty("gARM", Property{ 3, PropertyType::TEXTURE });
+    GraphicsPass* gBufferPass = new GBufferPass{ &scene };
+    GraphicsPass* lightingPass = new LightingPass{ &scene };
+    material->addPass(0, gBufferPass);
+    material->addPass(1, lightingPass);
+
+    scene.addMaterial(1000, material);
 }

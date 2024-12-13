@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Core/Passes/GraphicsPass.hpp"
+#include "Rendering/Passes/GraphicsPass.hpp"
 #include "Scene/Scene.hpp"
 
 #include <vector>
 
-class GBufferPass: GraphicsPass {
+class GBufferPass: public GraphicsPass {
 public:
 	GBufferPass(const Scene*);
 	~GBufferPass();

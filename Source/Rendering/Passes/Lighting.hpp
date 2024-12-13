@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Core/Passes/GraphicsPass.hpp"
+#include "Rendering/Passes/GraphicsPass.hpp"
 #include "Scene/Scene.hpp"
 
 #include <vector>
 
-class LightingPass: GraphicsPass {
+class LightingPass: public GraphicsPass {
 public:
 	LightingPass(const Scene*);
 	~LightingPass();

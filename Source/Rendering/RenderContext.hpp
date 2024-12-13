@@ -14,6 +14,7 @@ class GBufferPass;
 class LightingPass;
 class TaaPass;
 class FrustumCullPass;
+class GraphicsPass;
 
 struct FrameData {
 	std::atomic<bool> readyForRender{ false };  // 帧数据是否可供渲染线程使用
@@ -57,6 +58,8 @@ protected:
 	FrustumCullPass* cullPass = nullptr;
 
 	std::array<FrameData, 2> frameDatas;
+
+	std::vector<GraphicsPass*> passes;
 
 private:
 	RenderContext();

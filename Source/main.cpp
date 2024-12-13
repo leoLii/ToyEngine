@@ -7,7 +7,7 @@ int main() {
 /////////////////////////////////////////////////////////////////////
     logging::init();
     Scene scene{};
-    BuildScene(std::move(scene));
+    BuildScene(scene);
     scene.collectMeshes();
 
     Application app{};

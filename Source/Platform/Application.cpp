@@ -1,6 +1,7 @@
 #include "Application.hpp"
-
 #include "InputManager.hpp"
+
+#include "SceneBuilder.hpp"
 
 #include "Scene/Scene.hpp"
 #include "Scene/Mesh.hpp"
@@ -8,10 +9,7 @@
 
 #include "Core/GPUFramework/Vulkan/TextureVulkan.hpp"
 #include "Core/TextureManager.hpp"
-#include "Core/Passes/GBuffer.hpp"
-#include "Core/Passes/Lighting.hpp"
-#include "Core/Passes/Taa.hpp"
-#include "Core/Passes/FrustumCull.hpp"
+
 #include "Rendering/RenderContext.hpp"
 
 #include <cstddef>
@@ -37,9 +35,10 @@ void Application::init(ApplicationConfig& config, Scene* scene)
 	TextureManager::GetSingleton().createTextureReference(std::move(texturePath));
 
 	this->scene = scene;
+	CreateMaterials(*scene);
 
 	RenderContext::GetSingleton().prepare(scene);
-
+	
 	renderThread = std::thread(&Application::render, this);
 }
 

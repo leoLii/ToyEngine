@@ -1,12 +1,15 @@
 #include "RenderContext.hpp"
 
-#include "Core/GPUFramework/GPUContext.hpp"
-#include "Core/Passes/FrustumCull.hpp"
-#include "Core/Passes/GBuffer.hpp"
-#include "Core/Passes/Lighting.hpp"
-#include "Core/Passes/Taa.hpp"
-#include "Core/ResourceManager.hpp"
 #include "Scene/Scene.hpp"
+
+#include "Core/GPUFramework/GPUContext.hpp"
+#include "Core/ResourceManager.hpp"
+
+#include "Rendering/Passes/GBuffer.hpp"
+#include "Rendering/Passes/Lighting.hpp"
+#include "Rendering/Passes/FrustumCull.hpp"
+#include "Rendering/Passes/Taa.hpp"
+#include "Rendering/Material.hpp"
 
 #include <future>
 
@@ -34,24 +37,29 @@ void RenderContext::prepare(const Scene* scene)
 		frameDatas[i].computeCommandBuffer = gpuContext.requestCommandBuffer(CommandType::cCompute, vk::CommandBufferLevel::ePrimary, i);
 	}
 
-	gBufferPass = new GBufferPass{ scene };
-	lightingPass = new LightingPass{ scene };
 	taaPass = new TaaPass{ scene };
 	cullPass = new FrustumCullPass{ scene };
 
-	gBufferPass->prepare();
-	lightingPass->prepare();
 	taaPass->prepare();
 	cullPass->prepare();
+
+	for (auto material : scene->getMaterials()) {
+		for (auto pass : material.second->getPasses()) {
+			passes.push_back(pass);
+			pass->prepare();
+		}
+	}
 }
 
 void RenderContext::render(uint64_t frameIndex)
 {
 	auto& frameData = RenderContext::GetSingleton().getFrameData(frameIndex);
 
-	gBufferPass->update(frameIndex);
-	lightingPass->update(frameIndex);
 	cullPass->update(frameIndex);
+	for (auto pass : passes) {
+		pass->update(frameIndex);
+	}
+	taaPass->update(frameIndex);
 	
 	gpuContext.waitForFences({ frameData.renderFence, frameData.computeFence });
 	gpuContext.resetFences({ frameData.renderFence, frameData.computeFence });
@@ -93,9 +101,10 @@ void RenderContext::render(uint64_t frameIndex)
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
 				gpuContext.getSwapchainImages()[swapChainIndex]);
 
-			gBufferPass->record(frameData.renderCommandBuffer);
 
-			lightingPass->record(frameData.renderCommandBuffer);
+			for (auto pass : passes) {
+				pass->record(frameData.renderCommandBuffer);
+			}
 
 			gpuContext.imageBarrier(
 				frameData.renderCommandBuffer,
@@ -165,8 +174,6 @@ void RenderContext::clear()
 		gpuContext.returnSemaphore(frameData.renderFinished);
 	}
 
-	delete gBufferPass;
-	delete lightingPass;
 	delete taaPass;
 	delete cullPass;
 }

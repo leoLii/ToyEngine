@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Passes/ComputePass.hpp"
+#include "Rendering/Passes/ComputePass.hpp"
 #include "Scene/Scene.hpp"
 
 #include <vector>
